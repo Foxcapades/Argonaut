@@ -1,1 +1,41 @@
+= Ar__go__naut
+:source-highlighter: pygments
+:pygments-style: monokai
+
+++++
+<p align="center" role="Header">
+  <img src="https://raw.githubusercontent.com/Foxcapades/Argonaut/master/meta/assets/argonaut.png" height="200"/>
+</p>
+++++
+
+A builder style CLI creation kit.
+
+[source,go,linenums,tabsize=2]
+----
+package main
+
+import "github.com/Foxcapades/Argonaut/v1"
+
+type Config struct {
+	ForceEnabled bool
+	WorkDir string
+}
+
+func main() {
+	var conf Config
+
+	argo.NewCommand().
+		Description("Do the things to the files").
+		Flag(argo.NewFlag().
+			Short('f').
+			Long("force").
+			Bind(&conf.ForceEnabled, false)).
+		Argument(argo.NewArg().
+			Require().
+			Description("path to the files").
+			Bind(&conf.WorkDir)).
+		MustParse()
+
+}
+----
 

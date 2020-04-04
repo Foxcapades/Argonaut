@@ -7,11 +7,13 @@ type CommandBuilder interface {
 
 	Examples(...string) CommandBuilder
 
+	Flag(FlagBuilder) CommandBuilder
+
+	Unmarshaler(InternalUnmarshaler) CommandBuilder
+
 	Build() (Command, error)
 
 	MustBuild() Command
-
-	Unmarshaler(InternalUnmarshaler) CommandBuilder
 
 	Parse() error
 

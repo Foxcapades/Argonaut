@@ -1,5 +1,10 @@
 package argo
 
+
+func NewFlag() FlagBuilder {
+	return &flagBuilder{}
+}
+
 type flagBuilder struct {
 	err error
 	short byte

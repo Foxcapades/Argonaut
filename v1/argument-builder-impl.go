@@ -1,5 +1,9 @@
 package argo
 
+func NewArg() ArgumentBuilder {
+	return new(argumentBuilder)
+}
+
 type bindValidator func(argumentBuilder) error
 
 type argumentBuilder struct {

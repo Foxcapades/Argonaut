@@ -45,19 +45,6 @@ type UnmarshalIntegerProps struct {
 	//     0xfa9   0Xfa9
 	HexLeaders []string `json:"hexLeaderChars"`
 
-	// BinLeaders defines the prefixes used to signify that
-	// a value should be parsed as binary.
-	//
-	// An empty slice will disable binary value parsing.
-	//
-	// Default: ["0b", "0B", "b", "B"]
-	//
-	// Example hex values using the default prefixes:
-	//
-	//     b00101   B00101
-	//     0b00101  0B00101
-	BinLeaders []string `json:"binLeaderChars"`
-
 	// The integer base to use when no prefix is present.
 	//
 	// Default: base 10
@@ -121,7 +108,6 @@ var defaultUnmarshalProps = UnmarshalProps{
 	Integers: UnmarshalIntegerProps{
 		OctalLeaders: []string{"0o", "0O", "o", "O"},
 		HexLeaders:   []string{"0x", "0X", "x", "X"},
-		BinLeaders:   []string{"0b", "0B", "b", "B"},
 		DefaultBase:  10,
 	},
 	Maps:     UnmarshalMapProps{

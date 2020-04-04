@@ -1,5 +1,9 @@
 package argo
 
+func NewCommand() CommandBuilder {
+	return nil
+}
+
 type commandBuilder struct {
 
 }

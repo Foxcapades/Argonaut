@@ -35,7 +35,7 @@ func Unmarshal(raw string, val interface{}, props UnmarshalProps) (err error) {
 		*(val.(*string)) = raw
 
 	case reflect.Int:
-		if tmp, e := parseInt(raw, strconv.IntSize); e != nil {
+		if tmp, e := parseInt(raw, strconv.IntSize, &props.Integers); e != nil {
 			err = e
 		} else {
 			ptrVal.SetInt(tmp)
@@ -50,7 +50,7 @@ func Unmarshal(raw string, val interface{}, props UnmarshalProps) (err error) {
 		}
 
 	case reflect.Int64:
-		if tmp, e := parseInt(raw, 64); e != nil {
+		if tmp, e := parseInt(raw, 64, &props.Integers); e != nil {
 			err = e
 		} else {
 			ptrVal.SetInt(tmp)
@@ -61,29 +61,39 @@ func Unmarshal(raw string, val interface{}, props UnmarshalProps) (err error) {
 		*(val.(*float64)), err = strconv.ParseFloat(raw, 64)
 
 	case reflect.Uint64:
-		tmp, e := parseUInt(raw, 64, &props.Integers)
-		err = e
-		*(val.(*uint64)) = uint64(tmp)
+		if tmp, e := parseUInt(raw, 64, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetUint(tmp)
+		}
 
 	case reflect.Uint:
-		tmp, e := parseUInt(raw, strconv.IntSize, &props.Integers)
-		err = e
-		*(val.(*uint)) = uint(tmp)
+		if tmp, e := parseUInt(raw, strconv.IntSize, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetUint(tmp)
+		}
 
 	case reflect.Int32:
-		tmp, e := parseInt(raw, 32)
-		err = e
-		*(val.(*int32)) = int32(tmp)
+		if tmp, e := parseInt(raw, 32, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetInt(tmp)
+		}
 
 	case reflect.Uint32:
-		tmp, e := parseUInt(raw, 32, &props.Integers)
-		err = e
-		*(val.(*uint32)) = uint32(tmp)
+		if tmp, e := parseUInt(raw, 32, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetUint(tmp)
+		}
 
 	case reflect.Uint8:
-		tmp, e := parseUInt(raw, 8, &props.Integers)
-		err = e
-		*(val.(*uint8)) = uint8(tmp)
+		if tmp, e := parseUInt(raw, 8, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetUint(tmp)
+		}
 
 	case reflect.Slice:
 		// check slice is unmarshalable
@@ -91,19 +101,25 @@ func Unmarshal(raw string, val interface{}, props UnmarshalProps) (err error) {
 		// check map is unmarshalable
 
 	case reflect.Int8:
-		tmp, e := parseInt(raw, 8)
-		err = e
-		*(val.(*int8)) = int8(tmp)
+		if tmp, e := parseInt(raw, 8, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetInt(tmp)
+		}
 
 	case reflect.Int16:
-		tmp, e := parseInt(raw, 16)
-		err = e
-		*(val.(*int16)) = int16(tmp)
+		if tmp, e := parseInt(raw, 16, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetInt(tmp)
+		}
 
 	case reflect.Uint16:
-		tmp, e := parseUInt(raw, 16, &props.Integers)
-		err = e
-		*(val.(*uint16)) = uint16(tmp)
+		if tmp, e := parseUInt(raw, 16, &props.Integers); e != nil {
+			err = e
+		} else {
+			ptrVal.SetUint(tmp)
+		}
 
 	case reflect.Interface:
 		ptrVal.Set(reflect.ValueOf(raw))
@@ -116,18 +132,28 @@ func Unmarshal(raw string, val interface{}, props UnmarshalProps) (err error) {
 	return
 }
 
-func parseInt(v string, bits int) (int64, error) {
+func parseInt(v string, bits int, opt *UnmarshalIntegerProps) (int64, error) {
+	var neg string
 	// TODO: Wrap this error
-	switch v[0] {
-	case 'o', 'O':
-		return strconv.ParseInt(v, 8, bits)
-	case 'x', 'X':
-		return strconv.ParseInt(v, 16, bits)
-	case 'b', 'B':
-		return strconv.ParseInt(v, 2, bits)
-	default:
-		return strconv.ParseInt(v, 10, bits)
+
+	if v[0] == '-' {
+		neg = "-"
+		v = v[1:]
 	}
+
+	for i := range opt.HexLeaders {
+		if strings.HasPrefix(v, opt.HexLeaders[i]) {
+			return strconv.ParseInt(neg + v[len(opt.HexLeaders[i]):], 16, bits)
+		}
+	}
+
+	for i := range opt.OctalLeaders {
+		if strings.HasPrefix(v, opt.OctalLeaders[i]) {
+			return strconv.ParseInt(neg + v[len(opt.OctalLeaders[i]):], 8, bits)
+		}
+	}
+
+	return strconv.ParseInt(neg + v, 10, bits)
 }
 
 func parseUInt(v string, bits int, opt *UnmarshalIntegerProps) (uint64, error) {
@@ -135,19 +161,13 @@ func parseUInt(v string, bits int, opt *UnmarshalIntegerProps) (uint64, error) {
 
 	for i := range opt.HexLeaders {
 		if strings.HasPrefix(v, opt.HexLeaders[i]) {
-			return strconv.ParseUint(v, 16, bits)
+			return strconv.ParseUint(v[len(opt.HexLeaders[i]):], 16, bits)
 		}
 	}
 
 	for i := range opt.OctalLeaders {
 		if strings.HasPrefix(v, opt.OctalLeaders[i]) {
-			return strconv.ParseUint(v, 8, bits)
-		}
-	}
-
-	for i := range opt.BinLeaders {
-		if strings.HasPrefix(v, opt.BinLeaders[i]) {
-			return strconv.ParseUint(v, 2, bits)
+			return strconv.ParseUint(v[len(opt.OctalLeaders[i]):], 8, bits)
 		}
 	}
 
