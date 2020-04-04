@@ -3,9 +3,9 @@ package argo
 type CommandBuilder interface {
 	Description(string) CommandBuilder
 
-	Arg(ArgumentBuilder) CommandBuilder
-
 	Examples(...string) CommandBuilder
+
+	Arg(ArgumentBuilder) CommandBuilder
 
 	Flag(FlagBuilder) CommandBuilder
 

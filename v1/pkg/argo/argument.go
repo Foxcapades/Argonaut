@@ -51,11 +51,5 @@ type Argument interface {
 
 	RawValue() string
 
-	RequiredBool()
-
-	binding() interface{}
-	hasBinding() bool
-	parse(string) error
+	Required() bool
 }
-
-

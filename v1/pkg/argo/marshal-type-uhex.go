@@ -56,4 +56,3 @@ func (h *UHex64) Unmarshal(value string) (err error) {
 	*h = UHex64(tmp)
 	return
 }
-

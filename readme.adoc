@@ -1,4 +1,4 @@
-= Ar__go__naut
+= Argonaut
 :source-highlighter: pygments
 :pygments-style: monokai
 

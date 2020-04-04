@@ -51,7 +51,4 @@ type Flag interface {
 	HasDescription() bool
 
 	Hits() int
-
-	hit()
 }
-

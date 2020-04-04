@@ -6,4 +6,3 @@ func (u *UseCounter) Unmarshal(string) error {
 	*u++
 	return nil
 }
-

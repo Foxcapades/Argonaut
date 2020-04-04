@@ -36,6 +36,10 @@ func (i *InvalidFlagCharError) Error() string {
 	return fmt.Sprintf(errInvalidFlag, i.Flag, i.Hint)
 }
 
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃     Invalid Flag Config     ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
 type InvalidFlagError struct {
 	Hint ErrHint
 }
@@ -44,29 +48,49 @@ func (i *InvalidFlagError) Error() string {
 	return fmt.Sprintf(errCannotBuildFlag, i.Hint)
 }
 
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃     Nil or Non-Ptr          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
 type InvalidUnmarshalError struct {
-	value    reflect.Value
+	Value    reflect.Value
 	Argument string
 }
 
 func (i *InvalidUnmarshalError) Error() string {
-	if i.value.IsNil() {
+	if i.Value.IsNil() {
 		return "Attempted to unmarshal into nil"
 	}
 	return "Attempted to unmarshal into a non-pointer"
 }
 
-type RecursivePointerError struct {
-	Chain    []reflect.Value
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃     Invalid Type            ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+type InvalidTypeError struct {
+	Value reflect.Value
+}
+
+func (i *InvalidTypeError) Error() string {
+	return fmt.Sprintf("Cannot unmarshal type %s", i.Value.Type())
+}
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃     Invalid Format          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+const errFormat = "Format error in input text, could not unmarshal to type %s"
+
+type FormatError struct {
+	Value    reflect.Value
 	Argument string
+	Kind     reflect.Kind
+	Root     error
 }
 
-func (r *RecursivePointerError) Error() string {
-	return "Attempted to unmarshal into a recursive pointer"
-}
-
-func (r *RecursivePointerError) Depth() int {
-	return len(r.Chain) - 1
+func (f *FormatError) Error() string {
+	return fmt.Sprintf(errFormat, f.Kind)
 }
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//

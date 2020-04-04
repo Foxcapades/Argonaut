@@ -1,6 +1,9 @@
-package argo
+package impl
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+)
 
 type parserState uint8
 
@@ -10,13 +13,13 @@ const (
 	psExpectOptional
 )
 
-func NewDefaultParser(command Command) Parser {
+func NewDefaultParser(command argo.Command) argo.Parser {
 	return &parser{com: command}
 }
 
 type parser struct {
-	shorts map[byte]Flag
-	longs  map[string]Flag
+	shorts map[byte]argo.Flag
+	longs  map[string]argo.Flag
 
 	// Input arguments
 	args []string
@@ -37,12 +40,12 @@ type parser struct {
 	passthrough bool
 
 	// Command to parse
-	com Command
+	com argo.Command
 
 	// last error
 	err error
 
-	awaitingValue Flag
+	awaitingValue argo.Flag
 }
 
 func (p *parser) Parse(args []string) error {
@@ -52,8 +55,8 @@ func (p *parser) Parse(args []string) error {
 		return p.wrapup()
 	}
 
-	p.shorts = make(map[byte]Flag)
-	p.longs  = make(map[string]Flag)
+	p.shorts = make(map[byte]argo.Flag)
+	p.longs = make(map[string]argo.Flag)
 
 	for _, arg := range p.com.Flags() {
 		if arg.HasShort() {
@@ -132,9 +135,9 @@ func (p *parser) handleFlag() {
 	// One character string at end of arg list
 	if !p.hasNextChar() {
 		if p.currentComArg >= len(p.com.Arguments()) {
-			p.com.appendUnmappedInput(p.read(1))
+			//p.com.appendUnmappedInput(p.read(1))
 		} else {
-			p.err = p.com.Arguments()[p.currentComArg].parse(p.read(1))
+			//p.err = p.com.Arguments()[p.currentComArg].parse(p.read(1))
 		}
 		return
 	}
@@ -156,7 +159,7 @@ func (p *parser) shortFlag() {
 	}
 
 	flag := p.shorts[p.curChar]
-	flag.hit()
+	//flag.hit()
 
 	if !flag.HasArgument() {
 		if p.hasNextChar() {

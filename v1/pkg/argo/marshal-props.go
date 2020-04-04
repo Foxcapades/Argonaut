@@ -97,11 +97,6 @@ type UnmarshalMapProps struct {
 }
 
 type UnmarshalSliceProps struct {
-
-}
-
-func DefaultUnmarshalProps() UnmarshalProps {
-	return defaultUnmarshalProps
 }
 
 var defaultUnmarshalProps = UnmarshalProps{
@@ -110,9 +105,9 @@ var defaultUnmarshalProps = UnmarshalProps{
 		HexLeaders:   []string{"0x", "0X", "x", "X"},
 		DefaultBase:  10,
 	},
-	Maps:     UnmarshalMapProps{
+	Maps: UnmarshalMapProps{
 		KeyValSeparatorChars: "=:",
 		EntrySeparatorChars:  ",; ",
 	},
-	Slices:   UnmarshalSliceProps{},
+	Slices: UnmarshalSliceProps{},
 }

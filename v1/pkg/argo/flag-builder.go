@@ -91,6 +91,7 @@ type FlagBuilder interface {
 	// See ArgumentBuilder.Default() for more information.
 	Default(val interface{}) FlagBuilder
 
-	build() (Flag, error)
-	mustBuild() Flag
+	Build() (Flag, error)
+
+	MustBuild() Flag
 }

@@ -65,4 +65,3 @@ func (h *hitCounter) parse(string) error {
 	h.value++
 	return nil
 }
-

@@ -5,7 +5,4 @@ type Command interface {
 	Arguments() []Argument
 	Flags() []Flag
 	UnmappedInput() []string
-
-	appendUnmappedInput(string)
 }
-

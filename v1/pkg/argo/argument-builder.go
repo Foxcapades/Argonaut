@@ -38,6 +38,7 @@ type ArgumentBuilder interface {
 	// based on the provided value.
 	Required(bool) ArgumentBuilder
 
-	build() (Argument, error)
-	mustBuild() Argument
+	Build() (Argument, error)
+
+	MustBuild() Argument
 }
