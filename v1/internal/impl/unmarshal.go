@@ -150,7 +150,8 @@ func unmarshalMap(m R.Value, raw string, props *aProps) error {
 		return err
 	}
 
-	m.SetMapIndex(R.ValueOf(kv), vv)
+	m.Set(R.MakeMap(mt))
+	m.SetMapIndex(R.ValueOf(kv).Elem(), vv)
 	return nil
 }
 

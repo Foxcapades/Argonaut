@@ -465,7 +465,62 @@ func TestUnmarshal(t *testing.T) {
 				// Reset test container
 				zero()
 			}
+		})
 
+		C.Convey("Valid map values", func() {
+			root := struct {
+				ss   map[string]string
+				ssp  map[string]*string
+				si   map[string]int
+				sip  map[string]*int
+				sb   map[string]byte
+				ssb  map[string][]byte
+				ssbp map[string]*[]byte
+				ii   map[int]int
+			}{}
+
+			zero := func() {
+				root.ss = make(map[string]string)
+				root.ssp = make(map[string]*string)
+				root.si = make(map[string]int)
+				root.sip = make(map[string]*int)
+				root.sb = make(map[string]byte)
+				root.ssb = make(map[string][]byte)
+				root.ssbp = make(map[string]*[]byte)
+			}
+
+			sKey  := "key"
+			sVal  := "value"
+			ssRaw := "key=value"
+			//sp := "123"
+			//ip := 123
+			//bp := []byte{'1', '2', '3'}
+
+			parseTests := []unmarshalerValueTest{
+				{"map[string]string", ssRaw, map[string]string{sKey: sVal}, &root.ss},
+				{"map[string]*string", ssRaw, map[string]*string{sKey: &sVal}, &root.ssp},
+				//{"int slice", sp, []int{ip}, &root.si},
+				//{"int pointer slice", sp, []*int{&ip}, &root.sip},
+				//{"byte slice", sp, bp, &root.sb},
+				//{"byte slice slice", sp, [][]byte{bp}, &root.ssb},
+				//{"byte slice pointer slice", sp, []*[]byte{&bp}, &root.ssbp},
+			}
+
+			for i := range parseTests {
+				tmp := &parseTests[i]
+
+				C.Convey(tmp.Name, func() {
+					C.So(impl.UnmarshalDefault(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+
+					eVal := reflect.ValueOf(tmp.Temp).Elem()
+
+					C.So(eVal.Kind(), C.ShouldEqual, reflect.ValueOf(tmp.Output).Kind())
+					C.So(eVal.Interface(), C.ShouldResemble, tmp.Output)
+				})
+
+				// Reset test container
+				zero()
+			}
 		})
 	})
 }
