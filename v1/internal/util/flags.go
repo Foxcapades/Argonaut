@@ -7,7 +7,7 @@ func IsValidShortFlag(b byte) bool {
 func IsValidLongFlag(s string) bool {
 	asB := []byte(s)
 
-	if !IsValidShortFlag(asB[1]) {
+	if !IsValidShortFlag(asB[0]) {
 		return false
 	}
 

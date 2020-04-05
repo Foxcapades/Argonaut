@@ -2,7 +2,9 @@ package impl_test
 
 import (
 	. "github.com/Foxcapades/Argonaut/v1/internal/impl"
+	A "github.com/Foxcapades/Argonaut/v1/pkg/argo"
 	. "github.com/smartystreets/goconvey/convey"
+	R "reflect"
 	. "testing"
 )
 
@@ -63,5 +65,84 @@ func TestArgumentBuilder_Required(t *T) {
 		So(a.Required(), ShouldBeTrue)
 		b := NewArgBuilder().Required(false).MustBuild()
 		So(b.Required(), ShouldBeFalse)
+	})
+}
+
+func TestArgumentBuilder_Build(t *T) {
+	Convey("ArgumentBuilder.Build", t, func() {
+		Convey("nil binding", func() {
+			a, b := NewArgBuilder().Bind(nil).Build()
+			So(a, ShouldBeNil)
+			So(b, ShouldNotBeNil)
+			c, d := b.(A.InvalidArgError)
+			So(d, ShouldBeTrue)
+			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
+		})
+
+		Convey("unaddressable binding", func() {
+			a, b := NewArgBuilder().Bind(3).Default(3).Build()
+			So(a, ShouldBeNil)
+			So(b, ShouldNotBeNil)
+			c, d := b.(A.InvalidArgError)
+			So(d, ShouldBeTrue)
+			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
+			So(c.BindingType().Kind(), ShouldEqual, R.Int)
+			So(c.DefaultValType().Kind(), ShouldEqual, R.Int)
+		})
+
+		Convey("type mismatch", func() {
+			e := ""
+			f := 3
+			a, b := NewArgBuilder().Default(e).Bind(&f).Build()
+			So(a, ShouldBeNil)
+			So(b, ShouldNotBeNil)
+			c, d := b.(A.InvalidArgError)
+			So(d, ShouldBeTrue)
+			So(c.Type(), ShouldEqual, A.InvalidArgDefaultError)
+			So(c.BindingType().Elem().Kind(), ShouldEqual, R.Int)
+			So(c.DefaultValType().Kind(), ShouldEqual, R.String)
+		})
+	})
+}
+
+func TestArgumentBuilder_MustBuild(t *T) {
+	prep := func(a A.ArgumentBuilder) (func(), func() interface{}) {
+		var err interface{}
+		return func() {
+			defer func() { err = recover(); panic(err) }()
+			a.MustBuild()
+		}, func() interface{} { return err }
+	}
+
+	Convey("ArgumentBuilder.MustBuild", t, func() {
+		Convey("nil binding", func() {
+			fn, b := prep(NewArgBuilder().Bind(nil))
+			So(fn, ShouldPanic)
+			c, d := b().(A.InvalidArgError)
+			So(d, ShouldBeTrue)
+			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
+		})
+
+		Convey("unaddressable binding", func() {
+			fn, b := prep(NewArgBuilder().Bind(3).Default(3))
+			So(fn, ShouldPanic)
+			c, d := b().(A.InvalidArgError)
+			So(d, ShouldBeTrue)
+			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
+			So(c.BindingType().Kind(), ShouldEqual, R.Int)
+			So(c.DefaultValType().Kind(), ShouldEqual, R.Int)
+		})
+
+		Convey("type mismatch", func() {
+			e := ""
+			f := 3
+			fn, b := prep(NewArgBuilder().Default(e).Bind(&f))
+			So(fn, ShouldPanic)
+			c, d := b().(A.InvalidArgError)
+			So(d, ShouldBeTrue)
+			So(c.Type(), ShouldEqual, A.InvalidArgDefaultError)
+			So(c.BindingType().Elem().Kind(), ShouldEqual, R.Int)
+			So(c.DefaultValType().Kind(), ShouldEqual, R.String)
+		})
 	})
 }

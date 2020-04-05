@@ -59,7 +59,6 @@ func (a *ArgumentBuilder) Required(req bool) argo.ArgumentBuilder {
 
 func (a *ArgumentBuilder) Build() (argo.Argument, error) {
 	if a.hasBind {
-
 		// Binding is not usable
 		if !util.IsUnmarshalable(a.binding) {
 			b := R.TypeOf(a.binding)

@@ -13,8 +13,8 @@ type InvalidFlagErrorType uint8
 
 const (
 	InvalidFlagNoFlags InvalidFlagErrorType = iota
-	InvalidFlagBadShortFlagCharacter
-	InvalidFlagBadLongFlagCharacter
+	InvalidFlagBadShortFlag
+	InvalidFlagBadLongFlag
 )
 
 type InvalidFlagError interface {
@@ -38,9 +38,9 @@ func (i *invalidFlagError) Error() string {
 	switch i.eType {
 	case InvalidFlagNoFlags:
 		return `Flags must have a short and/or long flag set`
-	case InvalidFlagBadLongFlagCharacter:
+	case InvalidFlagBadLongFlag:
 		return `Long flags may only contain alphanumeric characters, underscores, and dashes`
-	case InvalidFlagBadShortFlagCharacter:
+	case InvalidFlagBadShortFlag:
 		return `Short flags must be alphanumeric`
 	}
 	panic(fmt.Errorf("invalid flag error type %d", i.eType))
@@ -83,14 +83,18 @@ type InvalidArgError interface {
 	//
 	// If the argument had no binding value this will return
 	// nil.
-	BindingType() *R.Type
+	BindingType() R.Type
+
+	HasBindingType() bool
 
 	// DefaultValType returns the type of the default value
 	// given to the argument.
 	//
 	// If the argument was not provided a default value this
 	// will return nil.
-	DefaultValType() *R.Type
+	DefaultValType() R.Type
+
+	HasDefaultValType() bool
 }
 
 func NewInvalidArgError(errType InvalidArgErrorType, bind, def *R.Type) error {
@@ -107,12 +111,20 @@ func (i *invalidArgError) Type() InvalidArgErrorType {
 	return i.eType
 }
 
-func (i *invalidArgError) BindingType() *R.Type {
-	return i.bind
+func (i *invalidArgError) BindingType() R.Type {
+	return *i.bind
 }
 
-func (i *invalidArgError) DefaultValType() *R.Type {
-	return i.defVal
+func (i *invalidArgError) HasBindingType() bool {
+	return i.bind != nil
+}
+
+func (i *invalidArgError) HasDefaultValType() bool {
+	return i.defVal != nil
+}
+
+func (i *invalidArgError) DefaultValType() R.Type {
+	return *i.defVal
 }
 
 func (i *invalidArgError) Error() string {

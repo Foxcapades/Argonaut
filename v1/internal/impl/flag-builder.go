@@ -49,11 +49,11 @@ func (f *FlagBuilder) Build() (out argo.Flag, err error) {
 	}
 
 	if f.longSet && !util.IsValidLongFlag(f.long) {
-		return nil, argo.NewInvalidFlagError(argo.InvalidFlagBadLongFlagCharacter)
+		return nil, argo.NewInvalidFlagError(argo.InvalidFlagBadLongFlag)
 	}
 
 	if f.shortSet && !util.IsValidShortFlag(f.short) {
-		return nil, argo.NewInvalidFlagError(argo.InvalidFlagBadShortFlagCharacter)
+		return nil, argo.NewInvalidFlagError(argo.InvalidFlagBadShortFlag)
 	}
 
 	var arg argo.Argument
@@ -63,7 +63,6 @@ func (f *FlagBuilder) Build() (out argo.Flag, err error) {
 
 	if f.arg != nil {
 		arg, err = f.arg.Build()
-
 		if err != nil {
 			return nil, err
 		}
@@ -91,20 +90,19 @@ func (f *FlagBuilder) MustBuild() argo.Flag {
 }
 
 func (f *FlagBuilder) Bind(ptr interface{}, required bool) argo.FlagBuilder {
-	if f.arg != nil {
-		f.arg.Bind(ptr)
-		f.arg.Required(required)
-	} else {
-		f.arg = &ArgumentBuilder{required: required, binding: ptr}
+	if f.arg == nil {
+		f.arg = GetProvider().NewArg()
 	}
+
+	f.arg.Bind(ptr).Required(required)
+
 	return f
 }
 
 func (f *FlagBuilder) Default(val interface{}) argo.FlagBuilder {
-	if f.arg != nil {
-		f.arg.Default(val)
-	} else {
-		f.arg = &ArgumentBuilder{defVal: val}
+	if f.arg == nil {
+		f.arg = GetProvider().NewArg()
 	}
+	f.arg.Default(val)
 	return f
 }
