@@ -1,21 +1,23 @@
 package argo
 
 type CommandBuilder interface {
-	Description(string) CommandBuilder
+	Description(string) (this CommandBuilder)
 
-	Examples(...string) CommandBuilder
+	Examples(...string) (this CommandBuilder)
 
-	Arg(ArgumentBuilder) CommandBuilder
+	Arg(ArgumentBuilder) (this CommandBuilder)
 
-	Flag(FlagBuilder) CommandBuilder
+	Flag(FlagBuilder) (this CommandBuilder)
 
-	Unmarshaler(InternalUnmarshaler) CommandBuilder
+	FlagGroup(builder FlagGroupBuilder) (this CommandBuilder)
+
+	Unmarshaler(ValueUnmarshaler) (this CommandBuilder)
 
 	Build() (Command, error)
 
 	MustBuild() Command
 
-	Parse() error
+	Parse() (extra []string, err error)
 
-	MustParse()
+	MustParse() []string
 }

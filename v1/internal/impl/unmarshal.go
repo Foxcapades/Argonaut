@@ -32,7 +32,7 @@ func Unmarshal(raw string, val interface{}, props *aProps) (err error) {
 	ptrDef := ptrVal.Type()
 
 	if ptrDef.AssignableTo(unmarshalerType) {
-		return val.(A.Unmarshaler).Unmarshal(raw)
+		return ptrVal.Interface().(A.Unmarshaler).Unmarshal(raw)
 	}
 
 	switch ptrVal.Kind() {

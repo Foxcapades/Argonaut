@@ -2,6 +2,7 @@ package impl_test
 
 import (
 	"github.com/Foxcapades/Argonaut/v1/internal/impl"
+	A "github.com/Foxcapades/Argonaut/v1/pkg/argo"
 	"reflect"
 	"testing"
 
@@ -469,14 +470,13 @@ func TestUnmarshal(t *testing.T) {
 
 		C.Convey("Valid map values", func() {
 			root := struct {
-				ss   map[string]string
-				ssp  map[string]*string
-				si   map[string]int
-				sip  map[string]*int
-				sb   map[string]byte
-				ssb  map[string][]byte
-				ssbp map[string]*[]byte
-				ii   map[int]int
+				ss  map[string]string
+				ssp map[string]*string
+				si  map[string]int
+				sip map[string]*int
+				sb  map[string][]byte
+				sbp map[string]*[]byte
+				ii  map[int]int
 			}{}
 
 			zero := func() {
@@ -484,26 +484,26 @@ func TestUnmarshal(t *testing.T) {
 				root.ssp = make(map[string]*string)
 				root.si = make(map[string]int)
 				root.sip = make(map[string]*int)
-				root.sb = make(map[string]byte)
-				root.ssb = make(map[string][]byte)
-				root.ssbp = make(map[string]*[]byte)
+				root.sb = make(map[string][]byte)
+				root.sbp = make(map[string]*[]byte)
 			}
 
-			sKey  := "key"
-			sVal  := "value"
+			sKey := "key"
+			sVal := "value"
 			ssRaw := "key=value"
-			//sp := "123"
-			//ip := 123
-			//bp := []byte{'1', '2', '3'}
+			siRaw := "key=123"
+			iiRaw := "123:123"
+			iVal := 123
+			bVal := []byte{'1', '2', '3'}
 
 			parseTests := []unmarshalerValueTest{
 				{"map[string]string", ssRaw, map[string]string{sKey: sVal}, &root.ss},
 				{"map[string]*string", ssRaw, map[string]*string{sKey: &sVal}, &root.ssp},
-				//{"int slice", sp, []int{ip}, &root.si},
-				//{"int pointer slice", sp, []*int{&ip}, &root.sip},
-				//{"byte slice", sp, bp, &root.sb},
-				//{"byte slice slice", sp, [][]byte{bp}, &root.ssb},
-				//{"byte slice pointer slice", sp, []*[]byte{&bp}, &root.ssbp},
+				{"map[string]int", siRaw, map[string]int{sKey: iVal}, &root.si},
+				{"map[string]*int", siRaw, map[string]*int{sKey: &iVal}, &root.sip},
+				{"map[string][]byte]", siRaw, map[string][]byte{sKey: bVal}, &root.sb},
+				{"map[string]*[]byte]", siRaw, map[string]*[]byte{sKey: &bVal}, &root.sbp},
+				{"map[int]int", iiRaw, map[int]int{iVal: iVal}, &root.ii},
 			}
 
 			for i := range parseTests {
@@ -522,5 +522,97 @@ func TestUnmarshal(t *testing.T) {
 				zero()
 			}
 		})
+
+		C.Convey("Valid marshal-type values", func() {
+			root := struct {
+				c    A.UseCounter
+				h    A.Hex
+				h8   A.Hex8
+				h16  A.Hex16
+				h32  A.Hex32
+				h64  A.Hex64
+				uh   A.UHex
+				uh8  A.UHex8
+				uh16 A.UHex16
+				uh32 A.UHex32
+				uh64 A.UHex64
+				o    A.Octal
+				o8   A.Octal8
+				o16  A.Octal16
+				o32  A.Octal32
+				o64  A.Octal64
+				uo   A.UOctal
+				uo8  A.UOctal8
+				uo16 A.UOctal16
+				uo32 A.UOctal32
+				uo64 A.UOctal64
+			}{}
+
+			zero := func() {
+				root.c = 0
+				root.h = 0
+				root.h8 = 0
+				root.h16 = 0
+				root.h32 = 0
+				root.h64 = 0
+				root.uh = 0
+				root.uh8 = 0
+				root.uh16 = 0
+				root.uh32 = 0
+				root.uh64 = 0
+				root.o = 0
+				root.o8 = 0
+				root.o16 = 0
+				root.o32 = 0
+				root.o64 = 0
+				root.uo = 0
+				root.uo8 = 0
+				root.uo16 = 0
+				root.uo32 = 0
+				root.uo64 = 0
+			}
+
+			parseTests := []unmarshalerValueTest{
+				{"Counter", "123", A.UseCounter(1), &root.c},
+				{"Hex", "123", A.Hex(291), &root.h},
+				{"Hex8", "-80", A.Hex8(-128), &root.h8},
+				{"Hex16", "123", A.Hex16(291), &root.h16},
+				{"Hex32", "123", A.Hex32(291), &root.h32},
+				{"Hex64", "123", A.Hex64(291), &root.h64},
+				{"UHex", "123", A.UHex(291), &root.uh},
+				{"UHex8", "FF", A.UHex8(255), &root.uh8},
+				{"UHex16", "123", A.UHex16(291), &root.uh16},
+				{"UHex32", "123", A.UHex32(291), &root.uh32},
+				{"UHex64", "123", A.UHex64(291), &root.uh64},
+				{"Octal", "200", A.Octal(128), &root.o},
+				{"Octal8", "-200", A.Octal8(-128), &root.o8},
+				{"Octal16", "123", A.Octal16(83), &root.o16},
+				{"Octal32", "123", A.Octal32(83), &root.o32},
+				{"Octal64", "123", A.Octal64(83), &root.o64},
+				{"UOctal", "123", A.UOctal(83), &root.uo},
+				{"UOctal8", "377", A.UOctal8(255), &root.uo8},
+				{"UOctal16", "123", A.UOctal16(83), &root.uo16},
+				{"UOctal32", "123", A.UOctal32(83), &root.uo32},
+				{"UOctal64", "123", A.UOctal64(83), &root.uo64},
+			}
+
+			for i := range parseTests {
+				tmp := &parseTests[i]
+
+				C.Convey(tmp.Name, func() {
+					C.So(impl.UnmarshalDefault(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+
+					eVal := reflect.ValueOf(tmp.Temp).Elem()
+
+					C.So(eVal.Kind(), C.ShouldEqual, reflect.ValueOf(tmp.Output).Kind())
+					C.So(eVal.Interface(), C.ShouldEqual, tmp.Output)
+				})
+
+				// Reset test container
+				zero()
+			}
+
+		})
+
 	})
 }

@@ -5,16 +5,88 @@ import (
 	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
 )
 
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Command                                                             ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+var cProvider = CommandProvider(impl.NewCommandBuilder)
+
+type CommandProvider func() argo.CommandBuilder
+
+func SetCommandProvider(pro CommandProvider) {
+	if pro == nil {
+		panic("cannot set a nil command provider")
+	}
+	cProvider = pro
+}
+
 func NewCommand() argo.CommandBuilder {
-	return impl.NewCommandBuilder()
+	return cProvider()
+}
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Flag                                                                ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+var fProvider = FlagProvider(impl.NewFlagBuilder)
+
+type FlagProvider func() argo.FlagBuilder
+
+func SetFlagProvider(pro FlagProvider) {
+	if pro == nil {
+		panic("cannot set a nil flag provider")
+	}
+	fProvider = pro
 }
 
 func NewFlag() argo.FlagBuilder {
-	return impl.NewFlagBuilder()
+	return fProvider()
+}
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Flag Group                                                          ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+var gProvider = FlagGroupProvider(impl.NewFlagGroupBuilder)
+
+type FlagGroupProvider func() argo.FlagGroupBuilder
+
+func SetFlagGroupProvider(pro FlagGroupProvider) {
+	if pro == nil {
+		panic("cannot set a nil flag group provider")
+	}
+	gProvider = pro
+}
+
+func NewFlagGroup() argo.FlagGroupBuilder {
+	return gProvider()
+}
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Arguments                                                           ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+var aProvider = ArgumentProvider(impl.NewArgBuilder)
+
+type ArgumentProvider func() argo.ArgumentBuilder
+
+func SetArgumentProvider(pro ArgumentProvider) {
+	if pro == nil {
+		panic("cannot set a nil argument provider")
+	}
+	aProvider = pro
 }
 
 func NewArg() argo.ArgumentBuilder {
-	return impl.NewArgBuilder()
+	return aProvider()
 }
 
 func DefaultUnmarshalProps() argo.UnmarshalProps {
@@ -26,5 +98,5 @@ func UnmarshalDefault(raw string, val interface{}) (err error) {
 }
 
 func Unmarshal(raw string, val interface{}, props argo.UnmarshalProps) (err error) {
-	return impl.Unmarshal(raw, val, props)
+	return impl.Unmarshal(raw, val, &props)
 }

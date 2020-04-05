@@ -5,6 +5,7 @@ import (
 )
 
 type Command struct {
+	description string
 }
 
 func (c *Command) Description() string {

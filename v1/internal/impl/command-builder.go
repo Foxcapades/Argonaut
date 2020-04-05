@@ -1,41 +1,53 @@
 package impl
 
-import "github.com/Foxcapades/Argonaut/v1/pkg/argo"
+import A "github.com/Foxcapades/Argonaut/v1/pkg/argo"
 
-func NewCommandBuilder() *CommandBuilder {
-	return new(CommandBuilder)
+func NewCommandBuilder() A.CommandBuilder {
+	return &CommandBuilder{
+		fGroups: []A.FlagGroupBuilder{NewFlagGroupBuilder()},
+		parser:  NewParser(),
+	}
 }
 
 type CommandBuilder struct {
-	desc string
+	name    string
+	desc    string
+	fGroups []A.FlagGroupBuilder
+	parser  A.Parser
 }
 
-func (c *CommandBuilder) Flag(argo.FlagBuilder) argo.CommandBuilder {
+func (c *CommandBuilder) Flag(flag A.FlagBuilder) A.CommandBuilder {
+	c.fGroups[0].Flag(flag)
+	return c
+}
+
+func (c *CommandBuilder) FlagGroup(builder A.FlagGroupBuilder) (this A.CommandBuilder) {
+	c.fGroups = append(c.fGroups, builder)
+	return c
+}
+
+func (c *CommandBuilder) Unmarshaler(A.ValueUnmarshaler) A.CommandBuilder {
 	panic("implement me")
 }
 
-func (c *CommandBuilder) Unmarshaler(argo.InternalUnmarshaler) argo.CommandBuilder {
-	panic("implement me")
-}
-
-func (c *CommandBuilder) Description(desc string) argo.CommandBuilder {
+func (c *CommandBuilder) Description(desc string) A.CommandBuilder {
 	c.desc = desc
 	return c
 }
 
-func (c *CommandBuilder) Arg(argo.ArgumentBuilder) argo.CommandBuilder {
+func (c *CommandBuilder) Arg(A.ArgumentBuilder) A.CommandBuilder {
 	panic("implement me")
 }
 
-func (c *CommandBuilder) Examples(...string) argo.CommandBuilder {
+func (c *CommandBuilder) Examples(...string) A.CommandBuilder {
 	panic("implement me")
 }
 
-func (c *CommandBuilder) Build() (argo.Command, error) {
+func (c *CommandBuilder) Build() (A.Command, error) {
 	panic("implement me")
 }
 
-func (c *CommandBuilder) MustBuild() argo.Command {
+func (c *CommandBuilder) MustBuild() A.Command {
 	com, err := c.Build()
 	if err != nil {
 		panic(err)
@@ -43,16 +55,10 @@ func (c *CommandBuilder) MustBuild() argo.Command {
 	return com
 }
 
-func (c *CommandBuilder) Parse() error {
-	//com, err := c.Build()
-	//if err != nil {
-	//	return err
-	//}
-	return nil
+func (c *CommandBuilder) Parse() (extra []string, err error) {
+	panic("implement me")
 }
 
-func (c *CommandBuilder) MustParse() {
-	if err := c.Parse(); err != nil {
-		panic(err)
-	}
+func (c *CommandBuilder) MustParse() []string {
+	panic("implement me")
 }

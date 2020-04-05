@@ -14,6 +14,14 @@ type FlagGroupBuilder interface {
 
 type FlagGroup interface {
 	Name() string
+
+	HasName() bool
+
 	Description() string
+
+	HasDescription() bool
+
 	Flags() []Flag
+
+	HasFlags() bool
 }

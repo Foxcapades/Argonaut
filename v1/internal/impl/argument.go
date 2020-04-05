@@ -4,26 +4,21 @@ import (
 	"reflect"
 )
 
-func NewArg() *Argument {
-	return new(Argument)
-}
-
-type argumentProp = uint8
-
-const (
-	argIsReq argumentProp = 1 << iota
-)
-
 type Argument struct {
-	props  argumentProp
 	defVal interface{}
 	bind   interface{}
 	hint   string
 	desc   string
+	raw    string
+
+	// Flags
+	isReq   bool
+	hasDef  bool
+	hasBind bool
 }
 
 func (a *Argument) RawValue() string {
-	panic("implement me")
+	return a.raw
 }
 
 func (a *Argument) Hint() string {
@@ -39,7 +34,7 @@ func (a *Argument) Default() interface{} {
 }
 
 func (a *Argument) HasDefault() bool {
-	return a.defVal != nil
+	return a.hasDef
 }
 
 func (a *Argument) DefaultType() reflect.Type {
@@ -58,13 +53,13 @@ func (a *Argument) HasDescription() bool {
 }
 
 func (a *Argument) Required() bool {
-	return argIsReq == argIsReq&a.props
+	return a.isReq
 }
 
-func (a *Argument) binding() interface{} {
+func (a *Argument) Binding() interface{} {
 	return a.bind
 }
 
-func (a *Argument) hasBinding() bool {
-	return a.bind != nil
+func (a *Argument) HasBinding() bool {
+	return a.hasBind
 }

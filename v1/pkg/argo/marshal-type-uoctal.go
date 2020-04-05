@@ -8,7 +8,7 @@ import "strconv"
 type UOctal uint
 
 func (o *UOctal) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 8, strconv.IntSize)
+	tmp, err := strconv.ParseUint(value, 8, strconv.IntSize)
 	*o = UOctal(tmp)
 	return
 }
@@ -19,7 +19,7 @@ func (o *UOctal) Unmarshal(value string) (err error) {
 type UOctal8 uint8
 
 func (o *UOctal8) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 8, 8)
+	tmp, err := strconv.ParseUint(value, 8, 8)
 	*o = UOctal8(tmp)
 	return
 }
@@ -30,7 +30,7 @@ func (o *UOctal8) Unmarshal(value string) (err error) {
 type UOctal16 uint16
 
 func (o *UOctal16) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 8, 16)
+	tmp, err := strconv.ParseUint(value, 8, 16)
 	*o = UOctal16(tmp)
 	return
 }
@@ -41,7 +41,7 @@ func (o *UOctal16) Unmarshal(value string) (err error) {
 type UOctal32 uint32
 
 func (o *UOctal32) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 8, 32)
+	tmp, err := strconv.ParseUint(value, 8, 32)
 	*o = UOctal32(tmp)
 	return
 }
@@ -52,7 +52,7 @@ func (o *UOctal32) Unmarshal(value string) (err error) {
 type UOctal64 uint64
 
 func (o *UOctal64) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 8, 64)
+	tmp, err := strconv.ParseUint(value, 8, 64)
 	*o = UOctal64(tmp)
 	return
 }

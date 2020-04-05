@@ -1,62 +1,62 @@
 package util
 
 import (
-	"reflect"
+	R "reflect"
 
 	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
 )
 
-var numericKinds = map[reflect.Kind]bool{
-	reflect.Int:     true,
-	reflect.Int8:    true,
-	reflect.Int16:   true,
-	reflect.Int32:   true,
-	reflect.Int64:   true,
-	reflect.Uint:    true,
-	reflect.Uint8:   true,
-	reflect.Uint16:  true,
-	reflect.Uint32:  true,
-	reflect.Uint64:  true,
-	reflect.Float32: true,
-	reflect.Float64: true,
+var numericKinds = map[R.Kind]bool{
+	R.Int:     true,
+	R.Int8:    true,
+	R.Int16:   true,
+	R.Int32:   true,
+	R.Int64:   true,
+	R.Uint:    true,
+	R.Uint8:   true,
+	R.Uint16:  true,
+	R.Uint32:  true,
+	R.Uint64:  true,
+	R.Float32: true,
+	R.Float64: true,
 }
 
-func GetRootValue(v reflect.Value) reflect.Value {
+func GetRootValue(v R.Value) R.Value {
 	// Used for recursion detection
 	c := v
 
 	haveAddr := false
 
 	// see json.Unmarshaler indirect()
-	if v.Kind() != reflect.Ptr && v.Type().Name() != "" && v.CanAddr() {
+	if v.Kind() != R.Ptr && v.Type().Name() != "" && v.CanAddr() {
 		haveAddr = true
 		v = v.Addr()
 	}
 
 	for {
-		if v.Kind() == reflect.Interface && !v.IsNil() {
+		if v.Kind() == R.Interface && !v.IsNil() {
 			tmp := v.Elem()
-			if tmp.Kind() == reflect.Ptr && !tmp.IsNil() {
+			if tmp.Kind() == R.Ptr && !tmp.IsNil() {
 				haveAddr = false
 				v = tmp
 				continue
 			}
 		}
 
-		if v.Kind() != reflect.Ptr {
+		if v.Kind() != R.Ptr {
 			break
 		}
 
-		if v.Elem().Kind() == reflect.Interface && v.Elem().Elem() == v {
+		if v.Elem().Kind() == R.Interface && v.Elem().Elem() == v {
 			v = v.Elem()
 			break
 		}
 
 		if v.IsNil() {
-			v.Set(reflect.New(v.Type().Elem()))
+			v.Set(R.New(v.Type().Elem()))
 		}
 
-		if v.Type().AssignableTo(reflect.TypeOf((*argo.Unmarshaler)(nil)).Elem()) {
+		if v.Type().AssignableTo(R.TypeOf((*argo.Unmarshaler)(nil)).Elem()) {
 			break
 		}
 
@@ -71,15 +71,26 @@ func GetRootValue(v reflect.Value) reflect.Value {
 	return v
 }
 
-func IsBasicKind(k reflect.Kind) bool {
-	return k == reflect.String || k == reflect.Bool || IsNumericKind(k)
+func IsBasicKind(k R.Kind) bool {
+	return k == R.String || k == R.Bool || IsNumericKind(k)
 }
 
-func IsNumericKind(k reflect.Kind) bool {
+func IsNumericKind(k R.Kind) bool {
 	return numericKinds[k]
 }
 
-func IsByteSlice(t reflect.Type) bool {
-	return t.Kind() == reflect.Slice &&
-		t.Elem().Kind() == reflect.Uint8
+func IsByteSlice(t R.Type) bool {
+	return t.Kind() == R.Slice &&
+		t.Elem().Kind() == R.Uint8
+}
+
+func Compatible(val, test interface{}) bool {
+	vt := GetRootValue(R.ValueOf(val)).Type()
+	tt := R.TypeOf(test)
+
+	if tt.Kind() == R.Ptr {
+		return tt.Elem().AssignableTo(vt)
+	}
+
+	return tt.AssignableTo(vt)
 }

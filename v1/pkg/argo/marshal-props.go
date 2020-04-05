@@ -77,19 +77,6 @@ type UnmarshalMapProps struct {
 	//     key\\=bar=value      {"key=bar": "value"}
 	//     key\\:baz=value:a=b  {"key:baz": "value:a=b"}
 	//     key:value=c:d        {"key": "value=c:d"}
-	//
-	// Note: Nested maps will have these rules applied to
-	// the values for each level.
-	//
-	//   Given: type map[string]map[string]string
-	//
-	//   key:key2:value         {"key": {"key2": "value"}}
-	//   key=key2=value         {"key": {"key2": "value"}}
-	//   key:key2=value:split   {"key": {"key2": "value:split"}}
-	//
-	//   Given: type map[string]map[string]map[string]string
-	//
-	//   key:key2=value:split   {"key": {"key2": {"value": "split"}}}
 	KeyValSeparatorChars string
 
 	// Default: ",; " (comma, semicolon, space)
@@ -97,17 +84,4 @@ type UnmarshalMapProps struct {
 }
 
 type UnmarshalSliceProps struct {
-}
-
-var defaultUnmarshalProps = UnmarshalProps{
-	Integers: UnmarshalIntegerProps{
-		OctalLeaders: []string{"0o", "0O", "o", "O"},
-		HexLeaders:   []string{"0x", "0X", "x", "X"},
-		DefaultBase:  10,
-	},
-	Maps: UnmarshalMapProps{
-		KeyValSeparatorChars: "=:",
-		EntrySeparatorChars:  ",; ",
-	},
-	Slices: UnmarshalSliceProps{},
 }

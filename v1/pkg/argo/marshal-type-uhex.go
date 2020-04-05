@@ -8,7 +8,7 @@ import "strconv"
 type UHex uint
 
 func (h *UHex) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 16, strconv.IntSize)
+	tmp, err := strconv.ParseUint(value, 16, strconv.IntSize)
 	*h = UHex(tmp)
 	return
 }
@@ -19,7 +19,7 @@ func (h *UHex) Unmarshal(value string) (err error) {
 type UHex8 uint8
 
 func (h *UHex8) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 16, 8)
+	tmp, err := strconv.ParseUint(value, 16, 8)
 	*h = UHex8(tmp)
 	return
 }
@@ -30,7 +30,7 @@ func (h *UHex8) Unmarshal(value string) (err error) {
 type UHex16 uint16
 
 func (h *UHex16) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 16, 16)
+	tmp, err := strconv.ParseUint(value, 16, 16)
 	*h = UHex16(tmp)
 	return
 }
@@ -41,7 +41,7 @@ func (h *UHex16) Unmarshal(value string) (err error) {
 type UHex32 uint32
 
 func (h *UHex32) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 16, 32)
+	tmp, err := strconv.ParseUint(value, 16, 32)
 	*h = UHex32(tmp)
 	return
 }
@@ -52,7 +52,7 @@ func (h *UHex32) Unmarshal(value string) (err error) {
 type UHex64 uint64
 
 func (h *UHex64) Unmarshal(value string) (err error) {
-	tmp, err := strconv.ParseInt(value, 16, 64)
+	tmp, err := strconv.ParseUint(value, 16, 64)
 	*h = UHex64(tmp)
 	return
 }

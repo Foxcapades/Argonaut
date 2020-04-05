@@ -35,10 +35,6 @@ type Flag interface {
 	// argument set using HasArgument()
 	Argument() Argument
 
-	// HasArgument returns whether or not this flag has an
-	// argument definition set.
-	HasArgument() bool
-
 	// Description returns this flag's description text.
 	//
 	// If this flag does not have description text set, this

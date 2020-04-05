@@ -13,8 +13,8 @@ const (
 	psExpectOptional
 )
 
-func NewDefaultParser(command argo.Command) argo.Parser {
-	return &parser{com: command}
+func NewParser() argo.Parser {
+	return &parser{}
 }
 
 type parser struct {
@@ -49,35 +49,36 @@ type parser struct {
 }
 
 func (p *parser) Parse(args []string) error {
-	p.args = filterArgs(args)
-
-	if p.atEoa() {
-		return p.wrapup()
-	}
-
-	p.shorts = make(map[byte]argo.Flag)
-	p.longs = make(map[string]argo.Flag)
-
-	for _, arg := range p.com.Flags() {
-		if arg.HasShort() {
-			if p.hasShort(arg.Short()) {
-				// TODO: Make this an official error
-				return fmt.Errorf("duplicate entries for short flag %c", arg.Short())
-			}
-			p.shorts[arg.Short()] = arg
-		}
-
-		if arg.HasLong() {
-			if p.hasLong(arg.Long()) {
-				// TODO: make this an official error
-				return fmt.Errorf("duplicate entries for long flag %s", arg.Long())
-			}
-			p.longs[arg.Long()] = arg
-		}
-	}
-
-	p.curChar = p.args[p.curChar][p.curArgPos]
-	return p.run()
+	//p.args = filterArgs(args)
+	//
+	//if p.atEoa() {
+	//	return p.wrapup()
+	//}
+	//
+	//p.shorts = make(map[byte]argo.Flag)
+	//p.longs = make(map[string]argo.Flag)
+	//
+	//for _, arg := range p.com.Flags() {
+	//	if arg.HasShort() {
+	//		if p.hasShort(arg.Short()) {
+	//			// TODO: Make this an official error
+	//			return fmt.Errorf("duplicate entries for short flag %c", arg.Short())
+	//		}
+	//		p.shorts[arg.Short()] = arg
+	//	}
+	//
+	//	if arg.HasLong() {
+	//		if p.hasLong(arg.Long()) {
+	//			// TODO: make this an official error
+	//			return fmt.Errorf("duplicate entries for long flag %s", arg.Long())
+	//		}
+	//		p.longs[arg.Long()] = arg
+	//	}
+	//}
+	//
+	//p.curChar = p.args[p.curChar][p.curArgPos]
+	//return p.run()
+	return nil
 }
 
 func (p *parser) hasShort(f byte) bool {
@@ -158,16 +159,16 @@ func (p *parser) shortFlag() {
 		return
 	}
 
-	flag := p.shorts[p.curChar]
+	//flag := p.shorts[p.curChar]
 	//flag.hit()
 
-	if !flag.HasArgument() {
-		if p.hasNextChar() {
-			p.nextChar()
-			p.shortFlag()
-		}
-		return
-	}
+	//if !flag.HasArgument() {
+	//	if p.hasNextChar() {
+	//		p.nextChar()
+	//		p.shortFlag()
+	//	}
+	//	return
+	//}
 
 	//arg := flag.Argument()
 

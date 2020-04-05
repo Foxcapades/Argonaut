@@ -3,6 +3,6 @@ package argo
 type Command interface {
 	Description() string
 	Arguments() []Argument
-	Flags() []Flag
+	FlagGroups() []FlagGroup
 	UnmappedInput() []string
 }

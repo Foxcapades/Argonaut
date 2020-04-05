@@ -5,7 +5,7 @@ import (
 	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
 )
 
-func NewFlagBuilder() *FlagBuilder {
+func NewFlagBuilder() argo.FlagBuilder {
 	return new(FlagBuilder)
 }
 
@@ -16,27 +16,20 @@ type FlagBuilder struct {
 	desc  string
 
 	arg argo.ArgumentBuilder
+
+	shortSet bool
+	longSet  bool
 }
 
 func (f *FlagBuilder) Short(flag byte) argo.FlagBuilder {
-	if f.err == nil {
-		if util.IsValidShortFlag(flag) {
-			f.short = flag
-		} else {
-			f.err = &argo.InvalidFlagCharError{Flag: string([]byte{flag}), Hint: argo.ErrHintShortInvalidChar}
-		}
-	}
+	f.shortSet = true
+	f.short = flag
 	return f
 }
 
 func (f *FlagBuilder) Long(flag string) argo.FlagBuilder {
-	if f.err == nil {
-		if util.IsValidLongFlag(flag) {
-			f.long = flag
-		} else {
-			f.err = &argo.InvalidFlagCharError{Flag: flag, Hint: argo.ErrHintLongInvalidChar}
-		}
-	}
+	f.longSet = true
+	f.long = flag
 	return f
 }
 
@@ -51,11 +44,22 @@ func (f *FlagBuilder) Arg(arg argo.ArgumentBuilder) argo.FlagBuilder {
 }
 
 func (f *FlagBuilder) Build() (out argo.Flag, err error) {
-	if f.short == 0 && len(f.long) == 0 {
-		return nil, &argo.InvalidFlagError{Hint: argo.ErrHintNoFlag}
+	if !(f.shortSet || f.longSet) {
+		return nil, argo.NewInvalidFlagError(argo.InvalidFlagNoFlags)
+	}
+
+	if f.longSet && !util.IsValidLongFlag(f.long) {
+		return nil, argo.NewInvalidFlagError(argo.InvalidFlagBadLongFlagCharacter)
+	}
+
+	if f.shortSet && !util.IsValidShortFlag(f.short) {
+		return nil, argo.NewInvalidFlagError(argo.InvalidFlagBadShortFlagCharacter)
 	}
 
 	var arg argo.Argument
+	var cnt argo.UseCounter
+
+	cArg := &Argument{bind: &cnt}
 
 	if f.arg != nil {
 		arg, err = f.arg.Build()
@@ -63,18 +67,27 @@ func (f *FlagBuilder) Build() (out argo.Flag, err error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		arg = cArg
 	}
 
 	return &Flag{
 		short: f.short,
 		arg:   arg,
+		cArg:  cArg,
+		hits:  &cnt,
 		long:  f.long,
 		desc:  f.desc,
+		isReq: arg.Required(),
 	}, nil
 }
 
 func (f *FlagBuilder) MustBuild() argo.Flag {
-	panic("implement me")
+	if f, e := f.Build(); e != nil {
+		panic(e)
+	} else {
+		return f
+	}
 }
 
 func (f *FlagBuilder) Bind(ptr interface{}, required bool) argo.FlagBuilder {
