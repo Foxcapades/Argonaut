@@ -2,90 +2,254 @@ package impl_test
 
 import (
 	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
+	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	. "github.com/smartystreets/goconvey/convey"
 	. "testing"
 )
 
 func TestParser_Parse(t *T) {
 	Convey("Parser.Parse", t, func() {
-		Convey("Long flag with value", func() {
-			derp := ""
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
-					Long("foo").
-					Bind(&derp, false)).
-				MustBuild()
-			input := []string{"bar", "--foo=fizz"}
-			err := NewParser().Parse(input, com)
-			So(err, ShouldBeNil)
-			So(derp, ShouldEqual, "fizz")
+		tests := []ParserTest{
+			&stringParserTest{
+				name:   "Long flag with value",
+				expect: "fizz",
+				params: []string{"--foo=fizz"},
+				long:   "foo",
+			},
+			&stringParserTest{
+				name:   "Required long flag with value",
+				expect: "fizz",
+				params: []string{"--foo=fizz"},
+				long:   "foo",
+				reqArg: true,
+			},
+			&stringParserTest{
+				name:   "Short disconnected flag with value",
+				short:  'a',
+				expect: "fizz",
+				params: []string{"-a", "fizz"},
+			},
+			&stringParserTest{
+				name:   "Short disconnected flag with required value",
+				short:  'a',
+				expect: "fizz",
+				params: []string{"-a", "fizz"},
+				reqArg: true,
+			},
+			&stringParserTest{
+				name:   "Short connected flag with value",
+				short:  'a',
+				expect: "fizz",
+				params: []string{"-afizz"},
+			},
+			&stringParserTest{
+				name:   "Short connected flag with required value",
+				short:  'a',
+				expect: "fizz",
+				params: []string{"-afizz"},
+				reqArg: true,
+			},
+		}
+
+		for _, t := range tests {
+			Convey(t.Name(), func() {
+				ctx := parserTestCtx{parser: NewParser()}
+				com := NewCommandBuilder()
+				t.Setup(com)
+				ctx.error = ctx.parser.Parse(append([]string{"cmd"}, t.Params()...),
+					com.MustBuild())
+				t.Test(&ctx)
+			})
+		}
+
+		Convey("Short flag with required arg with no value", func() {
+			Convey("Type is bool", func() {
+				derp := false
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Short('a').
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "-a"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldBeTrue)
+			})
+
+			Convey("Type is *bool", func() {
+				var derp *bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Short('a').
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "-a"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldNotBeNil)
+				So(*derp, ShouldBeTrue)
+			})
+
+			Convey("Type is []bool", func() {
+				var derp []bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Short('a').
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "-a"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldNotBeEmpty)
+				So(derp[0], ShouldBeTrue)
+			})
+
+			Convey("Type is []*bool", func() {
+				var derp []*bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Short('a').
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "-a"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldNotBeEmpty)
+				So(derp[0], ShouldNotBeNil)
+				So(*derp[0], ShouldBeTrue)
+			})
 		})
 
-		Convey("Required long flag with value", func() {
-			derp := ""
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
-					Long("foo").
-					Bind(&derp, true)).
-				MustBuild()
-			input := []string{"bar", "--foo=fizz"}
-			err := NewParser().Parse(input, com)
-			So(err, ShouldBeNil)
-			So(derp, ShouldEqual, "fizz")
+		Convey("Long flag with required arg with no value", func() {
+			Convey("Type is bool", func() {
+				derp := false
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Long("applies").
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "--applies"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldBeTrue)
+			})
+
+			Convey("Type is *bool", func() {
+				var derp *bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Long("applies").
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "--applies"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldNotBeNil)
+				So(*derp, ShouldBeTrue)
+			})
+
+			Convey("Type is []bool", func() {
+				var derp []bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Long("applies").
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "--applies"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldNotBeEmpty)
+				So(derp[0], ShouldBeTrue)
+			})
+
+			Convey("Type is []*bool", func() {
+				var derp []*bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Long("applies").
+						Bind(&derp, true)).
+					MustBuild()
+				input := []string{"bar", "--applies"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(derp, ShouldNotBeEmpty)
+				So(derp[0], ShouldNotBeNil)
+				So(*derp[0], ShouldBeTrue)
+			})
 		})
 
-		Convey("Short disconnected flag with value", func() {
-			derp := ""
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
-					Short('a').
-					Bind(&derp, false)).
-				MustBuild()
-			input := []string{"bar", "-a", "fizz"}
-			err := NewParser().Parse(input, com)
-			So(err, ShouldBeNil)
-			So(derp, ShouldEqual, "fizz")
-		})
-
-		Convey("Required short disconnected flag with value", func() {
-			derp := ""
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
-					Short('a').
-					Bind(&derp, true)).
-				MustBuild()
-			input := []string{"bar", "-a", "fizz"}
-			parser := NewParser()
-			err := parser.Parse(input, com)
-			So(err, ShouldBeNil)
-			So(derp, ShouldEqual, "fizz")
-		})
-
-		Convey("Short connected flag with value", func() {
-			derp := ""
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
-					Short('a').
-					Bind(&derp, false)).
-				MustBuild()
-			input := []string{"bar", "-afizz"}
-			err := NewParser().Parse(input, com)
-			So(err, ShouldBeNil)
-			So(derp, ShouldEqual, "fizz")
-		})
-
-		Convey("Required short connected flag with value", func() {
-			derp := ""
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
-					Short('a').
-					Bind(&derp, true)).
-				MustBuild()
-			input := []string{"bar", "-afizz"}
-			parser := NewParser()
-			err := parser.Parse(input, com)
-			So(err, ShouldBeNil)
-			So(derp, ShouldEqual, "fizz")
-		})
 	})
+}
+
+type parserTestCtx struct {
+	parser A.Parser
+	error  error
+}
+
+type ParserTest interface {
+	Name() string
+	Params() []string
+	Setup(com A.CommandBuilder)
+	Test(ctx *parserTestCtx)
+}
+
+type stringParserTest struct {
+	name    string
+	text    string
+	expect  string
+	reqArg  bool
+	reqFlag bool
+	short   byte
+	long    string
+	params  []string
+}
+
+func (s *stringParserTest) Name() string {
+	return s.name
+}
+
+func (s *stringParserTest) Params() []string {
+	return s.params
+}
+
+func (s *stringParserTest) Setup(com A.CommandBuilder) {
+	bld := NewFlagBuilder().Bind(&s.text, s.reqArg)
+	if s.short != 0 {
+		bld.Short(s.short)
+	}
+	if s.long != "" {
+		bld.Long(s.long)
+	}
+	com.Flag(bld)
+}
+
+func (s *stringParserTest) Test(ctx *parserTestCtx) {
+	So(ctx.error, ShouldBeNil)
+	So(ctx.parser.Unrecognized(), ShouldBeEmpty)
+	So(ctx.parser.Passthroughs(), ShouldBeEmpty)
+	So(s.text, ShouldEqual, s.expect)
 }

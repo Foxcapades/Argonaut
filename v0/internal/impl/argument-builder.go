@@ -31,9 +31,25 @@ func (a *ArgumentBuilder) Name(name string) A.ArgumentBuilder {
 	return a
 }
 
+func (a *ArgumentBuilder) GetName() string {
+	return a.name
+}
+
+func (a *ArgumentBuilder) HasName() bool {
+	return len(a.name) > 0
+}
+
 func (a *ArgumentBuilder) Hint(hint string) A.ArgumentBuilder {
 	a.hintTxt = hint
 	return a
+}
+
+func (a *ArgumentBuilder) GetHint() string {
+	return a.hintTxt
+}
+
+func (a *ArgumentBuilder) HasHint() bool {
+	return len(a.hintTxt) > 0
 }
 
 func (a *ArgumentBuilder) Default(val interface{}) A.ArgumentBuilder {
@@ -85,6 +101,7 @@ func (a *ArgumentBuilder) Build() (A.Argument, error) {
 	}
 
 	return &Argument{
+		name:    a.name,
 		defVal:  a.defVal,
 		bind:    a.binding,
 		hint:    a.hintTxt,

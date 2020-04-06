@@ -40,6 +40,10 @@ func (c *CommandBuilder) FlagGroup(builder A.FlagGroupBuilder) (this A.CommandBu
 	return c
 }
 
+func (c *CommandBuilder) GetFlagGroups() []A.FlagGroupBuilder {
+	return c.fGroups
+}
+
 func (c *CommandBuilder) Unmarshaler(un A.ValueUnmarshaler) A.CommandBuilder {
 	if un == nil {
 		return c.warn("nil value passed to Unmarshaler()")
@@ -53,12 +57,24 @@ func (c *CommandBuilder) Description(desc string) A.CommandBuilder {
 	return c
 }
 
+func (c *CommandBuilder) GetDescription() string {
+	return c.desc
+}
+
+func (c *CommandBuilder) HasDescription() bool {
+	return len(c.desc) > 0
+}
+
 func (c *CommandBuilder) Arg(arg A.ArgumentBuilder) A.CommandBuilder {
 	if arg == nil {
 		return c.warn("nil value passed to Arg()")
 	}
 	c.args = append(c.args, arg)
 	return c
+}
+
+func (c *CommandBuilder) GetArgs() []A.ArgumentBuilder {
+	return c.args
 }
 
 func (c *CommandBuilder) Examples(examples ...string) A.CommandBuilder {
@@ -125,7 +141,12 @@ func (c *CommandBuilder) MustParse() []string {
 	panic("implement me")
 }
 
+func (c *CommandBuilder) Warnings() []string {
+	return c.warnings
+}
+
 func (c *CommandBuilder) warn(txt string) A.CommandBuilder {
 	c.warnings = append(c.warnings, "CommandBuilder: "+txt)
 	return c
 }
+

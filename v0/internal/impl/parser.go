@@ -54,7 +54,6 @@ func (p *Parser) Parse(args []string, command A.Command) (err error) {
 
 	// Skip first arg (it's the command name)
 	for p.nextArg() {
-		fmt.Println(p.argument())
 		p.parseNext()
 	}
 
@@ -63,33 +62,21 @@ func (p *Parser) Parse(args []string, command A.Command) (err error) {
 	return
 }
 
-func (p *Parser) GetExtras() []string {
+func (p *Parser) Unrecognized() []string {
 	return p.extra
 }
 
-func (p *Parser) GetPassthroughs() []string {
+func (p *Parser) Passthroughs() []string {
 	return p.passthrough
 }
 
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃                                                                          ┃//
-//┃      Internal API                                                        ┃//
+//┃      Internal API: Parse Meta                                            ┃//
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
-
-func (p *Parser) setup(args []string, com A.Command) {
-	p.makeMaps(com)
-	p.args        = com.Arguments()
-	p.input       = args
-	p.com         = com
-	p.extra       = nil
-	p.passthrough = nil
-	p.argI        = 0
-	p.charI       = 0
-	p.waiting     = nil
-}
 
 func (p *Parser) parseNext() {
 
@@ -169,27 +156,28 @@ func (p *Parser) parseNext() {
 }
 
 func (p *Parser) complete() {
-
-}
-
-func (p *Parser) handleRequiredArg() {
-	arg := p.waiting.Argument()
-	bt := arg.BindingType().String()
-
-	// Special case for boolean arguments.  The existence of
-	// the flag can itself be a true value for a boolean arg.
-	if bt == "bool" || bt == "*bool" || bt == "[]bool" || bt == "[]*bool" {
-		if util.IsBool(p.argument()) {
-			p.handleArg()
-			return
-		} else {
+	if p.waiting != nil {
+		if p.isBoolArg(p.waiting.Argument()) {
 			util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
+		} else {
+			// TODO: make this a real error
+			panic("missing required arg")
 		}
 	}
 
-	p.handleArg()
-	return
+	if len(p.reqs) > 0 {
+		// TODO: make this a real error
+		panic("missing required params")
+	}
 }
+
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Internal API: Parse Params                                          ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
 
 func (p *Parser) handleArg() {
 	if arg := p.popArg(); arg != nil {
@@ -277,6 +265,12 @@ func (p *Parser) handleLongFlag() {
 	// No argument provided
 	if len(split) == 1 {
 		if arg.Required() {
+			// Boolean case
+			if p.isBoolArg(arg) {
+				util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+				return
+			}
+
 			// TODO: make this a real error
 			panic("flag " + flag.String() + " requires an argument")
 		}
@@ -284,6 +278,71 @@ func (p *Parser) handleLongFlag() {
 	}
 
 	util.Must(p.com.Unmarshaler().Unmarshal(split[1], arg.Binding()))
+}
+
+func (p *Parser) isBoolArg(arg A.Argument) bool {
+	bt := arg.BindingType().String()
+
+	// Special case for boolean arguments.  The existence of
+	// the flag can itself be a true value for a boolean arg.
+	return bt == "bool" || bt == "*bool" || bt == "[]bool" || bt == "[]*bool"
+}
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Internal API: Positioning                                           ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+
+// Increments the current character index and returns whether or not we've
+// passed the end of the arg string
+func (p *Parser) nextChar() bool {
+	p.charI++
+	return p.charI < p.strLen()
+}
+
+// Increments the current argument index, resets the current character index and
+// returns whether or not we've passed the end of the arg list
+func (p *Parser) nextArg() bool {
+	p.argI++
+	p.charI = 0
+	return p.argI < len(p.input)
+}
+
+
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Internal API: Helpers                                               ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
+func (p *Parser) setup(args []string, com A.Command) {
+	p.makeMaps(com)
+	p.args        = com.Arguments()
+	p.input       = args
+	p.com         = com
+	p.extra       = nil
+	p.passthrough = nil
+	p.argI        = 0
+	p.charI       = 0
+	p.waiting     = nil
+}
+
+func (p *Parser) handleRequiredArg() {
+	// Special case for boolean arguments.  The existence of
+	// the flag can itself be a true value for a boolean arg.
+	if p.isBoolArg(p.waiting.Argument()) {
+		if util.IsBool(p.argument()) {
+			p.handleArg()
+			return
+		} else {
+			util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
+		}
+	}
+
+	p.handleArg()
+	return
 }
 
 func (p *Parser) popArg() (arg A.Argument) {
@@ -316,21 +375,6 @@ func (p *Parser) char() byte {
 // returns the argument at the current arg index
 func (p *Parser) argument() string {
 	return p.input[p.argI]
-}
-
-// Increments the current character index and returns whether or not we've
-// passed the end of the arg string
-func (p *Parser) nextChar() bool {
-	p.charI++
-	return p.charI < p.strLen()
-}
-
-// Increments the current argument index, resets the current character index and
-// returns whether or not we've passed the end of the arg list
-func (p *Parser) nextArg() bool {
-	p.argI++
-	p.charI = 0
-	return p.argI < len(p.input)
 }
 
 // Create and populate parser maps
