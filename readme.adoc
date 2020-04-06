@@ -52,7 +52,7 @@ In following tables, all entries in this table will be
 referenced by `<basic>`.
 
 .Basic Types
-[cols=5]
+[cols=5, width="100%"]
 |===
 | `int`    | `int8`   | `int16`  | `int32`  | `int64`
 | `uint`   | `uint8`  | `uint16` | `uint32` | `uint64`
@@ -73,13 +73,13 @@ Additionally, `[]byte` can also be referenced by pointers of
 arbitrary depth.
 
 .Slices
-[cols=4]
+[cols=4, width="100%"]
 |===
 | `[]<basic>` | `[][]byte` | `[]*[]byte` | `[]interface{}` |
 |===
 
 .Maps
-[col=5]
+[col=5, width="100%"]
 |===
 | `map[<basic>]<basic>` | `map[<basic>][]byte`
 |===
@@ -119,7 +119,7 @@ Additionally, the `argo` package contains predefined types
 to force base16 parsing without requiring a prefix.
 
 .Provided Hex Types
-[cols=3]
+[cols=3, width="100%"]
 |===
 | `argo.Hex`    -> `int`    | `argo.Hex8`   -> `int8`   | `argo.Hex16`  -> `int16`
 | `argo.Hex32`  -> `int32`  | `argo.Hex64`  -> `int64`  |
@@ -154,7 +154,7 @@ Additionally, the `argo` package contains predefined types
 to force base8 parsing without requiring a prefix.
 
 .Provided Octal Types
-[cols=3]
+[cols=3, width="100%"]
 |===
 | `argo.Octal`    -> `int`    | `argo.Octal8`   -> `int8`   | `argo.Octal16`  -> `int16`
 | `argo.Octal32`  -> `int32`  | `argo.Octal64`  -> `int64`  |
@@ -168,10 +168,10 @@ to force base8 parsing without requiring a prefix.
 Arguments of type `bool` can be represented by the following
 formats.
 
-[cols="h,m,m,m,m,m"]
+[cols="h,m,m,m,m,m", width="100%"]
 |===
-| true  | "true"  | "t" | "yes" | "y" | "1"
-| false | "false" | "f" | "no"  | "n" | "0"
+| true  | true  | t | yes | y | 1
+| false | false | f | no  | n | 0
 |===
 
 A boolean argument attached to a flag can also be set to
@@ -186,4 +186,5 @@ input.
 
 . Required arguments cannot follow optional arguments
 . map of slice with nested appending
-. Date formatting
+. Date parsing
+. Struct tag -> cli config parsing
