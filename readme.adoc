@@ -5,7 +5,7 @@
 
 ++++
 <p align="center" role="Header">
-  <img src="https://raw.githubusercontent.com/Foxcapades/Argonaut/master/meta/assets/argonaut.png" height="200"/>
+  <img src="https://raw.githubusercontent.com/Foxcapades/Argonaut/master/meta/assets/argonaut.png"/>
 </p>
 ++++
 
@@ -180,7 +180,7 @@ input.
 
 == Examples
 
-=== Complex Types
+. https://github.com/Foxcapades/Argonaut/tree/master/examples/complex-type[Complex Types]
 
 == TODO
 
