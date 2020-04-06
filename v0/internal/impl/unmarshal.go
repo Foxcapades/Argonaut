@@ -157,7 +157,9 @@ func (v *ValueUnmarshaler) unmarshalMap(m R.Value, raw string) error {
 		return err
 	}
 
-	m.Set(R.MakeMap(mt))
+	if m.IsNil() {
+		m.Set(R.MakeMap(mt))
+	}
 	m.SetMapIndex(R.ValueOf(kv).Elem(), vv)
 	return nil
 }

@@ -1,6 +1,7 @@
 = Argonaut
 :source-highlighter: pygments
 :pygments-style: monokai
+:toc: preamble
 
 ++++
 <p align="center" role="Header">
@@ -10,35 +11,179 @@
 
 A builder style CLI creation kit.
 
-[source,go,linenums,tabsize=2]
+
+//[source,go,linenums,tabsize=2]
+//----
+//package main
+//
+//import "github.com/Foxcapades/Argonaut/v1"
+//
+//type Config struct {
+//	ForceEnabled bool
+//	WorkDir string
+//}
+//
+//func main() {
+//	var conf Config
+//
+//	argo.NewCommand().
+//		Description("Do the things to the files").
+//		Flag(argo.NewFlag().
+//			Short('f').
+//			Long("force").
+//			Bind(&conf.ForceEnabled, false)).
+//		Argument(argo.NewArg().
+//			Require().
+//			Description("path to the files").
+//			Bind(&conf.WorkDir)).
+//		MustParse()
+//
+//}
+//----
+
+== Supported Types
+
+By default Argonaut can parse the following built-in Go
+types.
+
+=== Basic Types
+
+In following tables, all entries in this table will be
+referenced by `<basic>`.
+
+.Basic Types
+[cols=5]
+|===
+| `int`    | `int8`   | `int16`  | `int32`  | `int64`
+| `uint`   | `uint8`  | `uint16` | `uint32` | `uint64`
+| `string` | `bool`   | (`byte`) | (`rune`) |
+|===
+
+Currently `complex64` and `complex128` are not supported.
+
+Additionally, pointers of arbitrary depth to these types are
+can also be parsed.
+
+=== Container Types
+
+Like with the basic types, references to `<basic>` here can
+be pointers of arbitrary depth to those basic types.
+
+Additionally, `[]byte` can also be referenced by pointers of
+arbitrary depth.
+
+.Slices
+[cols=4]
+|===
+| `[]<basic>` | `[][]byte` | `[]*[]byte` | `[]interface{}` |
+|===
+
+.Maps
+[col=5]
+|===
+| `map[<basic>]<basic>` | `map[<basic>][]byte`
+|===
+
+A planned future feature is to allow maps to slices of any
+of the basic types.
+
+=== Custom types
+
+Argonaut provides an `Unarshaler` interface which can be
+used to allow parsing custom types or controlling the
+specifics of how a type get unmarshaled.
+
+== Formats
+
+=== Number
+
+By default, numeric argument types can be handled in base
+8, 10, and 16 using the formats or provided types below.
+
+==== Hexadecimal
+
+Argonaut will automatically parse values with the following
+formats as base16.
+
+These prefixes can be overridden or disabled entirely using
+the `argo.UnmarshalProps` type.
+
 ----
-package main
-
-import "github.com/Foxcapades/Argonaut/v1"
-
-type Config struct {
-	ForceEnabled bool
-	WorkDir string
-}
-
-func main() {
-	var conf Config
-
-	argo.NewCommand().
-		Description("Do the things to the files").
-		Flag(argo.NewFlag().
-			Short('f').
-			Long("force").
-			Bind(&conf.ForceEnabled, false)).
-		Argument(argo.NewArg().
-			Require().
-			Description("path to the files").
-			Bind(&conf.WorkDir)).
-		MustParse()
-
-}
+0xFF
+xFF
+0XFF
+XFF
 ----
+
+Additionally, the `argo` package contains predefined types
+to force base16 parsing without requiring a prefix.
+
+.Provided Hex Types
+[cols=3]
+|===
+| `argo.Hex`    -> `int`    | `argo.Hex8`   -> `int8`   | `argo.Hex16`  -> `int16`
+| `argo.Hex32`  -> `int32`  | `argo.Hex64`  -> `int64`  |
+| `argo.UHex`   -> `uint`   | `argo.UHex8`  -> `uint8`  | `argo.UHex16` -> `uint16`
+| `argo.UHex32` -> `uint32` | `argo.UHex64` -> `uint64` |
+|===
+
+[WARNING]
+--
+Due to the way Go parses numbers, negative values must be
+preceded by `-`.  Using `FF` with `int8` to get `-128` is
+not currently possible, however this is a planned future
+feature since this is a fairly normal expectation.
+--
+
+==== Octal
+
+Argonaut will automatically parse values with the following
+formats as base8.
+
+These prefixes can be overridden or disabled entirely using
+the `argo.UnmarshalProps` type.
+
+----
+0oFF
+oFF
+0OFF
+OFF
+----
+
+Additionally, the `argo` package contains predefined types
+to force base8 parsing without requiring a prefix.
+
+.Provided Octal Types
+[cols=3]
+|===
+| `argo.Octal`    -> `int`    | `argo.Octal8`   -> `int8`   | `argo.Octal16`  -> `int16`
+| `argo.Octal32`  -> `int32`  | `argo.Octal64`  -> `int64`  |
+| `argo.UOctal`   -> `uint`   | `argo.UOctal8`  -> `uint8`  | `argo.UOctal16` -> `uint16`
+| `argo.UOctal32` -> `uint32` | `argo.UOctal64` -> `uint64` |
+|===
+
+
+=== Boolean
+
+Arguments of type `bool` can be represented by the following
+formats.
+
+[cols="h,m,m,m,m,m"]
+|===
+| true  | "true"  | "t" | "yes" | "y" | "1"
+| false | "false" | "f" | "no"  | "n" | "0"
+|===
+
+A boolean argument attached to a flag can also be set to
+`true` simply by the existence of that flag in the CLI
+input.
+
+== Examples
+
+=== Complex Types
 
 == TODO
 
 . Required arguments cannot follow optional arguments
+. map of slice with nested appending
+. Date formatting

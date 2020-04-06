@@ -186,7 +186,6 @@ func (p *Parser) handleArg() {
 	} else {
 		p.extra = append(p.extra, p.argument())
 	}
-	p.nextArg()
 }
 
 // Process a short flag param

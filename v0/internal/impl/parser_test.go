@@ -62,6 +62,23 @@ func TestParser_Parse(t *T) {
 			})
 		}
 
+		Convey("StringSlice", func() {
+			var derp []string
+			com := NewCommandBuilder().
+				Flag(NewFlagBuilder().
+					Short('a').
+					Long("aa").
+					Bind(&derp, true)).
+				MustBuild()
+			input := []string{"bar", "-a", "fizz", "-abuzz", "--aa=pong"}
+			parser := NewParser()
+			err := parser.Parse(input, com)
+			So(err, ShouldBeNil)
+			So(parser.Unrecognized(), ShouldBeEmpty)
+			So(parser.Passthroughs(), ShouldBeEmpty)
+			So(derp, ShouldResemble, []string{"fizz", "buzz", "pong"})
+		})
+
 		Convey("Short flag with required arg with no value", func() {
 			Convey("Type is bool", func() {
 				derp := false

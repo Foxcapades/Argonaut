@@ -3,6 +3,7 @@ package impl
 import (
 	"errors"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
+	"os"
 )
 
 func NewCommandBuilder() A.CommandBuilder {
@@ -134,11 +135,22 @@ func (c *CommandBuilder) MustBuild() A.Command {
 }
 
 func (c *CommandBuilder) Parse() (extra []string, err error) {
-	panic("implement me")
+	com, err := c.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.parser.Parse(os.Args, com)
+
+	return c.parser.Passthroughs(), err
 }
 
 func (c *CommandBuilder) MustParse() []string {
-	panic("implement me")
+	if a, b := c.Parse(); b != nil {
+		panic(b)
+	} else {
+		return a
+	}
 }
 
 func (c *CommandBuilder) Warnings() []string {
