@@ -169,6 +169,8 @@ func (p *Parser) complete() {
 		// TODO: make this a real error
 		panic("missing required params")
 	}
+
+	// assign defaults
 }
 
 

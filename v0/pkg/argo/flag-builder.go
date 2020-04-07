@@ -88,6 +88,10 @@ type FlagBuilder interface {
 
 	HasArg() bool
 
+	OnHit(FlagEventHandler) FlagBuilder
+
+	Parent(FlagGroup) FlagBuilder
+
 	// Bind is a convenience shorthand for passing a nameless
 	// argument to `Arg()`
 	//

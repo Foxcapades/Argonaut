@@ -16,6 +16,8 @@ type FlagGroupBuilder interface {
 	Build() (FlagGroup, error)
 
 	MustBuild() FlagGroup
+
+	Parent(c Command) FlagGroupBuilder
 }
 
 type FlagGroup interface {
@@ -30,4 +32,6 @@ type FlagGroup interface {
 	Flags() []Flag
 
 	HasFlags() bool
+
+	Parent() Command
 }

@@ -52,11 +52,11 @@ In following tables, all entries in this table will be
 referenced by `<basic>`.
 
 .Basic Types
-[cols=5, width="100%"]
+[cols="m,m,m,m,m", width="100%"]
 |===
-| `int`    | `int8`   | `int16`  | `int32`  | `int64`
-| `uint`   | `uint8`  | `uint16` | `uint32` | `uint64`
-| `string` | `bool`   | (`byte`) | (`rune`) |
+| int    | int8   | int16  | int32  | int64
+| uint   | uint8  | uint16 | uint32 | uint64
+| string | bool   | (byte) | (rune) |
 |===
 
 Currently `complex64` and `complex128` are not supported.
@@ -73,15 +73,15 @@ Additionally, `[]byte` can also be referenced by pointers of
 arbitrary depth.
 
 .Slices
-[cols=4, width="100%"]
+[cols="m,m,m,m", width="100%"]
 |===
-| `[]<basic>` | `[][]byte` | `[]*[]byte` | `[]interface{}` |
+| []<basic> | [][]byte | []*[]byte | []interface{}
 |===
 
 .Maps
-[col=5, width="100%"]
+[cols="m,m", width="100%"]
 |===
-| `map[<basic>]<basic>` | `map[<basic>][]byte`
+| map[<basic>]<basic> | map[<basic>][]byte
 |===
 
 A planned future feature is to allow maps to slices of any
@@ -119,12 +119,12 @@ Additionally, the `argo` package contains predefined types
 to force base16 parsing without requiring a prefix.
 
 .Provided Hex Types
-[cols=3, width="100%"]
+[cols="m,m,m", width="100%"]
 |===
-| `argo.Hex`    -> `int`    | `argo.Hex8`   -> `int8`   | `argo.Hex16`  -> `int16`
-| `argo.Hex32`  -> `int32`  | `argo.Hex64`  -> `int64`  |
-| `argo.UHex`   -> `uint`   | `argo.UHex8`  -> `uint8`  | `argo.UHex16` -> `uint16`
-| `argo.UHex32` -> `uint32` | `argo.UHex64` -> `uint64` |
+| argo.Hex    -> int    | argo.Hex8   -> int8   | argo.Hex16  -> int16
+| argo.Hex32  -> int32  | argo.Hex64  -> int64  |
+| argo.UHex   -> uint   | argo.UHex8  -> uint8  | argo.UHex16 -> uint16
+| argo.UHex32 -> uint32 | argo.UHex64 -> uint64 |
 |===
 
 [WARNING]
@@ -144,22 +144,22 @@ These prefixes can be overridden or disabled entirely using
 the `argo.UnmarshalProps` type.
 
 ----
-0oFF
-oFF
-0OFF
-OFF
+0o77
+o77
+0O77
+O77
 ----
 
 Additionally, the `argo` package contains predefined types
 to force base8 parsing without requiring a prefix.
 
 .Provided Octal Types
-[cols=3, width="100%"]
+[cols="m,m,m", width="100%"]
 |===
-| `argo.Octal`    -> `int`    | `argo.Octal8`   -> `int8`   | `argo.Octal16`  -> `int16`
-| `argo.Octal32`  -> `int32`  | `argo.Octal64`  -> `int64`  |
-| `argo.UOctal`   -> `uint`   | `argo.UOctal8`  -> `uint8`  | `argo.UOctal16` -> `uint16`
-| `argo.UOctal32` -> `uint32` | `argo.UOctal64` -> `uint64` |
+| argo.Octal    -> int    | argo.Octal8   -> int8   | argo.Octal16  -> int16
+| argo.Octal32  -> int32  | argo.Octal64  -> int64  |
+| argo.UOctal   -> uint   | argo.UOctal8  -> uint8  | argo.UOctal16 -> uint16
+| argo.UOctal32 -> uint32 | argo.UOctal64 -> uint64 |
 |===
 
 
@@ -184,7 +184,10 @@ input.
 
 == TODO
 
-. Required arguments cannot follow optional arguments
-. map of slice with nested appending
-. Date parsing
-. Struct tag -> cli config parsing
+* [ ] Required arguments cannot follow optional arguments
+* [ ] map of slice with nested appending
+* [ ] Date parsing
+* [ ] Subcommands
+* [ ] Format help text based on TTY width
+* [ ] Tab-completion helper
+* [ ] Struct tag -> cli config parsing

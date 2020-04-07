@@ -12,10 +12,8 @@ import (
 // a flag or subcommand.
 type Argument interface {
 	fmt.Stringer
-
-	Name() string
-
-	HasName() bool
+	described
+	named
 
 	// Hint returns the hint text for this argument.
 	//
@@ -48,16 +46,6 @@ type Argument interface {
 	// not have a default value assigned.
 	DefaultType() reflect.Type
 
-	// Description returns the description text assigned to
-	// this argument.
-	//
-	// Description text is used when rendering help text.
-	Description() string
-
-	// HasDescription returns whether or not this argument has
-	// a description assigned.
-	HasDescription() bool
-
 	RawValue() string
 
 	Required() bool
@@ -66,5 +54,13 @@ type Argument interface {
 
 	Binding() interface{}
 
+	HasBinding() bool
+
 	BindingType() reflect.Type
+
+	Parent() interface{}
+
+	IsFlagArg() bool
+
+	IsPositionalArg() bool
 }

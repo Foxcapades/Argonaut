@@ -4,10 +4,10 @@ type ArgumentBuilder interface {
 
 	Name(string) ArgumentBuilder
 
-	// Hint sets the hint value for this argument.
+	// TypeHint sets the hint value for this argument.
 	//
 	// Used when rendering a usage example.
-	Hint(string) ArgumentBuilder
+	TypeHint(string) ArgumentBuilder
 
 	// Default sets the default value for the argument to be
 	// used if the argument is not provided on the command
@@ -21,6 +21,12 @@ type ArgumentBuilder interface {
 	// set the bind value.
 	Default(interface{}) ArgumentBuilder
 
+	GetDefault() interface{}
+
+	HasDefault() bool
+
+	HasDefaultProvider() bool
+
 	// Bind sets the pointer into which the value will be.
 	// parsed into on parse.
 	//
@@ -28,6 +34,10 @@ type ArgumentBuilder interface {
 	// value provided with `Default()` if default values are
 	// used.
 	Bind(ptr interface{}) ArgumentBuilder
+
+	GetBinding() interface{}
+
+	HasBinding() bool
 
 	// Description sets the description of this argument to be
 	// shown in rendered help text.
@@ -43,4 +53,6 @@ type ArgumentBuilder interface {
 	Build() (Argument, error)
 
 	MustBuild() Argument
+
+	Parent(interface{}) ArgumentBuilder
 }

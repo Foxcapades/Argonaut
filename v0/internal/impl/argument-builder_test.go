@@ -35,9 +35,9 @@ func TestArgumentBuilder_Default(t *T) {
 }
 
 func TestArgumentBuilder_Hint(t *T) {
-	Convey("ArgumentBuilder.Hint", t, func() {
+	Convey("ArgumentBuilder.TypeHint", t, func() {
 		v := "boots with the fur"
-		a := NewArgBuilder().Hint(v).MustBuild()
+		a := NewArgBuilder().TypeHint(v).MustBuild()
 		So(a.Hint(), ShouldResemble, v)
 		So(a.HasHint(), ShouldBeTrue)
 	})
@@ -74,20 +74,20 @@ func TestArgumentBuilder_Build(t *T) {
 			a, b := NewArgBuilder().Bind(nil).Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			c, d := b.(A.InvalidArgError)
+			c, d := b.(A.ArgumentError)
 			So(d, ShouldBeTrue)
-			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
+			So(c.Type(), ShouldEqual, A.ArgErrInvalidBindingBadType)
 		})
 
 		Convey("unaddressable binding", func() {
 			a, b := NewArgBuilder().Bind(3).Default(3).Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			c, d := b.(A.InvalidArgError)
+			c, d := b.(A.ArgumentError)
 			So(d, ShouldBeTrue)
-			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
-			So(c.BindingType().Kind(), ShouldEqual, R.Int)
-			So(c.DefaultValType().Kind(), ShouldEqual, R.Int)
+			So(c.Type(), ShouldEqual, A.ArgErrInvalidBindingBadType)
+			So(R.TypeOf(c.Builder().GetBinding()).Kind(), ShouldEqual, R.Int)
+			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.Int)
 		})
 
 		Convey("type mismatch", func() {
@@ -96,11 +96,11 @@ func TestArgumentBuilder_Build(t *T) {
 			a, b := NewArgBuilder().Default(e).Bind(&f).Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			c, d := b.(A.InvalidArgError)
+			c, d := b.(A.ArgumentError)
 			So(d, ShouldBeTrue)
-			So(c.Type(), ShouldEqual, A.InvalidArgDefaultError)
-			So(c.BindingType().Elem().Kind(), ShouldEqual, R.Int)
-			So(c.DefaultValType().Kind(), ShouldEqual, R.String)
+			So(c.Type(), ShouldEqual, A.ArgErrInvalidDefaultVal)
+			So(R.TypeOf(c.Builder().GetBinding()).Elem().Kind(), ShouldEqual, R.Int)
+			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.String)
 		})
 	})
 }
@@ -118,19 +118,19 @@ func TestArgumentBuilder_MustBuild(t *T) {
 		Convey("nil binding", func() {
 			fn, b := prep(NewArgBuilder().Bind(nil))
 			So(fn, ShouldPanic)
-			c, d := b().(A.InvalidArgError)
+			c, d := b().(A.ArgumentError)
 			So(d, ShouldBeTrue)
-			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
+			So(c.Type(), ShouldEqual, A.ArgErrInvalidBindingBadType)
 		})
 
 		Convey("unaddressable binding", func() {
 			fn, b := prep(NewArgBuilder().Bind(3).Default(3))
 			So(fn, ShouldPanic)
-			c, d := b().(A.InvalidArgError)
+			c, d := b().(A.ArgumentError)
 			So(d, ShouldBeTrue)
-			So(c.Type(), ShouldEqual, A.InvalidArgBindingError)
-			So(c.BindingType().Kind(), ShouldEqual, R.Int)
-			So(c.DefaultValType().Kind(), ShouldEqual, R.Int)
+			So(c.Type(), ShouldEqual, A.ArgErrInvalidBindingBadType)
+			So(R.TypeOf(c.Builder().GetBinding()).Kind(), ShouldEqual, R.Int)
+			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.Int)
 		})
 
 		Convey("type mismatch", func() {
@@ -138,11 +138,11 @@ func TestArgumentBuilder_MustBuild(t *T) {
 			f := 3
 			fn, b := prep(NewArgBuilder().Default(e).Bind(&f))
 			So(fn, ShouldPanic)
-			c, d := b().(A.InvalidArgError)
+			c, d := b().(A.ArgumentError)
 			So(d, ShouldBeTrue)
-			So(c.Type(), ShouldEqual, A.InvalidArgDefaultError)
-			So(c.BindingType().Elem().Kind(), ShouldEqual, R.Int)
-			So(c.DefaultValType().Kind(), ShouldEqual, R.String)
+			So(c.Type(), ShouldEqual, A.ArgErrInvalidDefaultVal)
+			So(R.TypeOf(c.Builder().GetBinding()).Elem().Kind(), ShouldEqual, R.Int)
+			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.String)
 		})
 	})
 }

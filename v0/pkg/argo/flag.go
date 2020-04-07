@@ -2,6 +2,16 @@ package argo
 
 import "fmt"
 
+type FlagEvent uint8
+
+const (
+	// FlagEventHit handlers will be called when a flag is hit
+	// in parsing.
+	FlagEventHit FlagEvent = iota
+)
+
+type FlagEventHandler = func(Flag)
+
 type Flag interface {
 	fmt.Stringer
 
@@ -54,4 +64,6 @@ type Flag interface {
 	Hits() int
 
 	IncrementHits()
+
+	Parent() FlagGroup
 }

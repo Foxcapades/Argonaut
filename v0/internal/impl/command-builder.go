@@ -2,6 +2,8 @@ package impl
 
 import (
 	"errors"
+	"fmt"
+	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"os"
 )
@@ -23,6 +25,12 @@ type CommandBuilder struct {
 	args        []A.ArgumentBuilder
 	warnings    []string
 	examples    []string
+	omitHelp    bool
+}
+
+func (c *CommandBuilder) DisableHelp() A.CommandBuilder {
+	c.omitHelp = true
+	return c
 }
 
 func (c *CommandBuilder) Flag(flag A.FlagBuilder) A.CommandBuilder {
@@ -85,7 +93,8 @@ func (c *CommandBuilder) Examples(examples ...string) A.CommandBuilder {
 
 func (c *CommandBuilder) Build() (A.Command, error) {
 	short := make(map[byte]bool)
-	long := make(map[string]bool)
+	long  := make(map[string]bool)
+	out   := new(Command)
 
 	// Check for overlapping flags
 	for _, g := range c.fGroups {
@@ -107,10 +116,26 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 		}
 	}
 
+	if !c.omitHelp {
+		c.fGroups = append(c.fGroups, GetProvider().
+			NewFlagGroup().
+			Name("Help & Info").
+			Flag(GetProvider().
+				NewFlag().
+				Short('h').
+				Long("help").
+				Description("Prints this help text").
+				OnHit(func(f A.Flag) {
+					fmt.Println(util.RenderHelp(f))
+					os.Exit(0)
+				})))
+	}
+
 	// Build groups
 	groups := make([]A.FlagGroup, len(c.fGroups))
 
 	for i, fg := range c.fGroups {
+		fg.Parent(out)
 		if g, err := fg.Build(); err != nil {
 			return nil, err
 		} else {
@@ -118,12 +143,11 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 		}
 	}
 
+	out.description = c.desc
+	out.groups = groups
+	out.unmarshal = c.unmarshaler
 
-	return &Command{
-		description: c.desc,
-		groups:      groups,
-		unmarshal:   c.unmarshaler,
-	}, nil
+	return out, nil
 }
 
 func (c *CommandBuilder) MustBuild() A.Command {
@@ -161,4 +185,3 @@ func (c *CommandBuilder) warn(txt string) A.CommandBuilder {
 	c.warnings = append(c.warnings, "CommandBuilder: "+txt)
 	return c
 }
-

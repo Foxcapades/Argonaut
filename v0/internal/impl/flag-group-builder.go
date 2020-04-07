@@ -9,10 +9,20 @@ func NewFlagGroupBuilder() A.FlagGroupBuilder {
 }
 
 type FlagGroupBuilder struct {
+	parent   A.Command
 	name     string
 	desc     string
 	flags    []A.FlagBuilder
 	warnings []string
+}
+
+func (f *FlagGroupBuilder) GetName() string           { return f.name }
+func (f *FlagGroupBuilder) GetDescription() string    { return f.desc }
+func (f *FlagGroupBuilder) GetFlags() []A.FlagBuilder { return f.flags }
+
+func (f *FlagGroupBuilder) Parent(com A.Command) A.FlagGroupBuilder {
+	f.parent = com
+	return f
 }
 
 func (f *FlagGroupBuilder) Name(name string) (this A.FlagGroupBuilder) {
@@ -20,17 +30,9 @@ func (f *FlagGroupBuilder) Name(name string) (this A.FlagGroupBuilder) {
 	return f
 }
 
-func (f *FlagGroupBuilder) GetName() string {
-	return f.name
-}
-
 func (f *FlagGroupBuilder) Description(desc string) (this A.FlagGroupBuilder) {
 	f.desc = desc
 	return f
-}
-
-func (f *FlagGroupBuilder) GetDescription() string {
-	return f.desc
 }
 
 func (f *FlagGroupBuilder) Flag(flag A.FlagBuilder) (this A.FlagGroupBuilder) {
@@ -41,24 +43,21 @@ func (f *FlagGroupBuilder) Flag(flag A.FlagBuilder) (this A.FlagGroupBuilder) {
 	return f
 }
 
-func (f *FlagGroupBuilder) GetFlags() []A.FlagBuilder {
-	return f.flags
-}
-
-func (f *FlagGroupBuilder) Build() (A.FlagGroup, error) {
+func (f *FlagGroupBuilder) Build() (out A.FlagGroup, err error) {
 	flags := make([]A.Flag, len(f.flags))
+
+	out = &FlagGroup{parent: f.parent, desc: f.desc, name: f.name, flags: flags}
+
 	for i, fb := range f.flags {
+		fb.Parent(out)
 		if flag, err := fb.Build(); err != nil {
 			return nil, err
 		} else {
 			flags[i] = flag
 		}
 	}
-	return &FlagGroup{
-		description: f.desc,
-		name:        f.name,
-		flags:       flags,
-	}, nil
+
+	return
 }
 
 func (f *FlagGroupBuilder) MustBuild() A.FlagGroup {

@@ -19,7 +19,19 @@ type FlagBuilder struct {
 
 	shortSet bool
 	longSet  bool
+
+	onHit  A.FlagEventHandler
+	parent A.FlagGroup
 }
+
+func (f *FlagBuilder) GetShort() byte            { return f.short }
+func (f *FlagBuilder) HasShort() bool            { return f.shortSet }
+func (f *FlagBuilder) GetLong() string           { return f.long }
+func (f *FlagBuilder) HasLong() bool             { return f.longSet }
+func (f *FlagBuilder) GetDescription() string    { return f.desc }
+func (f *FlagBuilder) HasDescription() bool      { return len(f.desc) > 0 }
+func (f *FlagBuilder) GetArg() A.ArgumentBuilder { return f.arg }
+func (f *FlagBuilder) HasArg() bool              { return f.arg != nil }
 
 func (f *FlagBuilder) Short(flag byte) A.FlagBuilder {
 	f.shortSet = true
@@ -27,12 +39,9 @@ func (f *FlagBuilder) Short(flag byte) A.FlagBuilder {
 	return f
 }
 
-func (f *FlagBuilder) GetShort() byte {
-	return f.short
-}
-
-func (f *FlagBuilder) HasShort() bool {
-	return f.shortSet
+func (f *FlagBuilder) OnHit(fn A.FlagEventHandler) A.FlagBuilder {
+	f.onHit = fn
+	return f
 }
 
 func (f *FlagBuilder) Long(flag string) A.FlagBuilder {
@@ -41,25 +50,9 @@ func (f *FlagBuilder) Long(flag string) A.FlagBuilder {
 	return f
 }
 
-func (f *FlagBuilder) GetLong() string {
-	return f.long
-}
-
-func (f *FlagBuilder) HasLong() bool {
-	return f.longSet
-}
-
 func (f *FlagBuilder) Description(desc string) A.FlagBuilder {
 	f.desc = desc
 	return f
-}
-
-func (f *FlagBuilder) GetDescription() string {
-	return f.desc
-}
-
-func (f *FlagBuilder) HasDescription() bool {
-	return len(f.desc) > 0
 }
 
 func (f *FlagBuilder) Arg(arg A.ArgumentBuilder) A.FlagBuilder {
@@ -67,12 +60,9 @@ func (f *FlagBuilder) Arg(arg A.ArgumentBuilder) A.FlagBuilder {
 	return f
 }
 
-func (f *FlagBuilder) GetArg() A.ArgumentBuilder {
-	return f.arg
-}
-
-func (f *FlagBuilder) HasArg() bool {
-	return f.arg != nil
+func (f *FlagBuilder) Parent(fg A.FlagGroup) A.FlagBuilder {
+	f.parent = fg
+	return f
 }
 
 func (f *FlagBuilder) Build() (out A.Flag, err error) {
@@ -98,10 +88,12 @@ func (f *FlagBuilder) Build() (out A.Flag, err error) {
 	}
 
 	return &Flag{
-		arg:   arg,
-		long:  f.long,
-		desc:  f.desc,
-		short: f.short,
+		arg:    arg,
+		long:   f.long,
+		desc:   f.desc,
+		short:  f.short,
+		onHit:  f.onHit,
+		parent: f.parent,
 	}, nil
 }
 

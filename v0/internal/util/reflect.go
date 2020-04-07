@@ -3,7 +3,7 @@ package util
 import (
 	R "reflect"
 
-	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
+	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
 var numericKinds = map[R.Kind]bool{
@@ -56,7 +56,7 @@ func GetRootValue(v R.Value) R.Value {
 			v.Set(R.New(v.Type().Elem()))
 		}
 
-		if v.Type().AssignableTo(R.TypeOf((*argo.Unmarshaler)(nil)).Elem()) {
+		if v.Type().AssignableTo(R.TypeOf((*A.Unmarshaler)(nil)).Elem()) {
 			break
 		}
 

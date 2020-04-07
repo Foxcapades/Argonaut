@@ -21,6 +21,8 @@ type CommandBuilder interface {
 
 	Unmarshaler(ValueUnmarshaler) (this CommandBuilder)
 
+	DisableHelp() (this CommandBuilder)
+
 	Build() (Command, error)
 
 	MustBuild() Command

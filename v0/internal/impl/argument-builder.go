@@ -10,10 +10,8 @@ func NewArgBuilder() A.ArgumentBuilder {
 	return new(ArgumentBuilder)
 }
 
-type bindValidator func(ArgumentBuilder) error
-
 type ArgumentBuilder struct {
-	bindValidators []bindValidator
+	parent interface{}
 
 	required bool
 	hasDef   bool
@@ -27,35 +25,23 @@ type ArgumentBuilder struct {
 }
 
 func (a *ArgumentBuilder) Name(name string) A.ArgumentBuilder {
-	a.name = name;
+	a.name = name
 	return a
 }
 
-func (a *ArgumentBuilder) GetName() string {
-	return a.name
-}
-
-func (a *ArgumentBuilder) HasName() bool {
-	return len(a.name) > 0
-}
-
-func (a *ArgumentBuilder) Hint(hint string) A.ArgumentBuilder {
+func (a *ArgumentBuilder) TypeHint(hint string) A.ArgumentBuilder {
 	a.hintTxt = hint
 	return a
-}
-
-func (a *ArgumentBuilder) GetHint() string {
-	return a.hintTxt
-}
-
-func (a *ArgumentBuilder) HasHint() bool {
-	return len(a.hintTxt) > 0
 }
 
 func (a *ArgumentBuilder) Default(val interface{}) A.ArgumentBuilder {
 	a.hasDef = true
 	a.defVal = val
 	return a
+}
+
+func (a *ArgumentBuilder) HasDefaultProvider() bool {
+	return a.hasDef && R.TypeOf(a.defVal).Elem().Kind() == R.Func
 }
 
 func (a *ArgumentBuilder) Bind(ptr interface{}) A.ArgumentBuilder {
@@ -79,24 +65,31 @@ func (a *ArgumentBuilder) Required(req bool) A.ArgumentBuilder {
 	return a
 }
 
+func (a *ArgumentBuilder) Parent(par interface{}) A.ArgumentBuilder {
+	a.parent = par
+	return a
+}
+
+func (a *ArgumentBuilder) GetName() string         { return a.name }
+func (a *ArgumentBuilder) HasName() bool           { return len(a.name) > 0 }
+func (a *ArgumentBuilder) GetHint() string         { return a.hintTxt }
+func (a *ArgumentBuilder) HasHint() bool           { return len(a.hintTxt) > 0 }
+func (a *ArgumentBuilder) GetDefault() interface{} { return a.defVal }
+func (a *ArgumentBuilder) HasDefault() bool        { return a.hasDef }
+func (a *ArgumentBuilder) GetBinding() interface{} { return a.binding }
+func (a *ArgumentBuilder) HasBinding() bool        { return a.hasBind }
+
 func (a *ArgumentBuilder) Build() (A.Argument, error) {
 	if a.hasBind {
 		// Binding is not usable
 		if !util.IsUnmarshalable(a.binding) {
-			b := R.TypeOf(a.binding)
-			if a.hasDef {
-				d := R.TypeOf(a.defVal)
-				return nil, A.NewInvalidArgError(A.InvalidArgBindingError, &b, &d)
-			} else {
-				return nil, A.NewInvalidArgError(A.InvalidArgBindingError, &b, nil)
-			}
+			return nil, A.NewInvalidArgError(A.ArgErrInvalidBindingBadType, a, "")
 		}
 
-		// Binding and Default val are incompatible
-		if a.hasDef && !util.Compatible(a.binding, a.defVal) {
-			b := R.TypeOf(a.binding)
-			d := R.TypeOf(a.defVal)
-			return nil, A.NewInvalidArgError(A.InvalidArgDefaultError, &b, &d)
+		if a.hasDef {
+			if err := checkDefault(a); err != nil {
+				return nil, err
+			}
 		}
 	}
 

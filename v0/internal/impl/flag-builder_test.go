@@ -2,14 +2,14 @@ package impl_test
 
 import (
 	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
-	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
+	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	. "github.com/smartystreets/goconvey/convey"
 	. "testing"
 )
 
 func TestFlagBuilder_Arg(t *T) {
 	Convey("FlagBuilder.Arg", t, func() {
-		a := NewArgBuilder().Hint("diced bagels")
+		a := NewArgBuilder().TypeHint("diced bagels")
 		b := NewFlagBuilder().Arg(a).Short('a').MustBuild()
 		So(b.Argument(), ShouldResemble, a.MustBuild())
 	})
@@ -75,36 +75,36 @@ func TestFlagBuilder_Build(t *T) {
 			a, b := NewFlagBuilder().Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			e, o := b.(argo.InvalidFlagError)
+			e, o := b.(A.InvalidFlagError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidFlagNoFlags)
+			So(e.Type(), ShouldEqual, A.InvalidFlagNoFlags)
 		})
 
 		Convey("Invalid Short Flag", func() {
 			a, b := NewFlagBuilder().Short(0).Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			e, o := b.(argo.InvalidFlagError)
+			e, o := b.(A.InvalidFlagError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidFlagBadShortFlag)
+			So(e.Type(), ShouldEqual, A.InvalidFlagBadShortFlag)
 		})
 
 		Convey("Invalid Long Flag", func() {
 			a, b := NewFlagBuilder().Long(" ").Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			e, o := b.(argo.InvalidFlagError)
+			e, o := b.(A.InvalidFlagError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidFlagBadLongFlag)
+			So(e.Type(), ShouldEqual, A.InvalidFlagBadLongFlag)
 		})
 
 		Convey("Invalid Argument", func() {
 			a, b := NewFlagBuilder().Short('3').Bind(nil, false).Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			e, o := b.(argo.InvalidArgError)
+			e, o := b.(A.ArgumentError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidArgBindingError)
+			So(e.Type(), ShouldEqual, A.ArgErrInvalidBindingBadType)
 		})
 	})
 }
@@ -119,9 +119,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(argo.InvalidFlagError)
+			e, o := err.(A.InvalidFlagError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidFlagNoFlags)
+			So(e.Type(), ShouldEqual, A.InvalidFlagNoFlags)
 		})
 
 		Convey("Invalid Short Flag", func() {
@@ -132,9 +132,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(argo.InvalidFlagError)
+			e, o := err.(A.InvalidFlagError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidFlagBadShortFlag)
+			So(e.Type(), ShouldEqual, A.InvalidFlagBadShortFlag)
 		})
 
 		Convey("Invalid Long Flag", func() {
@@ -145,9 +145,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(argo.InvalidFlagError)
+			e, o := err.(A.InvalidFlagError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidFlagBadLongFlag)
+			So(e.Type(), ShouldEqual, A.InvalidFlagBadLongFlag)
 		})
 
 		Convey("Invalid Argument", func() {
@@ -158,9 +158,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(argo.InvalidArgError)
+			e, o := err.(A.ArgumentError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, argo.InvalidArgBindingError)
+			So(e.Type(), ShouldEqual, A.ArgErrInvalidBindingBadType)
 		})
 	})
 }
