@@ -98,18 +98,19 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 	}
 }
 
-func isBreakChar(b rune) bool {
+func isBreakChar(b byte) bool {
 	return b == ' ' || b == '-'
 }
 
 func BreakFmt(str string, offset, width int, out *strings.Builder) {
 	size := width - offset
+	stln := len(str)
 
 	if size < 1 {
 		panic(fmt.Errorf("cannot break string into lengths of %d", size))
 	}
 
-	if len(str) <= size {
+	if stln <= size {
 		out.WriteString(str)
 		return
 	}
@@ -121,7 +122,8 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 
 	lastSplit := 0
 	lastBreak := 0
-	for i, b := range str {
+	for i := range str {
+		b := str[i]
 
 		if i - lastSplit >= size {
 			if lastSplit > 0 {
@@ -129,9 +131,15 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 				out.Write(buf)
 			}
 
+			if isBreakChar(b) {
+				out.WriteString(str[lastSplit:i])
+				lastBreak = i
+				lastSplit = i + 1
+				continue
+			}
+
 			// Really long single word
 			if lastSplit >= lastBreak {
-				fmt.Printf("%c -> str[lastSplit(%d):i(%d)] = %s\n", b, lastSplit, i, str[lastSplit:i])
 				if size == 1 {
 					out.WriteString(str[lastSplit:i])
 					lastSplit = i
@@ -141,7 +149,6 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 					lastSplit = i-1
 				}
 			} else {
-				fmt.Printf("%c -> str[lastSplit(%d):lastBreak(%d)] = %s\n", b, lastSplit, lastBreak, str[lastSplit:lastBreak])
 				out.WriteString(str[lastSplit:lastBreak])
 				lastSplit = lastBreak + 1
 			}
