@@ -1,6 +1,7 @@
 package impl_test
 
 import (
+	"errors"
 	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	. "github.com/smartystreets/goconvey/convey"
@@ -217,6 +218,17 @@ func TestParser_Parse(t *T) {
 				So(derp[0], ShouldNotBeNil)
 				So(*derp[0], ShouldBeTrue)
 			})
+		})
+
+		Convey("Required arg not provided", func() {
+			var str string
+			com := NewCommandBuilder().
+				Arg(NewArgBuilder().Bind(&str).Require()).
+				MustBuild()
+			input := []string{"bar"}
+			parser := NewParser()
+			err := parser.Parse(input, com)
+			So(err, ShouldResemble, errors.New("missing required params"))
 		})
 
 	})

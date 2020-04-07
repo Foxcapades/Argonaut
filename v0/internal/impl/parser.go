@@ -49,7 +49,7 @@ type Parser struct {
 
 
 func (p *Parser) Parse(args []string, command A.Command) (err error) {
-	//defer recovery(&err)
+	defer recovery(&err)
 	p.setup(args, command)
 
 	// Skip first arg (it's the command name)
@@ -438,14 +438,14 @@ func recovery(err *error) {
 	// return.
 	if tmp, ok := rec.(error); ok {
 		*err = tmp
-		//return
+		return
 	}
 
 	// If the panic was a string, convert it to an error, pass
 	// it up and return.
 	if tmp, ok := rec.(string); ok {
 		*err = errors.New(tmp)
-		//return
+		return
 	}
 
 	// If the panic was some unknown type, it didn't come from

@@ -11,6 +11,9 @@
 
 A builder style CLI creation kit.
 
+WARNING: This project is currently pre-v1 and the API may
+         not yet be stable.  Additionally, currently
+         existing features may not be behave as expected.
 
 //[source,go,linenums,tabsize=2]
 //----
@@ -40,6 +43,7 @@ A builder style CLI creation kit.
 //
 //}
 //----
+
 
 == Supported Types
 

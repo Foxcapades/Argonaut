@@ -143,8 +143,18 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 		}
 	}
 
+	args := make([]A.Argument, len(c.args))
+	for i, arg := range c.args {
+		if a, err := arg.Build(); err != nil {
+			return nil, err
+		} else {
+			args[i] = a
+		}
+	}
+
 	out.description = c.desc
 	out.groups = groups
+	out.arguments = args
 	out.unmarshal = c.unmarshaler
 
 	return out, nil
