@@ -73,15 +73,13 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 		}
 	}
 
-	maxLn += 6
-
 	if len(reqFlags) > 0 {
 		out.WriteString("  Required Flag(s)\n\n")
 		for key, val := range reqFlags {
 			out.WriteString("    ")
 			out.WriteString(pad(key, maxLn))
 			out.WriteString("  ")
-			BreakFmt(val, maxLn, 80, out)
+			BreakFmt(val, maxLn + 6, 80, out)
 			out.WriteByte('\n')
 		}
 	}
@@ -92,7 +90,7 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 			out.WriteString("    ")
 			out.WriteString(pad(key, maxLn))
 			out.WriteString("  ")
-			BreakFmt(val, maxLn, 80, out)
+			BreakFmt(val, maxLn + 6, 80, out)
 			out.WriteByte('\n')
 		}
 	}
