@@ -79,7 +79,7 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 		out.WriteString("  Required Flag(s)\n\n")
 		for key, val := range reqFlags {
 			out.WriteString("    ")
-			out.WriteString(key)
+			out.WriteString(pad(key, maxLn))
 			out.WriteString("  ")
 			BreakFmt(val, maxLn, 80, out)
 			out.WriteByte('\n')
@@ -90,7 +90,7 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 		out.WriteString("  Optional Flag(s)\n\n")
 		for key, val := range optFlags {
 			out.WriteString("    ")
-			out.WriteString(key)
+			out.WriteString(pad(key, maxLn))
 			out.WriteString("  ")
 			BreakFmt(val, maxLn, 80, out)
 			out.WriteByte('\n')
@@ -164,6 +164,18 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 	}
 }
 
+func pad(str string, ln int) string {
+	if len(str) >= ln {
+		return str
+	}
+
+	out := make([]byte, ln)
+	copy([]byte(str), out)
+	for i := len(str); i < ln; i++ {
+		out[i] = ' '
+	}
+	return string(out)
+}
 
 func nameForPosArg(i int, arg A.Argument) string {
 	if arg.HasName() {
