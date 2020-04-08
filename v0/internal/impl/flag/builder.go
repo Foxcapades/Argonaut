@@ -77,6 +77,7 @@ func (f *builder) Build() (out A.Flag, err error) {
 	tmp.short = f.short
 	tmp.onHit = f.onHit
 	tmp.parent = f.parent
+	tmp.hitBinding = f.hitBind
 	return tmp, nil
 }
 
