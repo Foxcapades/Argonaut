@@ -102,6 +102,7 @@ func (a *ArgumentBuilder) Build() (A.Argument, error) {
 		isReq:   a.required,
 		hasDef:  a.hasDef,
 		hasBind: a.hasBind,
+		parent:  a.parent,
 	}, nil
 }
 

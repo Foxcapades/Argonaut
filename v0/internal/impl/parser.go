@@ -3,6 +3,7 @@ package impl
 import (
 	"errors"
 	"fmt"
+	. "github.com/Foxcapades/Argonaut/v0/internal/log"
 	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	R "reflect"
@@ -49,6 +50,9 @@ type Parser struct {
 
 
 func (p *Parser) Parse(args []string, command A.Command) (err error) {
+	TraceStart("Parser.Parse", args, command)
+	defer TraceEnd(func() []interface{} { return []interface{}{err} })
+
 	defer recovery(&err)
 	p.setup(args, command)
 
@@ -79,6 +83,8 @@ func (p *Parser) Passthroughs() []string {
 
 
 func (p *Parser) parseNext() {
+	TraceStart("Parser.parseNext")
+	defer TraceEnd(func() []interface{} { return nil })
 
 	// We were intentionally given an empty string as an
 	// argument, assign it and move on
@@ -89,7 +95,9 @@ func (p *Parser) parseNext() {
 
 	// Handle required argument
 	if p.waiting != nil && p.waiting.Argument().Required() {
-		p.handleRequiredArg()
+		ptr := pointerFor(p.waiting) // get the pointer before we pop it
+		p.unmarshal(p.popArg())
+		delete(p.reqs, ptr)
 		return
 	}
 
@@ -156,6 +164,9 @@ func (p *Parser) parseNext() {
 }
 
 func (p *Parser) complete() {
+	TraceStart("Parser.complete")
+	defer TraceEnd(func() []interface{} { return nil })
+
 	if p.waiting != nil {
 		if p.isBoolArg(p.waiting.Argument()) {
 			util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
@@ -182,17 +193,26 @@ func (p *Parser) complete() {
 
 
 func (p *Parser) handleArg() {
+	TraceStart("Parser.handleArg")
+	defer TraceEnd(func() []interface{} { return nil })
+
 	if arg := p.popArg(); arg != nil {
-		util.Must(p.com.Unmarshaler().Unmarshal(p.argument(), arg.Binding()))
+		Trace("popped arg")
+		p.unmarshal(arg)
 		delete(p.reqs, pointerFor(arg))
 	} else {
+		Trace("no arg, extra input")
 		p.extra = append(p.extra, p.argument())
 	}
 }
 
 // Process a short flag param
 func (p *Parser) handleShortFlag() {
+	TraceStart("Parser.handleShortFlag")
+	defer TraceEnd(func() []interface{} { return nil })
+
 	flag, ok := p.shorts[p.char()]
+	Trace(flag, ok)
 
 	// Invalid flag character
 	if !ok {
@@ -220,12 +240,29 @@ func (p *Parser) handleShortFlag() {
 	arg := flag.Argument()
 
 	if !p.nextChar() {
+		Trace("ending with waiting flag")
 		p.waiting = flag
 		return
 	}
 
 	// Argument is required
 	if arg.Required() {
+		Trace("required arg")
+
+		if arg.BindingType().Kind() == R.Bool {
+			Trace("is bool")
+			if util.IsBool(p.argument()[p.charI:]) {
+				Trace("argument is also bool")
+				util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
+			} else {
+				Trace("argument is not bool")
+				util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+				if p.nextChar() {
+					p.handleShortFlag()
+				}
+			}
+			return
+		}
 		util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
 		return
 	}
@@ -238,6 +275,9 @@ func (p *Parser) handleShortFlag() {
 }
 
 func (p *Parser) handleLongFlag() {
+	TraceStart("Parser.handleLongFlag")
+	defer TraceEnd(func() []interface{} { return nil })
+
 	rest := p.eatString()
 	split := strings.SplitN(rest, "=", 2)
 
@@ -281,12 +321,16 @@ func (p *Parser) handleLongFlag() {
 	util.Must(p.com.Unmarshaler().Unmarshal(split[1], arg.Binding()))
 }
 
-func (p *Parser) isBoolArg(arg A.Argument) bool {
+func (p *Parser) isBoolArg(arg A.Argument) (out bool) {
+	TraceStart("isBoolArg")
+	defer TraceEnd(func() []interface{} { return []interface{}{out} })
+
 	bt := arg.BindingType().String()
 
 	// Special case for boolean arguments.  The existence of
 	// the flag can itself be a true value for a boolean arg.
-	return bt == "bool" || bt == "*bool" || bt == "[]bool" || bt == "[]*bool"
+	out = bt == "bool" || bt == "*bool" || bt == "[]bool" || bt == "[]*bool"
+	return
 }
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
@@ -298,17 +342,22 @@ func (p *Parser) isBoolArg(arg A.Argument) bool {
 
 // Increments the current character index and returns whether or not we've
 // passed the end of the arg string
-func (p *Parser) nextChar() bool {
+func (p *Parser) nextChar() (out bool) {
+	TraceStart("Parser.nextChar")
+	defer TraceEnd(func() []interface{} { return []interface{}{out} })
+
 	p.charI++
-	return p.charI < p.strLen()
+	out = p.charI < p.strLen()
+	return
 }
 
 // Increments the current argument index, resets the current character index and
 // returns whether or not we've passed the end of the arg list
-func (p *Parser) nextArg() bool {
+func (p *Parser) nextArg() (out bool) {
 	p.argI++
 	p.charI = 0
-	return p.argI < len(p.input)
+	out = p.argI < len(p.input)
+	return
 }
 
 
@@ -319,6 +368,8 @@ func (p *Parser) nextArg() bool {
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
 func (p *Parser) setup(args []string, com A.Command) {
+	TraceStart("Parser.setup", args, com)
+	defer TraceEnd(func() []interface{} { return nil })
 	p.makeMaps(com)
 	p.args        = com.Arguments()
 	p.input       = args
@@ -330,23 +381,10 @@ func (p *Parser) setup(args []string, com A.Command) {
 	p.waiting     = nil
 }
 
-func (p *Parser) handleRequiredArg() {
-	// Special case for boolean arguments.  The existence of
-	// the flag can itself be a true value for a boolean arg.
-	if p.isBoolArg(p.waiting.Argument()) {
-		if util.IsBool(p.argument()) {
-			p.handleArg()
-			return
-		} else {
-			util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
-		}
-	}
-
-	p.handleArg()
-	return
-}
-
 func (p *Parser) popArg() (arg A.Argument) {
+	TraceStart("Parser.popArg")
+	defer TraceEnd(func() []interface{} { return []interface{}{arg} })
+
 	if p.waiting != nil {
 		arg = p.waiting.Argument()
 		p.waiting = nil
@@ -359,8 +397,11 @@ func (p *Parser) popArg() (arg A.Argument) {
 	return
 }
 
-func (p *Parser) eatString() string {
-	return p.argument()[p.charI:]
+func (p *Parser) eatString() (out string) {
+	TraceStart("Parser.eatString")
+	defer TraceEnd(func() []interface{} { return []interface{}{out} })
+	out = p.argument()[p.charI:]
+	return
 }
 
 // Returns the length of the current argument string
@@ -380,6 +421,9 @@ func (p *Parser) argument() string {
 
 // Create and populate parser maps
 func (p *Parser) makeMaps(command A.Command) {
+	TraceStart("Parser.makeMaps", command)
+	defer TraceEnd(func() []interface{} { return nil })
+
 	p.shorts = make(map[byte]A.Flag)
 	p.longs = make(map[string]A.Flag)
 	p.reqs = make(map[uintptr]interface{})
@@ -405,6 +449,39 @@ func (p *Parser) makeMaps(command A.Command) {
 			p.reqs[pointerFor(args[i])] = args[i]
 		}
 	}
+}
+
+func (p *Parser) unmarshal(arg A.Argument) {
+	TraceStart("Parser.unmarshal", arg)
+	defer TraceEnd(func() []interface{} { return nil })
+
+	bind := arg.Binding()
+	kind := util.GetRootValue(R.ValueOf(bind))
+
+	Trace(arg.Parent())
+
+	// If binding is specialized
+	if cst, ok := kind.Interface().(A.SpecializedUnmarshaler); ok {
+		util.Must(p.com.Unmarshaler().Unmarshal(p.argument(), bind))
+		if !cst.ConsumesArguments() {
+			p.argI--
+		}
+		return
+	}
+
+	// if binding is bool, only consume the arg if it's
+	// actually a valid bool value
+	if p.isBoolArg(arg) {
+		if util.IsBool(p.argument()) {
+			util.Must(p.com.Unmarshaler().Unmarshal(p.argument(), bind))
+		} else {
+			util.Must(p.com.Unmarshaler().Unmarshal("true", bind))
+			p.argI--
+		}
+		return
+	}
+
+	util.Must(p.com.Unmarshaler().Unmarshal(p.argument(), bind))
 }
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//

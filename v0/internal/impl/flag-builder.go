@@ -79,22 +79,23 @@ func (f *FlagBuilder) Build() (out A.Flag, err error) {
 	}
 
 	var arg A.Argument
+	tmp := new(Flag)
 
 	if f.arg != nil {
+		f.arg.Parent(tmp)
 		arg, err = f.arg.Build()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return &Flag{
-		arg:    arg,
-		long:   f.long,
-		desc:   f.desc,
-		short:  f.short,
-		onHit:  f.onHit,
-		parent: f.parent,
-	}, nil
+	tmp.arg = arg
+	tmp.long = f.long
+	tmp.desc = f.desc
+	tmp.short = f.short
+	tmp.onHit = f.onHit
+	tmp.parent = f.parent
+	return tmp, nil
 }
 
 func (f *FlagBuilder) MustBuild() A.Flag {

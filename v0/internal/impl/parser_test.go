@@ -231,6 +231,21 @@ func TestParser_Parse(t *T) {
 			So(err, ShouldResemble, errors.New("missing required params"))
 		})
 
+		Convey("Required arg provided with leading flags", func() {
+			var str string
+			var no bool
+			com := NewCommandBuilder().
+				Arg(NewArgBuilder().Bind(&str).Require()).
+				Flag(NewFlagBuilder().Short('v').Bind(&no, false)).
+				MustBuild()
+			input  := []string{"bar", "-vv", "value"}
+			parser := NewParser()
+			err := parser.Parse(input, com)
+			So(err, ShouldBeNil)
+			So(str, ShouldEqual, "value")
+			So(no, ShouldBeTrue)
+		})
+
 	})
 }
 

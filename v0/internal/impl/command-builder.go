@@ -145,6 +145,7 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 
 	args := make([]A.Argument, len(c.args))
 	for i, arg := range c.args {
+		arg.Parent(out)
 		if a, err := arg.Build(); err != nil {
 			return nil, err
 		} else {
