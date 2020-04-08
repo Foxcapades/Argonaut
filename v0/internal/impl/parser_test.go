@@ -121,14 +121,15 @@ func TestParser_Parse(t *T) {
 						Short('a').
 						Bind(&derp, true)).
 					MustBuild()
-				input := []string{"bar", "-a"}
+				input := []string{"bar", "-aa"}
 				parser := NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
 				So(parser.Passthroughs(), ShouldBeEmpty)
-				So(derp, ShouldNotBeEmpty)
+				So(len(derp), ShouldEqual, 2)
 				So(derp[0], ShouldBeTrue)
+				So(derp[1], ShouldBeTrue)
 			})
 
 			Convey("Type is []*bool", func() {
@@ -208,15 +209,17 @@ func TestParser_Parse(t *T) {
 						Long("applies").
 						Bind(&derp, true)).
 					MustBuild()
-				input := []string{"bar", "--applies"}
+				input := []string{"bar", "--applies", "--applies"}
 				parser := NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
 				So(parser.Passthroughs(), ShouldBeEmpty)
-				So(derp, ShouldNotBeEmpty)
+				So(len(derp), ShouldEqual, 2)
 				So(derp[0], ShouldNotBeNil)
 				So(*derp[0], ShouldBeTrue)
+				So(derp[1], ShouldNotBeNil)
+				So(*derp[1], ShouldBeTrue)
 			})
 		})
 

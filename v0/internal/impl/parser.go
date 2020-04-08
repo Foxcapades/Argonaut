@@ -249,17 +249,15 @@ func (p *Parser) handleShortFlag() {
 	if arg.Required() {
 		Trace("required arg")
 
-		if arg.BindingType().Kind() == R.Bool {
-			Trace("is bool")
+		if p.isBoolArg(arg) {
+			Trace("argument is bool")
 			if util.IsBool(p.argument()[p.charI:]) {
-				Trace("argument is also bool")
+				Trace("input is also bool")
 				util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
 			} else {
-				Trace("argument is not bool")
+				Trace("input is not bool")
 				util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
-				if p.nextChar() {
-					p.handleShortFlag()
-				}
+				p.handleShortFlag()
 			}
 			return
 		}
