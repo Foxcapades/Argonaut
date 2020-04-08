@@ -132,22 +132,48 @@ func TestParser_Parse(t *T) {
 				So(derp[1], ShouldBeTrue)
 			})
 
-			Convey("Type is []*bool", func() {
+			Convey("Type is []*bool, required is true", func() {
 				var derp []*bool
 				com := NewCommandBuilder().
 					Flag(NewFlagBuilder().
 						Short('a').
 						Bind(&derp, true)).
 					MustBuild()
-				input := []string{"bar", "-a"}
+				input := []string{"bar", "-aa", "-a"}
 				parser := NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
 				So(parser.Passthroughs(), ShouldBeEmpty)
-				So(derp, ShouldNotBeEmpty)
+				So(len(derp), ShouldEqual, 3)
 				So(derp[0], ShouldNotBeNil)
 				So(*derp[0], ShouldBeTrue)
+				So(derp[1], ShouldNotBeNil)
+				So(*derp[1], ShouldBeTrue)
+				So(derp[2], ShouldNotBeNil)
+				So(*derp[2], ShouldBeTrue)
+			})
+
+			Convey("Type is []*bool, required is false", func() {
+				var derp []*bool
+				com := NewCommandBuilder().
+					Flag(NewFlagBuilder().
+						Short('a').
+						Bind(&derp, false)).
+					MustBuild()
+				input := []string{"bar", "-aa", "-a"}
+				parser := NewParser()
+				err := parser.Parse(input, com)
+				So(err, ShouldBeNil)
+				So(parser.Unrecognized(), ShouldBeEmpty)
+				So(parser.Passthroughs(), ShouldBeEmpty)
+				So(len(derp), ShouldEqual, 3)
+				So(derp[0], ShouldNotBeNil)
+				So(*derp[0], ShouldBeTrue)
+				So(derp[1], ShouldNotBeNil)
+				So(*derp[1], ShouldBeTrue)
+				So(derp[2], ShouldNotBeNil)
+				So(*derp[2], ShouldBeTrue)
 			})
 		})
 

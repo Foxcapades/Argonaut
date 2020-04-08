@@ -112,8 +112,13 @@ func (p *Parser) parseNext() {
 
 	// Input is an argument
 	if p.char() != '-' {
+		Trace("current param did not start with dash")
 		p.handleArg()
 		return
+	}
+
+	if p.waiting != nil && p.isBoolArg(p.waiting.Argument()) {
+		util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
 	}
 
 	// if we've made it this far we know that:
@@ -127,12 +132,14 @@ func (p *Parser) parseNext() {
 
 	// input was just "-"
 	if !p.nextChar() {
+		Trace("current param was just '-'")
 		p.handleArg()
 		return
 	}
 
 	// Dash followed by some other character
 	if p.char() != '-' {
+		Trace("current param is short flag")
 		p.handleShortFlag()
 		return
 	}
@@ -265,7 +272,17 @@ func (p *Parser) handleShortFlag() {
 		return
 	}
 
+	Trace("short flag arg is optional")
+
 	if _, ok := p.shorts[p.char()]; ok {
+		Trace("next char is flag")
+		if p.isBoolArg(arg) {
+			Trace("cur flag argument is bool")
+			util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+		} else if _, ok := util.GetRootValue(R.ValueOf(arg.Binding())).Interface().(A.UseCounter); ok {
+			Trace("cur flag argument is use counter")
+			util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+		}
 		p.handleShortFlag()
 	} else {
 		util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
