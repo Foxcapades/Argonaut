@@ -20,7 +20,7 @@ type Parser struct {
 
 	com A.Command
 
-	args   []A.Argument
+	args []A.Argument
 
 	// CLI input
 	input []string
@@ -40,13 +40,11 @@ type Parser struct {
 	waiting A.Flag
 }
 
-
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃                                                                          ┃//
 //┃      Public API                                                          ┃//
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
-
 
 func (p *Parser) Parse(args []string, command A.Command) (err error) {
 	TraceStart("Parser.Parse", args, command)
@@ -73,13 +71,11 @@ func (p *Parser) Passthroughs() []string {
 	return p.passthrough
 }
 
-
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃                                                                          ┃//
 //┃      Internal API: Parse Meta                                            ┃//
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
-
 
 func (p *Parser) parseNext() {
 	TraceStart("Parser.parseNext")
@@ -190,13 +186,11 @@ func (p *Parser) complete() {
 	// assign defaults
 }
 
-
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃                                                                          ┃//
 //┃      Internal API: Parse Params                                          ┃//
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
-
 
 func (p *Parser) handleArg() {
 	TraceStart("Parser.handleArg")
@@ -350,7 +344,6 @@ func (p *Parser) isBoolArg(arg A.Argument) (out bool) {
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
-
 // Increments the current character index and returns whether or not we've
 // passed the end of the arg string
 func (p *Parser) nextChar() (out bool) {
@@ -371,7 +364,6 @@ func (p *Parser) nextArg() (out bool) {
 	return
 }
 
-
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃                                                                          ┃//
 //┃      Internal API: Helpers                                               ┃//
@@ -382,14 +374,14 @@ func (p *Parser) setup(args []string, com A.Command) {
 	TraceStart("Parser.setup", args, com)
 	defer TraceEnd(func() []interface{} { return nil })
 	p.makeMaps(com)
-	p.args        = com.Arguments()
-	p.input       = args
-	p.com         = com
-	p.extra       = nil
+	p.args = com.Arguments()
+	p.input = args
+	p.com = com
+	p.extra = nil
 	p.passthrough = nil
-	p.argI        = 0
-	p.charI       = 0
-	p.waiting     = nil
+	p.argI = 0
+	p.charI = 0
+	p.waiting = nil
 }
 
 func (p *Parser) popArg() (arg A.Argument) {
@@ -503,9 +495,11 @@ func (p *Parser) unmarshal(arg A.Argument) {
 
 func pointerFor(v interface{}) uintptr {
 	var err error
-	defer func() {if err != nil {
-		panic(fmt.Errorf("Failed to get the backing pointer for %s: %s", v, err))
-	}}()
+	defer func() {
+		if err != nil {
+			panic(fmt.Errorf("Failed to get the backing pointer for %s: %s", v, err))
+		}
+	}()
 	defer recovery(&err)
 
 	return R.ValueOf(v).Pointer()

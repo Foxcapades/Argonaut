@@ -271,7 +271,7 @@ func TestParser_Parse(t *T) {
 				Arg(arg.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
 				Flag(flag.NewBuilder(impl.NewProvider()).Short('v').Bind(&no, false)).
 				MustBuild()
-			input  := []string{"bar", "-vv", "value"}
+			input := []string{"bar", "-vv", "value"}
 			parser := parse.NewParser()
 			err := parser.Parse(input, com)
 			So(err, ShouldBeNil)

@@ -43,7 +43,7 @@ func RenderHelp(hf A.Flag) string {
 			if fg.HasName() {
 				out.WriteString(fg.Name())
 			} else {
-				out.WriteString(fmt.Sprintf("Flag Group %d", i + 1))
+				out.WriteString(fmt.Sprintf("Flag Group %d", i+1))
 			}
 			out.WriteString("\n\n")
 			renderFg(i, fg, &out)
@@ -60,7 +60,7 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 
 	for _, flag := range fg.Flags() {
 		name := flag.String()
-		nln  := len(name)
+		nln := len(name)
 
 		if nln > maxLn {
 			maxLn = nln
@@ -79,7 +79,7 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 			out.WriteString("    ")
 			out.WriteString(pad(key, maxLn))
 			out.WriteString("  ")
-			BreakFmt(val, maxLn + 6, 80, out)
+			BreakFmt(val, maxLn+6, 80, out)
 			out.WriteByte('\n')
 		}
 	}
@@ -90,7 +90,7 @@ func renderFg(i int, fg A.FlagGroup, out *strings.Builder) {
 			out.WriteString("    ")
 			out.WriteString(pad(key, maxLn))
 			out.WriteString("  ")
-			BreakFmt(val, maxLn + 6, 80, out)
+			BreakFmt(val, maxLn+6, 80, out)
 			out.WriteByte('\n')
 		}
 	}
@@ -123,7 +123,7 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 	for i := range str {
 		b := str[i]
 
-		if i - lastSplit >= size {
+		if i-lastSplit >= size {
 			if lastSplit > 0 {
 				out.WriteByte('\n')
 				out.Write(buf)
@@ -142,9 +142,9 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 					out.WriteString(str[lastSplit:i])
 					lastSplit = i
 				} else {
-					out.WriteString(str[lastSplit:i-1])
+					out.WriteString(str[lastSplit : i-1])
 					out.WriteByte('-')
-					lastSplit = i-1
+					lastSplit = i - 1
 				}
 			} else {
 				out.WriteString(str[lastSplit:lastBreak])
@@ -152,7 +152,9 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 			}
 		}
 
-		if isBreakChar(b) {lastBreak = i}
+		if isBreakChar(b) {
+			lastBreak = i
+		}
 	}
 
 	if lastSplit < len(str) {

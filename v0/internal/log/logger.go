@@ -14,9 +14,9 @@ const (
 
 var stack []string
 
-type TraceEndFn  = func() []interface{}
+type TraceEndFn = func() []interface{}
 
-func TraceStart(name string, args... interface{}) {
+func TraceStart(name string, args ...interface{}) {
 	if !enabled {
 		return
 	}
@@ -25,14 +25,14 @@ func TraceStart(name string, args... interface{}) {
 	stack = append(stack, name)
 }
 
-func Trace(args... interface{}) {
+func Trace(args ...interface{}) {
 	if !enabled {
 		return
 	}
 	fmt.Println(prefix(), fmt.Sprint(args...))
 }
 
-func Tracef(format string, args... interface{}) {
+func Tracef(format string, args ...interface{}) {
 	if !enabled {
 		return
 	}
@@ -43,7 +43,7 @@ func TraceEnd(fn TraceEndFn) {
 	if !enabled {
 		return
 	}
-	out  := fn()
+	out := fn()
 	name := pop()
 	if len(out) == 0 {
 		fmt.Println(prefix(), fmt.Sprintf("End %s --> void", name))

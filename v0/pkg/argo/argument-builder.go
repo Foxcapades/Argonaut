@@ -1,7 +1,6 @@
 package argo
 
 type ArgumentBuilder interface {
-
 	Name(string) ArgumentBuilder
 
 	// TypeHint sets the hint value for this argument.

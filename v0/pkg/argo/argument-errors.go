@@ -39,8 +39,8 @@ const (
 )
 
 func NewInvalidArgError(
-	kind   ArgumentErrorType,
-	build  ArgumentBuilder,
+	kind ArgumentErrorType,
+	build ArgumentBuilder,
 	reason string,
 ) error {
 	return &invalidArgError{eType: kind, build: build, reason: reason}
@@ -57,7 +57,7 @@ func (i *invalidArgError) Type() ArgumentErrorType {
 }
 
 func (i *invalidArgError) Is(kind ArgumentErrorType) bool {
-	return i.eType & kind == kind
+	return i.eType&kind == kind
 }
 
 func (i *invalidArgError) Builder() ArgumentBuilder {

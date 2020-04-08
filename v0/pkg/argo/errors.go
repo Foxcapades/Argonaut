@@ -46,7 +46,6 @@ func (i *invalidFlagError) Error() string {
 	panic(fmt.Errorf("invalid flag error type %d", i.eType))
 }
 
-
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃     Nil or Non-Ptr          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//

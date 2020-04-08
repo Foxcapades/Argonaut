@@ -15,7 +15,7 @@ type flag struct {
 	isReq  bool
 
 	hitBinding *int
-	onHit A.FlagEventHandler
+	onHit      A.FlagEventHandler
 }
 
 func (f *flag) Short() byte          { return f.short }

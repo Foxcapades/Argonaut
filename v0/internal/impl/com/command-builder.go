@@ -100,8 +100,8 @@ func (c *CommandBuilder) Examples(examples ...string) A.CommandBuilder {
 
 func (c *CommandBuilder) Build() (A.Command, error) {
 	short := make(map[byte]bool)
-	long  := make(map[string]bool)
-	out   := new(Command)
+	long := make(map[string]bool)
+	out := new(Command)
 
 	// Check for overlapping flags
 	for _, g := range c.fGroups {
