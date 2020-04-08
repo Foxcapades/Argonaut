@@ -165,14 +165,20 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 }
 
 func pad(str string, ln int) string {
-	if len(str) >= ln {
+	strln := len(str)
+
+	if strln >= ln {
 		return str
 	}
 
 	out := make([]byte, ln)
-	copy([]byte(str), out)
-	for i := len(str); i < ln; i++ {
-		out[i] = ' '
+
+	for i := 0; i < ln; i++ {
+		if strln > i {
+			out[i] = str[i]
+		} else {
+			out[i] = ' '
+		}
 	}
 	return string(out)
 }
