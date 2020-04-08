@@ -1,7 +1,6 @@
-package impl
+package parse
 
 import (
-	"errors"
 	"fmt"
 	. "github.com/Foxcapades/Argonaut/v0/internal/log"
 	"github.com/Foxcapades/Argonaut/v0/internal/util"
@@ -279,9 +278,6 @@ func (p *Parser) handleShortFlag() {
 		if p.isBoolArg(arg) {
 			Trace("cur flag argument is bool")
 			util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
-		} else if _, ok := util.GetRootValue(R.ValueOf(arg.Binding())).Interface().(A.UseCounter); ok {
-			Trace("cur flag argument is use counter")
-			util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
 		}
 		p.handleShortFlag()
 	} else {
@@ -513,34 +509,4 @@ func pointerFor(v interface{}) uintptr {
 	defer recovery(&err)
 
 	return R.ValueOf(v).Pointer()
-}
-
-// Catch panics and set the panic value to the given error
-// pointer if the panic value is an instance of error or
-// string.
-func recovery(err *error) {
-	rec := recover()
-
-	// No panics, nothing to do
-	if rec == nil {
-		return
-	}
-
-	// If the panic was due to an error, pass it up and
-	// return.
-	if tmp, ok := rec.(error); ok {
-		*err = tmp
-		return
-	}
-
-	// If the panic was a string, convert it to an error, pass
-	// it up and return.
-	if tmp, ok := rec.(string); ok {
-		*err = errors.New(tmp)
-		return
-	}
-
-	// If the panic was some unknown type, it didn't come from
-	// us, panic with it again
-	panic(rec)
 }

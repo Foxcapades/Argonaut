@@ -1,4 +1,4 @@
-package impl
+package flag
 
 import (
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"

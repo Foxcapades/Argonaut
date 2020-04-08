@@ -1,12 +1,13 @@
-package impl
+package arg
 
 import (
+	R "reflect"
+
 	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
-	R "reflect"
 )
 
-func NewArgBuilder() A.ArgumentBuilder {
+func NewBuilder(A.Provider) A.ArgumentBuilder {
 	return new(ArgumentBuilder)
 }
 

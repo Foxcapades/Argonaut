@@ -102,6 +102,8 @@ type FlagBuilder interface {
 	// ArgumentBuilder.Required() for more information.
 	Bind(ptr interface{}, required bool) FlagBuilder
 
+	BindUseCount(ptr *int) FlagBuilder
+
 	// Default is a convenience shorthand for passing a
 	// nameless argument to `Arg()`
 	//

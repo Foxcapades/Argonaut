@@ -1,7 +1,8 @@
-package impl_test
+package com_test
 
 import (
-	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl"
+	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/com"
 	. "github.com/smartystreets/goconvey/convey"
 	. "testing"
 )
@@ -9,14 +10,14 @@ import (
 func TestCommand_Description(t *T) {
 	Convey("Command.Description", t, func() {
 		str := "knee deep in the hoopla"
-		So(NewCommandBuilder().Description(str).MustBuild().Description(),
+		So(com2.NewBuilder(impl.NewProvider()).Description(str).MustBuild().Description(),
 			ShouldEqual, str)
 	})
 }
 
 func TestCommand_Name(t *T) {
 	Convey("Command.Name", t, func() {
-		com := Command{}
+		com := com2.Command{}
 		So(com.Name(), ShouldEqual, com.String())
 	})
 }

@@ -1,8 +1,12 @@
-package impl_test
+package parse_test
 
 import (
 	"errors"
-	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/arg"
+	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/com"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/flag"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/parse"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	. "github.com/smartystreets/goconvey/convey"
 	. "testing"
@@ -54,8 +58,8 @@ func TestParser_Parse(t *T) {
 
 		for _, t := range tests {
 			Convey(t.Name(), func() {
-				ctx := parserTestCtx{parser: NewParser()}
-				com := NewCommandBuilder()
+				ctx := parserTestCtx{parser: parse.NewParser()}
+				com := com2.NewBuilder(impl.NewProvider())
 				t.Setup(com)
 				ctx.error = ctx.parser.Parse(append([]string{"cmd"}, t.Params()...),
 					com.MustBuild())
@@ -65,14 +69,14 @@ func TestParser_Parse(t *T) {
 
 		Convey("StringSlice", func() {
 			var derp []string
-			com := NewCommandBuilder().
-				Flag(NewFlagBuilder().
+			com := com2.NewBuilder(impl.NewProvider()).
+				Flag(flag.NewBuilder(impl.NewProvider()).
 					Short('a').
 					Long("aa").
 					Bind(&derp, true)).
 				MustBuild()
 			input := []string{"bar", "-a", "fizz", "-abuzz", "--aa=pong"}
-			parser := NewParser()
+			parser := parse.NewParser()
 			err := parser.Parse(input, com)
 			So(err, ShouldBeNil)
 			So(parser.Unrecognized(), ShouldBeEmpty)
@@ -83,13 +87,13 @@ func TestParser_Parse(t *T) {
 		Convey("Short flag with required arg with no value", func() {
 			Convey("Type is bool", func() {
 				derp := false
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Short('a').
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "-a"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -99,13 +103,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is *bool", func() {
 				var derp *bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Short('a').
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "-a"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -116,13 +120,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is []bool", func() {
 				var derp []bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Short('a').
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "-aa"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -134,13 +138,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is []*bool, required is true", func() {
 				var derp []*bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Short('a').
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "-aa", "-a"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -156,13 +160,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is []*bool, required is false", func() {
 				var derp []*bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Short('a').
 						Bind(&derp, false)).
 					MustBuild()
 				input := []string{"bar", "-aa", "-a"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -180,13 +184,13 @@ func TestParser_Parse(t *T) {
 		Convey("Long flag with required arg with no value", func() {
 			Convey("Type is bool", func() {
 				derp := false
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Long("applies").
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "--applies"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -196,13 +200,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is *bool", func() {
 				var derp *bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Long("applies").
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "--applies"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -213,13 +217,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is []bool", func() {
 				var derp []bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Long("applies").
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "--applies"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -230,13 +234,13 @@ func TestParser_Parse(t *T) {
 
 			Convey("Type is []*bool", func() {
 				var derp []*bool
-				com := NewCommandBuilder().
-					Flag(NewFlagBuilder().
+				com := com2.NewBuilder(impl.NewProvider()).
+					Flag(flag.NewBuilder(impl.NewProvider()).
 						Long("applies").
 						Bind(&derp, true)).
 					MustBuild()
 				input := []string{"bar", "--applies", "--applies"}
-				parser := NewParser()
+				parser := parse.NewParser()
 				err := parser.Parse(input, com)
 				So(err, ShouldBeNil)
 				So(parser.Unrecognized(), ShouldBeEmpty)
@@ -251,11 +255,11 @@ func TestParser_Parse(t *T) {
 
 		Convey("Required arg not provided", func() {
 			var str string
-			com := NewCommandBuilder().
-				Arg(NewArgBuilder().Bind(&str).Require()).
+			com := com2.NewBuilder(impl.NewProvider()).
+				Arg(arg.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
 				MustBuild()
 			input := []string{"bar"}
-			parser := NewParser()
+			parser := parse.NewParser()
 			err := parser.Parse(input, com)
 			So(err, ShouldResemble, errors.New("missing required params"))
 		})
@@ -263,12 +267,12 @@ func TestParser_Parse(t *T) {
 		Convey("Required arg provided with leading flags", func() {
 			var str string
 			var no bool
-			com := NewCommandBuilder().
-				Arg(NewArgBuilder().Bind(&str).Require()).
-				Flag(NewFlagBuilder().Short('v').Bind(&no, false)).
+			com := com2.NewBuilder(impl.NewProvider()).
+				Arg(arg.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
+				Flag(flag.NewBuilder(impl.NewProvider()).Short('v').Bind(&no, false)).
 				MustBuild()
 			input  := []string{"bar", "-vv", "value"}
-			parser := NewParser()
+			parser := parse.NewParser()
 			err := parser.Parse(input, com)
 			So(err, ShouldBeNil)
 			So(str, ShouldEqual, "value")
@@ -310,7 +314,7 @@ func (s *stringParserTest) Params() []string {
 }
 
 func (s *stringParserTest) Setup(com A.CommandBuilder) {
-	bld := NewFlagBuilder().Bind(&s.text, s.reqArg)
+	bld := flag.NewBuilder(impl.NewProvider()).Bind(&s.text, s.reqArg)
 	if s.short != 0 {
 		bld.Short(s.short)
 	}

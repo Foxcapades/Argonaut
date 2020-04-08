@@ -2,6 +2,8 @@ package cli
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/marsh"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/props"
 	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
@@ -51,13 +53,13 @@ func NewArg() argo.ArgumentBuilder {
 
 
 func DefaultUnmarshalProps() argo.UnmarshalProps {
-	return impl.DefaultUnmarshalProps()
+	return props.DefaultUnmarshalProps()
 }
 
 func UnmarshalDefault(raw string, val interface{}) (err error) {
-	return impl.NewDefaultedValueUnmarshaler().Unmarshal(raw, val)
+	return marsh.NewDefaultedValueUnmarshaler().Unmarshal(raw, val)
 }
 
 func Unmarshal(raw string, val interface{}, props argo.UnmarshalProps) (err error) {
-	return impl.NewValueUnmarshaler(&props).Unmarshal(raw, val)
+	return marsh.NewValueUnmarshaler(&props).Unmarshal(raw, val)
 }

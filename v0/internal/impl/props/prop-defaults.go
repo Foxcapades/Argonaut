@@ -1,4 +1,4 @@
-package impl
+package props
 
 import "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 

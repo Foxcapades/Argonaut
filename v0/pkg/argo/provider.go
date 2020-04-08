@@ -1,10 +1,10 @@
 package argo
 
 type (
-	ArgumentProvider  func() ArgumentBuilder
-	CommandProvider   func() CommandBuilder
-	FlagProvider      func() FlagBuilder
-	FlagGroupProvider func() FlagGroupBuilder
+	ArgumentProvider  func(Provider) ArgumentBuilder
+	CommandProvider   func(Provider) CommandBuilder
+	FlagProvider      func(Provider) FlagBuilder
+	FlagGroupProvider func(Provider) FlagGroupBuilder
 )
 
 type Provider interface {

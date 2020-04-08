@@ -1,4 +1,4 @@
-package impl
+package arg
 
 import (
 	"fmt"

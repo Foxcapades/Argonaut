@@ -1,4 +1,4 @@
-package impl
+package arg
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/util"

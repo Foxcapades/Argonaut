@@ -1,22 +1,29 @@
-package impl
+package com
 
 import (
 	"errors"
 	"fmt"
-	"github.com/Foxcapades/Argonaut/v0/internal/util"
-	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"os"
+
+	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
+
+	"github.com/Foxcapades/Argonaut/v0/internal/util"
+
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/marsh"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/parse"
 )
 
-func NewCommandBuilder() A.CommandBuilder {
+func NewBuilder(provider A.Provider) A.CommandBuilder {
 	return &CommandBuilder{
-		fGroups:     []A.FlagGroupBuilder{NewFlagGroupBuilder()},
-		parser:      NewParser(),
-		unmarshaler: NewDefaultedValueUnmarshaler(),
+		provider:    provider,
+		fGroups:     []A.FlagGroupBuilder{provider.NewFlagGroup()},
+		parser:      parse.NewParser(),
+		unmarshaler: marsh.NewDefaultedValueUnmarshaler(),
 	}
 }
 
 type CommandBuilder struct {
+	provider    A.Provider
 	name        string
 	desc        string
 	parser      A.Parser
@@ -117,10 +124,10 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 	}
 
 	if !c.omitHelp {
-		c.fGroups = append(c.fGroups, GetProvider().
+		c.fGroups = append(c.fGroups, c.provider.
 			NewFlagGroup().
 			Name("Help & Info").
-			Flag(GetProvider().
+			Flag(c.provider.
 				NewFlag().
 				Short('h').
 				Long("help").

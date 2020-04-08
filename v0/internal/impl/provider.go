@@ -1,6 +1,11 @@
 package impl
 
-import I "github.com/Foxcapades/Argonaut/v0/pkg/argo"
+import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/arg"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/com"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/flag"
+	I "github.com/Foxcapades/Argonaut/v0/pkg/argo"
+)
 
 var provider = NewProvider()
 
@@ -17,10 +22,10 @@ func SetProvider(p I.Provider) {
 
 func NewProvider() I.Provider {
 	return &Provider{
-		arg:  NewArgBuilder,
-		com:  NewCommandBuilder,
-		flag: NewFlagBuilder,
-		fgp:  NewFlagGroupBuilder,
+		arg:  arg.NewBuilder,
+		com:  com.NewBuilder,
+		flag: flag.NewBuilder,
+		fgp:  flag.NewFlagGroupBuilder,
 	}
 }
 
@@ -32,19 +37,19 @@ type Provider struct {
 }
 
 func (p *Provider) NewArg() I.ArgumentBuilder {
-	return p.arg()
+	return p.arg(p)
 }
 
 func (p *Provider) NewCommand() I.CommandBuilder {
-	return p.com()
+	return p.com(p)
 }
 
 func (p *Provider) NewFlag() I.FlagBuilder {
-	return p.flag()
+	return p.flag(p)
 }
 
 func (p *Provider) NewFlagGroup() I.FlagGroupBuilder {
-	return p.fgp()
+	return p.fgp(p)
 }
 
 func (p *Provider) ArgumentProvider(provider I.ArgumentProvider) (this I.Provider) {

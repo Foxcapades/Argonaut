@@ -1,7 +1,7 @@
-package impl_test
+package marsh_test
 
 import (
-	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/marsh"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"reflect"
 	"testing"
@@ -170,7 +170,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &validIntParseTest[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -290,7 +290,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &validIntParseTest[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -323,7 +323,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &parseTests[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -371,7 +371,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &parseTests[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -402,7 +402,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &parseTests[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -455,7 +455,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &parseTests[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -510,7 +510,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &parseTests[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 
@@ -525,7 +525,6 @@ func TestUnmarshal(t *testing.T) {
 
 		C.Convey("Valid marshal-type values", func() {
 			root := struct {
-				c    A.UseCounter
 				h    A.Hex
 				h8   A.Hex8
 				h16  A.Hex16
@@ -549,7 +548,6 @@ func TestUnmarshal(t *testing.T) {
 			}{}
 
 			zero := func() {
-				root.c = 0
 				root.h = 0
 				root.h8 = 0
 				root.h16 = 0
@@ -573,7 +571,6 @@ func TestUnmarshal(t *testing.T) {
 			}
 
 			parseTests := []unmarshalerValueTest{
-				{"Counter", "123", A.UseCounter(1), &root.c},
 				{"Hex", "123", A.Hex(291), &root.h},
 				{"Hex8", "-80", A.Hex8(-128), &root.h8},
 				{"Hex16", "123", A.Hex16(291), &root.h16},
@@ -600,7 +597,7 @@ func TestUnmarshal(t *testing.T) {
 				tmp := &parseTests[i]
 
 				C.Convey(tmp.Name, func() {
-					C.So(NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
+					C.So(marsh.NewDefaultedValueUnmarshaler().Unmarshal(tmp.Input, &tmp.Temp), C.ShouldBeNil)
 
 					eVal := reflect.ValueOf(tmp.Temp).Elem()
 

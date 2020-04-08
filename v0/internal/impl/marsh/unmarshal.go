@@ -1,6 +1,7 @@
-package impl
+package marsh
 
 import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/props"
 	R "reflect"
 	S "strconv"
 
@@ -13,7 +14,8 @@ type iProps = A.UnmarshalIntegerProps
 var unmarshalerType = R.TypeOf((*A.Unmarshaler)(nil)).Elem()
 
 func NewDefaultedValueUnmarshaler() A.ValueUnmarshaler {
-	return NewValueUnmarshaler(&defaultUnmarshalProps)
+	tmp := props.DefaultUnmarshalProps()
+	return NewValueUnmarshaler(&tmp)
 }
 
 func NewValueUnmarshaler(props *A.UnmarshalProps) A.ValueUnmarshaler {
