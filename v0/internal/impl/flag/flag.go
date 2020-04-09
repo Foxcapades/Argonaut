@@ -1,16 +1,18 @@
 package flag
 
 import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"strings"
 )
 
 type flag struct {
+	trait.Described
+
 	parent A.FlagGroup
 	arg    A.Argument
 	hits   uint
 	long   string
-	desc   string
 	short  byte
 	isReq  bool
 
@@ -25,8 +27,6 @@ func (f *flag) HasLong() bool        { return len(f.long) > 0 }
 func (f *flag) Required() bool       { return f.isReq }
 func (f *flag) HasArgument() bool    { return f.arg != nil }
 func (f *flag) Argument() A.Argument { return f.arg }
-func (f *flag) Description() string  { return f.desc }
-func (f *flag) HasDescription() bool { return len(f.desc) > 0 }
 func (f *flag) Hits() int            { return int(f.hits) }
 func (f *flag) IncrementHits() {
 	f.hits++

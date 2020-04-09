@@ -1,6 +1,7 @@
 package arg
 
 import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	R "reflect"
 
 	"github.com/Foxcapades/Argonaut/v0/internal/util"
@@ -21,19 +22,12 @@ type ArgumentBuilder struct {
 	defVal   interface{}
 	binding  interface{}
 	hintTxt  string
-	descTxt  string
-	name     string
+	desc     trait.Described
+	name     trait.Named
 }
 
-func (a *ArgumentBuilder) Name(name string) A.ArgumentBuilder {
-	a.name = name
-	return a
-}
-
-func (a *ArgumentBuilder) TypeHint(hint string) A.ArgumentBuilder {
-	a.hintTxt = hint
-	return a
-}
+func (a *ArgumentBuilder) Name(name string) A.ArgumentBuilder     { a.name.NameValue = name; return a }
+func (a *ArgumentBuilder) TypeHint(hint string) A.ArgumentBuilder { a.hintTxt = hint; return a }
 
 func (a *ArgumentBuilder) Default(val interface{}) A.ArgumentBuilder {
 	a.hasDef = true
@@ -52,7 +46,7 @@ func (a *ArgumentBuilder) Bind(ptr interface{}) A.ArgumentBuilder {
 }
 
 func (a *ArgumentBuilder) Description(desc string) A.ArgumentBuilder {
-	a.descTxt = desc
+	a.desc.DescriptionValue = desc
 	return a
 }
 
@@ -71,8 +65,8 @@ func (a *ArgumentBuilder) Parent(par interface{}) A.ArgumentBuilder {
 	return a
 }
 
-func (a *ArgumentBuilder) GetName() string         { return a.name }
-func (a *ArgumentBuilder) HasName() bool           { return len(a.name) > 0 }
+func (a *ArgumentBuilder) GetName() string         { return a.name.NameValue }
+func (a *ArgumentBuilder) HasName() bool           { return a.name.HasName() }
 func (a *ArgumentBuilder) GetHint() string         { return a.hintTxt }
 func (a *ArgumentBuilder) HasHint() bool           { return len(a.hintTxt) > 0 }
 func (a *ArgumentBuilder) GetDefault() interface{} { return a.defVal }
@@ -95,15 +89,15 @@ func (a *ArgumentBuilder) Build() (A.Argument, error) {
 	}
 
 	return &Argument{
-		name:    a.name,
-		defVal:  a.defVal,
-		bind:    a.binding,
-		hint:    a.hintTxt,
-		desc:    a.descTxt,
-		isReq:   a.required,
-		hasDef:  a.hasDef,
-		hasBind: a.hasBind,
-		parent:  a.parent,
+		Named:     a.name,
+		defVal:    a.defVal,
+		bind:      a.binding,
+		hint:      a.hintTxt,
+		Described: a.desc,
+		isReq:     a.required,
+		hasDef:    a.hasDef,
+		hasBind:   a.hasBind,
+		parent:    a.parent,
 	}, nil
 }
 

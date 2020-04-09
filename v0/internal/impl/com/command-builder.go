@@ -3,11 +3,11 @@ package com
 import (
 	"errors"
 	"fmt"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
+	"github.com/Foxcapades/Argonaut/v0/internal/render"
 	"os"
 
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
-
-	"github.com/Foxcapades/Argonaut/v0/internal/util"
 
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/marsh"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/parse"
@@ -24,8 +24,8 @@ func NewBuilder(provider A.Provider) A.CommandBuilder {
 
 type CommandBuilder struct {
 	provider    A.Provider
-	name        string
-	desc        string
+	name        trait.Named
+	desc        trait.Described
 	parser      A.Parser
 	unmarshaler A.ValueUnmarshaler
 	fGroups     []A.FlagGroupBuilder
@@ -69,16 +69,16 @@ func (c *CommandBuilder) Unmarshaler(un A.ValueUnmarshaler) A.CommandBuilder {
 }
 
 func (c *CommandBuilder) Description(desc string) A.CommandBuilder {
-	c.desc = desc
+	c.desc.DescriptionValue = desc
 	return c
 }
 
 func (c *CommandBuilder) GetDescription() string {
-	return c.desc
+	return c.desc.Description()
 }
 
 func (c *CommandBuilder) HasDescription() bool {
-	return len(c.desc) > 0
+	return len(c.desc.DescriptionValue) > 0
 }
 
 func (c *CommandBuilder) Arg(arg A.ArgumentBuilder) A.CommandBuilder {
@@ -133,7 +133,7 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 				Long("help").
 				Description("Prints this help text").
 				OnHit(func(f A.Flag) {
-					fmt.Println(util.RenderHelp(f))
+					fmt.Println(render.Command(out))
 					os.Exit(0)
 				})))
 	}
@@ -160,7 +160,7 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 		}
 	}
 
-	out.description = c.desc
+	out.Described = c.desc
 	out.groups = groups
 	out.arguments = args
 	out.unmarshal = c.unmarshaler

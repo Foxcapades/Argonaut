@@ -1,13 +1,14 @@
 package com
 
 import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"os"
 	"path"
 )
 
 type Command struct {
-	description string
+	trait.Described
 	unmarshal   A.ValueUnmarshaler
 
 	groups    []A.FlagGroup
@@ -16,8 +17,6 @@ type Command struct {
 }
 
 func (c *Command) FlagGroups() []A.FlagGroup       { return c.groups }
-func (c *Command) Description() string             { return c.description }
-func (c *Command) HasDescription() bool            { return len(c.description) > 0 }
 func (c *Command) Arguments() []A.Argument         { return c.arguments }
 func (c *Command) UnmappedInput() []string         { return c.unmapped }
 func (c *Command) Unmarshaler() A.ValueUnmarshaler { return c.unmarshal }

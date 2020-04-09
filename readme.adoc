@@ -195,3 +195,4 @@ input.
 * [ ] Format help text based on TTY width
 * [ ] Tab-completion helper
 * [ ] Struct tag -> cli config parsing
+* [ ] Unmarshaling String value defaults (prerequisite for struct tags)

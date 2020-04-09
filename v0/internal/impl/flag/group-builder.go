@@ -1,6 +1,7 @@
 package flag
 
 import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
@@ -12,8 +13,8 @@ type iFgb = A.FlagGroupBuilder
 
 type gBuilder struct {
 	parent   A.Command
-	name     string
-	desc     string
+	name     trait.Named
+	desc     trait.Described
 	flags    []A.FlagBuilder
 	warnings []string
 }
@@ -22,8 +23,8 @@ type gBuilder struct {
 // Getters
 //
 
-func (f *gBuilder) GetName() string           { return f.name }
-func (f *gBuilder) GetDescription() string    { return f.desc }
+func (f *gBuilder) GetName() string           { return f.name.NameValue }
+func (f *gBuilder) GetDescription() string    { return f.desc.DescriptionValue }
 func (f *gBuilder) GetFlags() []A.FlagBuilder { return f.flags }
 
 //
@@ -31,8 +32,8 @@ func (f *gBuilder) GetFlags() []A.FlagBuilder { return f.flags }
 //
 
 func (f *gBuilder) Parent(com A.Command) iFgb    { f.parent = com; return f }
-func (f *gBuilder) Name(name string) iFgb        { f.name = name; return f }
-func (f *gBuilder) Description(desc string) iFgb { f.desc = desc; return f }
+func (f *gBuilder) Name(name string) iFgb        { f.name.NameValue = name; return f }
+func (f *gBuilder) Description(desc string) iFgb { f.desc.DescriptionValue = desc; return f }
 
 //
 // Operations
@@ -50,7 +51,7 @@ func (f *gBuilder) Flag(flag A.FlagBuilder) iFgb {
 func (f *gBuilder) Build() (out A.FlagGroup, err error) {
 	flags := make([]A.Flag, len(f.flags))
 
-	out = &FlagGroup{parent: f.parent, desc: f.desc, name: f.name, flags: flags}
+	out = &Group{parent: f.parent, Described: f.desc, Named: f.name, flags: flags}
 
 	for i, fb := range f.flags {
 		fb.Parent(out)

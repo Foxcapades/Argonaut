@@ -1,6 +1,7 @@
 package flag
 
 import (
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
@@ -17,7 +18,7 @@ type builder struct {
 	err   error
 	short byte
 	long  string
-	desc  string
+	desc  trait.Described
 
 	arg A.ArgumentBuilder
 
@@ -34,15 +35,15 @@ func (f *builder) GetShort() byte            { return f.short }
 func (f *builder) HasShort() bool            { return f.shortSet }
 func (f *builder) GetLong() string           { return f.long }
 func (f *builder) HasLong() bool             { return f.longSet }
-func (f *builder) GetDescription() string    { return f.desc }
-func (f *builder) HasDescription() bool      { return len(f.desc) > 0 }
+func (f *builder) GetDescription() string    { return f.desc.Description() }
+func (f *builder) HasDescription() bool      { return len(f.desc.DescriptionValue) > 0 }
 func (f *builder) GetArg() A.ArgumentBuilder { return f.arg }
 func (f *builder) HasArg() bool              { return f.arg != nil }
 
 func (f *builder) Short(flag byte) iFb             { f.shortSet = true; f.short = flag; return f }
 func (f *builder) OnHit(fn A.FlagEventHandler) iFb { f.onHit = fn; return f }
 func (f *builder) Long(flag string) iFb            { f.longSet = true; f.long = flag; return f }
-func (f *builder) Description(desc string) iFb     { f.desc = desc; return f }
+func (f *builder) Description(desc string) iFb     { f.desc.DescriptionValue = desc; return f }
 func (f *builder) Arg(arg A.ArgumentBuilder) iFb   { f.arg = arg; return f }
 func (f *builder) Parent(fg A.FlagGroup) iFb       { f.parent = fg; return f }
 func (f *builder) BindUseCount(ptr *int) iFb       { f.hitBind = ptr; return f }
@@ -73,7 +74,7 @@ func (f *builder) Build() (out A.Flag, err error) {
 
 	tmp.arg = arg
 	tmp.long = f.long
-	tmp.desc = f.desc
+	tmp.Described = f.desc
 	tmp.short = f.short
 	tmp.onHit = f.onHit
 	tmp.parent = f.parent
