@@ -66,7 +66,7 @@ func flagNames(flags []af) (out flagResult) {
 		var arg string
 
 		if flag.HasArgument() {
-			formattedArgName(flag.Argument(), &bld)
+			FormattedArgName(flag.Argument(), &bld)
 			arg = bld.String()
 			bld.Reset()
 		}
@@ -108,4 +108,3 @@ func flagNames(flags []af) (out flagResult) {
 
 	return
 }
-

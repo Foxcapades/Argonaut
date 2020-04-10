@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	comPrefix  = "Usage:\n  "
-	comOpts    = " [OPTIONS]"
+	comPrefix = "Usage:\n  "
+	comOpts   = " [OPTIONS]"
 )
 
 func Command(com ac) string {
@@ -48,9 +48,9 @@ func appendComArgs(com ac, out *strings.Builder) {
 	for _, arg := range com.Arguments() {
 		if arg.Required() {
 			out.WriteByte(' ')
-			formattedArgName(arg, out)
+			FormattedArgName(arg, out)
 		} else {
-			formattedArgName(arg, out)
+			FormattedArgName(arg, out)
 		}
 	}
 }
