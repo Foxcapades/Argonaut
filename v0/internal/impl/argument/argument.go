@@ -31,6 +31,12 @@ type Argument struct {
 	dt reflect.Type
 }
 
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+//┃                                                                          ┃//
+//┃      Interface Implementation                                            ┃//
+//┃                                                                          ┃//
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+
 func (a *Argument) RawValue() string       { return a.raw }
 func (a *Argument) Default() interface{}   { return a.defVal }
 func (a *Argument) HasDefault() bool       { return a.hasDef }

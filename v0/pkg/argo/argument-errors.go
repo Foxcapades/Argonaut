@@ -43,6 +43,22 @@ const (
 	ArgErrInvalidBindingBadType = ArgErrInvalidBinding | 1<<iota
 )
 
+func (a ArgumentErrorType) String() string {
+	switch a {
+	case ArgErrInvalidDefault:
+		return "Invalid default"
+	case ArgErrInvalidBinding:
+		return "Invalid binding"
+	case ArgErrInvalidDefaultFn:
+		return "Invalid default value provider"
+	case ArgErrInvalidDefaultVal:
+		return "Invalid default value"
+	case ArgErrInvalidBindingBadType:
+		return "Invalid binding type, not unmarshalable"
+	}
+	panic("Invalid ArgumentErrorType")
+}
+
 // ArgumentError represents an error encountered when
 // attempting to build or handle an Argument.
 type ArgumentError interface {
@@ -79,28 +95,28 @@ func NewInvalidArgError(
 	build ArgumentBuilder,
 	reason string,
 ) error {
-	return &invalidArgError{eType: kind, build: build, reason: reason}
+	return &InvalidArgError{eType: kind, build: build, reason: reason}
 }
 
-type invalidArgError struct {
+type InvalidArgError struct {
 	eType  ArgumentErrorType
 	build  ArgumentBuilder
 	reason string
 }
 
-func (i *invalidArgError) Type() ArgumentErrorType {
+func (i *InvalidArgError) Type() ArgumentErrorType {
 	return i.eType
 }
 
-func (i *invalidArgError) Is(kind ArgumentErrorType) bool {
+func (i *InvalidArgError) Is(kind ArgumentErrorType) bool {
 	return i.eType&kind == kind
 }
 
-func (i *invalidArgError) Builder() ArgumentBuilder {
+func (i *InvalidArgError) Builder() ArgumentBuilder {
 	return i.build
 }
 
-func (i *invalidArgError) Error() string {
+func (i *InvalidArgError) Error() string {
 	switch i.eType {
 	case ArgErrInvalidBindingBadType /*, ArgErrInvalidBindingNil*/ :
 		return fmt.Sprintf(errArgBinding, R.TypeOf(i.build.GetBinding()))

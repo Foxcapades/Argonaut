@@ -16,7 +16,7 @@ func TestFlag_String(t *testing.T) {
 		})
 		Convey("Long flag, optional arg", func() {
 			So(flag.NewBuilder(impl.NewProvider()).Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).Name("flump")).
-				MustBuild().String(), ShouldEqual, "--fail=[flump]")
+				MustBuild().String(), ShouldEqual, "--fail=flump")
 		})
 		Convey("Long flag, required arg", func() {
 			So(flag.NewBuilder(impl.NewProvider()).Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).Name("flump").
@@ -28,7 +28,7 @@ func TestFlag_String(t *testing.T) {
 		})
 		Convey("Short flag, optional arg", func() {
 			So(flag.NewBuilder(impl.NewProvider()).Short('f').Arg(argument.NewBuilder(impl.NewProvider()).Name("flump")).
-				MustBuild().String(), ShouldEqual, "-f [flump]")
+				MustBuild().String(), ShouldEqual, "-f flump")
 		})
 		Convey("Short flag, required arg", func() {
 			So(flag.NewBuilder(impl.NewProvider()).Short('f').Arg(argument.NewBuilder(impl.NewProvider()).Name("flump").
@@ -41,7 +41,7 @@ func TestFlag_String(t *testing.T) {
 		Convey("Short & Long flag, optional arg", func() {
 			So(flag.NewBuilder(impl.NewProvider()).Short('f').Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).
 				Name("flump")).MustBuild().String(), ShouldEqual,
-				"-f [flump] | --fail=[flump]")
+				"-f flump | --fail=flump")
 		})
 		Convey("Short & Long flag, required arg", func() {
 			So(flag.NewBuilder(impl.NewProvider()).Short('f').Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).
