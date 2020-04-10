@@ -23,6 +23,12 @@ type Argument struct {
 	hasBind bool
 
 	index uint8
+
+	// Root binding type, set lazily.
+	bt reflect.Type
+
+	// Default type, set lazily
+	dt reflect.Type
 }
 
 func (a *Argument) RawValue() string       { return a.raw }
@@ -49,14 +55,27 @@ func (a *Argument) IsPositionalArg() bool {
 }
 
 func (a *Argument) BindingType() reflect.Type {
-	return util.GetRootValue(reflect.ValueOf(a.Binding())).Type()
+	if a.bind == nil {
+		return nil
+	}
+
+	if a.bt == nil {
+		a.bt = util.GetRootValue(reflect.ValueOf(a.Binding())).Type()
+	}
+
+	return a.bt
 }
 
 func (a *Argument) DefaultType() reflect.Type {
 	if !a.HasDefault() {
 		return nil
 	}
-	return reflect.TypeOf(a.defVal)
+
+	if a.dt == nil {
+		a.dt = util.GetRootValue(reflect.ValueOf(a.defVal)).Type()
+	}
+
+	return a.dt
 }
 
 func (a *Argument) String() string {

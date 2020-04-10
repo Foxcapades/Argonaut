@@ -12,13 +12,13 @@ import (
 )
 
 func TestFlagBuilder_Arg(t *T) {
-	prov := NewProvider()
-
-	Convey("FlagBuilder.Arg", t, func() {
-		a := argument.NewBuilder(prov).TypeHint("diced bagels")
-		b := flag.NewBuilder(prov).Arg(a).Short('a').MustBuild()
-		So(b.Argument(), ShouldResemble, a.MustBuild())
-	})
+	//prov := NewProvider()
+	//
+	//Convey("FlagBuilder.Arg", t, func() {
+	//	a := argument.NewBuilder(prov).TypeHint("diced bagels")
+	//	b := flag.NewBuilder(prov).Arg(a).Short('a').MustBuild()
+	//	So(b.Argument(), ShouldResemble, a.MustBuild())
+	//})
 }
 
 func TestFlagBuilder_Bind(t *T) {

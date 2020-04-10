@@ -1,4 +1,4 @@
-package com
+package command
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 func NewBuilder(provider AP) ACB {
 	return &Builder{
 		provider:    provider,
-		fGroups:     []AFGB{provider.NewFlagGroup()},
+		fGroups:     []AFGB{provider.NewFlagGroup().Name("Options")},
 		parser:      parse.NewParser(),
 		unmarshaler: marsh.NewDefaultedValueUnmarshaler(),
 		options:     props.DefaultCommandOptions(),
@@ -40,7 +40,7 @@ type Builder struct {
 	options props.CommandOptions
 }
 
-func (c *Builder) DisableHelp() ACB      { c.omitHelp = true; return c }
+func (c *Builder) DisableHelp() ACB      { c.options.IncludeHelp = false; return c }
 func (c *Builder) GetFlagGroups() []AFGB { return c.fGroups }
 func (c *Builder) GetArgs() []AAB        { return c.args }
 
@@ -109,7 +109,7 @@ func (c *Builder) Build() (AC, error) {
 		}
 	}
 
-	if !c.omitHelp {
+	if c.options.IncludeHelp {
 		c.fGroups = append(c.fGroups, c.provider.
 			NewFlagGroup().
 			Name("Help & Info").

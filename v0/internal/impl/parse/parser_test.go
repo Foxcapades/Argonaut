@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
-	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/com"
+	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/command"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/flag"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/parse"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"

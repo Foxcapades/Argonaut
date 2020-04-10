@@ -2,7 +2,7 @@ package impl
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/com"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/command"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/flag"
 	I "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
@@ -23,7 +23,7 @@ func SetProvider(p I.Provider) {
 func NewProvider() I.Provider {
 	return &Provider{
 		arg:  argument.NewBuilder,
-		com:  com.NewBuilder,
+		com:  command.NewBuilder,
 		flag: flag.NewBuilder,
 		fgp:  flag.NewFlagGroupBuilder,
 	}

@@ -62,7 +62,7 @@ func (f *builder) Build() (out A.Flag, err error) {
 	}
 
 	var arg A.Argument
-	tmp := new(flag)
+	tmp := new(Flag)
 
 	if f.arg != nil {
 		f.arg.Parent(tmp)

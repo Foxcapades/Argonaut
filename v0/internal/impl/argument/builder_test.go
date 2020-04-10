@@ -35,15 +35,6 @@ func TestArgumentBuilder_Default(t *T) {
 	})
 }
 
-func TestArgumentBuilder_Hint(t *T) {
-	Convey("ArgumentBuilder.TypeHint", t, func() {
-		v := "boots with the fur"
-		a := argument.NewBuilder(impl.NewProvider()).TypeHint(v).MustBuild()
-		So(a.Hint(), ShouldResemble, v)
-		So(a.HasHint(), ShouldBeTrue)
-	})
-}
-
 func TestArgumentBuilder_Description(t *T) {
 	Convey("ArgumentBuilder.Description", t, func() {
 		v := "interior crocodile, alligator"

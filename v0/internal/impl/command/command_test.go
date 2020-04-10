@@ -1,8 +1,8 @@
-package com_test
+package command_test
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl"
-	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/com"
+	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/command"
 	. "github.com/smartystreets/goconvey/convey"
 	. "testing"
 )
