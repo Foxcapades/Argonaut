@@ -5,24 +5,60 @@ import (
 	R "reflect"
 )
 
+// ArgumentErrorType provides a flag indicating what kind
+// of error was encountered while attempting to build or use
+// an Argument.
 type ArgumentErrorType uint8
 
 const (
+	// ArgErrInvalidDefault represents all cases where the
+	// Default value passed to an ArgumentBuilder is the root
+	// cause.
 	ArgErrInvalidDefault ArgumentErrorType = 1 << iota
+
+	// ArgErrInvalidBinding represents all cases where the
+	// Binding value passed to an ArgumentBuilder is the root
+	// cause.
 	ArgErrInvalidBinding
 
-	ArgErrInvalidDefaultFn  = ArgErrInvalidDefault | 1<<iota
+	// ArgErrInvalidDefaultFn represents the case where the
+	// default value provider function set on an
+	// ArgumentBuilder is incompatible with the binding type
+	// also set on that ArgumentBuilder.
+	ArgErrInvalidDefaultFn = ArgErrInvalidDefault | 1<<iota
+
+	// ArgErrInvalidDefaultFn represents the case where the
+	// default value set on an ArgumentBuilder is incompatible
+	// with the binding type also set on that ArgumentBuilder.
 	ArgErrInvalidDefaultVal = ArgErrInvalidDefault | 1<<iota
 
-	ArgErrInvalidBindingNil     = ArgErrInvalidBinding | 1<<iota
+	// ArgErrInvalidBindingNil <currently not used>
+	// represents the case where the binding set on an
+	// ArgumentBuilder is an untyped nil.
+	//ArgErrInvalidBindingNil     = ArgErrInvalidBinding | 1<<iota
+
+	// ArgErrInvalidBindingBadType represents the case where
+	// the value set as the ArgumentBuilder's binding is not
+	// of a type that can be unmarshaled.
 	ArgErrInvalidBindingBadType = ArgErrInvalidBinding | 1<<iota
 )
 
+// ArgumentError represents an error encountered when
+// attempting to build or handle an Argument.
 type ArgumentError interface {
 	error
-	Error() string
+
+	// Type returns the specific type of this error.
+	//
+	// See ArgumentErrorType for more details.
 	Type() ArgumentErrorType
+
+	// Is returns whether or not this error is of the type
+	// given.
 	Is(errorType ArgumentErrorType) bool
+
+	// Builder returns the ArgumentBuilder in which this error
+	// was encountered.
 	Builder() ArgumentBuilder
 }
 
@@ -66,7 +102,7 @@ func (i *invalidArgError) Builder() ArgumentBuilder {
 
 func (i *invalidArgError) Error() string {
 	switch i.eType {
-	case ArgErrInvalidBindingBadType, ArgErrInvalidBindingNil:
+	case ArgErrInvalidBindingBadType /*, ArgErrInvalidBindingNil*/ :
 		return fmt.Sprintf(errArgBinding, R.TypeOf(i.build.GetBinding()))
 	case ArgErrInvalidDefaultVal:
 		return fmt.Sprintf(errArgDefault, R.TypeOf(i.build.GetDefault()),
