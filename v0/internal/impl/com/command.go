@@ -1,32 +1,29 @@
 package com
 
 import (
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
-	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"os"
 	"path"
+
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 )
 
 type Command struct {
 	trait.Described
-	unmarshal   A.ValueUnmarshaler
+	unmarshal AVU
 
-	groups    []A.FlagGroup
-	arguments []A.Argument
+	groups    []AFG
+	arguments []AA
 	unmapped  []string
 }
 
-func (c *Command) FlagGroups() []A.FlagGroup       { return c.groups }
-func (c *Command) Arguments() []A.Argument         { return c.arguments }
-func (c *Command) UnmappedInput() []string         { return c.unmapped }
-func (c *Command) Unmarshaler() A.ValueUnmarshaler { return c.unmarshal }
-func (c *Command) String() string                  { return c.Name() }
+func (c *Command) FlagGroups() []AFG       { return c.groups }
+func (c *Command) Arguments() []AA         { return c.arguments }
+func (c *Command) UnmappedInput() []string { return c.unmapped }
+func (c *Command) Unmarshaler() AVU        { return c.unmarshal }
+func (c *Command) String() string          { return c.Name() }
+func (c *Command) Name() string            { return path.Base(os.Args[0]) }
 
-func (c *Command) Name() string {
-	return path.Base(os.Args[0])
-}
-
-func (c *Command) LookupFlag(key interface{}) (match A.Flag, found bool) {
+func (c *Command) LookupFlag(key interface{}) (match AF, found bool) {
 	for _, g := range c.groups {
 		for _, f := range g.Flags() {
 			if f.HasShort() && f.Short() == key {

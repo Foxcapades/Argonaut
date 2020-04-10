@@ -3,44 +3,56 @@ package com
 import (
 	"errors"
 	"fmt"
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
-	"github.com/Foxcapades/Argonaut/v0/internal/render"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/props"
 	"os"
 
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/marsh"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/parse"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
+	"github.com/Foxcapades/Argonaut/v0/internal/render"
 )
 
-func NewBuilder(provider A.Provider) A.CommandBuilder {
-	return &CommandBuilder{
+func NewBuilder(provider AP) ACB {
+	return &Builder{
 		provider:    provider,
-		fGroups:     []A.FlagGroupBuilder{provider.NewFlagGroup()},
+		fGroups:     []AFGB{provider.NewFlagGroup()},
 		parser:      parse.NewParser(),
 		unmarshaler: marsh.NewDefaultedValueUnmarshaler(),
+		options:     props.DefaultCommandOptions(),
 	}
 }
 
-type CommandBuilder struct {
-	provider    A.Provider
-	name        trait.Named
-	desc        trait.Described
+type Builder struct {
+	name trait.Named
+	desc trait.Described
+
+	provider    AP
 	parser      A.Parser
-	unmarshaler A.ValueUnmarshaler
-	fGroups     []A.FlagGroupBuilder
-	args        []A.ArgumentBuilder
-	warnings    []string
-	examples    []string
-	omitHelp    bool
+	unmarshaler AVU
+
+	fGroups  []AFGB
+	args     []AAB
+	warnings []string
+	examples []string
+
+	options props.CommandOptions
 }
 
-func (c *CommandBuilder) DisableHelp() A.CommandBuilder {
-	c.omitHelp = true
-	return c
-}
+func (c *Builder) DisableHelp() ACB      { c.omitHelp = true; return c }
+func (c *Builder) GetFlagGroups() []AFGB { return c.fGroups }
+func (c *Builder) GetArgs() []AAB        { return c.args }
 
-func (c *CommandBuilder) Flag(flag A.FlagBuilder) A.CommandBuilder {
+func (c *Builder) Examples(examples ...string) ACB { c.examples = examples; return c }
+
+func (c *Builder) Description(desc string) ACB { c.desc.DescriptionValue = desc; return c }
+func (c *Builder) HasDescription() bool        { return len(c.desc.DescriptionValue) > 0 }
+func (c *Builder) GetDescription() string      { return c.desc.Description() }
+
+func (c *Builder) Warnings() []string { return c.warnings }
+
+func (c *Builder) Flag(flag A.FlagBuilder) ACB {
 	if flag == nil {
 		return c.warn("nil value passed to Flag()")
 	}
@@ -48,7 +60,7 @@ func (c *CommandBuilder) Flag(flag A.FlagBuilder) A.CommandBuilder {
 	return c
 }
 
-func (c *CommandBuilder) FlagGroup(builder A.FlagGroupBuilder) (this A.CommandBuilder) {
+func (c *Builder) FlagGroup(builder AFGB) (this ACB) {
 	if builder == nil {
 		return c.warn("nil value passed to FlagGroup()")
 	}
@@ -56,11 +68,7 @@ func (c *CommandBuilder) FlagGroup(builder A.FlagGroupBuilder) (this A.CommandBu
 	return c
 }
 
-func (c *CommandBuilder) GetFlagGroups() []A.FlagGroupBuilder {
-	return c.fGroups
-}
-
-func (c *CommandBuilder) Unmarshaler(un A.ValueUnmarshaler) A.CommandBuilder {
+func (c *Builder) Unmarshaler(un AVU) ACB {
 	if un == nil {
 		return c.warn("nil value passed to Unmarshaler()")
 	}
@@ -68,20 +76,7 @@ func (c *CommandBuilder) Unmarshaler(un A.ValueUnmarshaler) A.CommandBuilder {
 	return c
 }
 
-func (c *CommandBuilder) Description(desc string) A.CommandBuilder {
-	c.desc.DescriptionValue = desc
-	return c
-}
-
-func (c *CommandBuilder) GetDescription() string {
-	return c.desc.Description()
-}
-
-func (c *CommandBuilder) HasDescription() bool {
-	return len(c.desc.DescriptionValue) > 0
-}
-
-func (c *CommandBuilder) Arg(arg A.ArgumentBuilder) A.CommandBuilder {
+func (c *Builder) Arg(arg AAB) ACB {
 	if arg == nil {
 		return c.warn("nil value passed to Arg()")
 	}
@@ -89,16 +84,7 @@ func (c *CommandBuilder) Arg(arg A.ArgumentBuilder) A.CommandBuilder {
 	return c
 }
 
-func (c *CommandBuilder) GetArgs() []A.ArgumentBuilder {
-	return c.args
-}
-
-func (c *CommandBuilder) Examples(examples ...string) A.CommandBuilder {
-	c.examples = examples
-	return c
-}
-
-func (c *CommandBuilder) Build() (A.Command, error) {
+func (c *Builder) Build() (AC, error) {
 	short := make(map[byte]bool)
 	long := make(map[string]bool)
 	out := new(Command)
@@ -132,14 +118,14 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 				Short('h').
 				Long("help").
 				Description("Prints this help text").
-				OnHit(func(f A.Flag) {
+				OnHit(func(f AF) {
 					fmt.Println(render.Command(out))
 					os.Exit(0)
 				})))
 	}
 
 	// Build groups
-	groups := make([]A.FlagGroup, len(c.fGroups))
+	groups := make([]AFG, len(c.fGroups))
 
 	for i, fg := range c.fGroups {
 		fg.Parent(out)
@@ -150,7 +136,7 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 		}
 	}
 
-	args := make([]A.Argument, len(c.args))
+	args := make([]AA, len(c.args))
 	for i, arg := range c.args {
 		arg.Parent(out)
 		if a, err := arg.Build(); err != nil {
@@ -168,7 +154,7 @@ func (c *CommandBuilder) Build() (A.Command, error) {
 	return out, nil
 }
 
-func (c *CommandBuilder) MustBuild() A.Command {
+func (c *Builder) MustBuild() AC {
 	com, err := c.Build()
 	if err != nil {
 		panic(err)
@@ -176,7 +162,7 @@ func (c *CommandBuilder) MustBuild() A.Command {
 	return com
 }
 
-func (c *CommandBuilder) Parse() (extra []string, err error) {
+func (c *Builder) Parse() (extra []string, err error) {
 	com, err := c.Build()
 	if err != nil {
 		return nil, err
@@ -187,7 +173,7 @@ func (c *CommandBuilder) Parse() (extra []string, err error) {
 	return c.parser.Passthroughs(), err
 }
 
-func (c *CommandBuilder) MustParse() []string {
+func (c *Builder) MustParse() []string {
 	if a, b := c.Parse(); b != nil {
 		panic(b)
 	} else {
@@ -195,11 +181,7 @@ func (c *CommandBuilder) MustParse() []string {
 	}
 }
 
-func (c *CommandBuilder) Warnings() []string {
-	return c.warnings
-}
-
-func (c *CommandBuilder) warn(txt string) A.CommandBuilder {
+func (c *Builder) warn(txt string) ACB {
 	c.warnings = append(c.warnings, "CommandBuilder: "+txt)
 	return c
 }
