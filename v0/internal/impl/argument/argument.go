@@ -1,4 +1,4 @@
-package arg
+package argument
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
@@ -15,7 +15,6 @@ type Argument struct {
 
 	defVal interface{}
 	bind   interface{}
-	hint   string
 	raw    string
 
 	// Flags
@@ -27,8 +26,6 @@ type Argument struct {
 }
 
 func (a *Argument) RawValue() string       { return a.raw }
-func (a *Argument) Hint() string           { return a.hint }
-func (a *Argument) HasHint() bool          { return len(a.hint) > 0 }
 func (a *Argument) Default() interface{}   { return a.defVal }
 func (a *Argument) HasDefault() bool       { return a.hasDef }
 func (a *Argument) Required() bool         { return a.isReq }

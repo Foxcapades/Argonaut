@@ -8,11 +8,6 @@ type ArgumentBuilder interface {
 	// information about this argument.
 	Name(string) ArgumentBuilder
 
-	// TypeHint sets the hint value for this argument.
-	//
-	// Used when rendering a usage example.
-	TypeHint(string) ArgumentBuilder
-
 	// Default sets the default value for the argument to be
 	// used if the argument is not provided on the command
 	// line.

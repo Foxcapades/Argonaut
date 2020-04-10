@@ -1,8 +1,8 @@
-package arg_test
+package argument_test
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl"
-	. "github.com/Foxcapades/Argonaut/v0/internal/impl/arg"
+	. "github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
 	. "github.com/smartystreets/goconvey/convey"
 	. "testing"
 )

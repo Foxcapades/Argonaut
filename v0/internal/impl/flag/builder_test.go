@@ -1,7 +1,7 @@
 package flag_test
 
 import (
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/arg"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
 	. "testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -15,7 +15,7 @@ func TestFlagBuilder_Arg(t *T) {
 	prov := NewProvider()
 
 	Convey("FlagBuilder.Arg", t, func() {
-		a := arg.NewBuilder(prov).TypeHint("diced bagels")
+		a := argument.NewBuilder(prov).TypeHint("diced bagels")
 		b := flag.NewBuilder(prov).Arg(a).Short('a').MustBuild()
 		So(b.Argument(), ShouldResemble, a.MustBuild())
 	})
@@ -30,13 +30,13 @@ func TestFlagBuilder_Bind(t *T) {
 		Convey("required", func() {
 			b := flag.NewBuilder(prov).Bind(&p, true).Short('a').MustBuild()
 			So(b.Argument().Required(), ShouldBeTrue)
-			So(b.Argument().(*arg.Argument).Binding(), ShouldPointTo, &p)
+			So(b.Argument().(*argument.Argument).Binding(), ShouldPointTo, &p)
 		})
 
 		Convey("not required", func() {
 			b := flag.NewBuilder(prov).Bind(&p, false).Short('a').MustBuild()
 			So(b.Argument().Required(), ShouldBeFalse)
-			So(b.Argument().(*arg.Argument).Binding(), ShouldPointTo, &p)
+			So(b.Argument().(*argument.Argument).Binding(), ShouldPointTo, &p)
 		})
 	})
 }
@@ -72,7 +72,7 @@ func TestFlagBuilder_Default(t *T) {
 		Convey("required", func() {
 			b := flag.NewBuilder(NewProvider()).Default(&p).Short('a').MustBuild()
 			So(b.Argument().Required(), ShouldBeFalse)
-			So(b.Argument().(*arg.Argument).Default(), ShouldPointTo, &p)
+			So(b.Argument().(*argument.Argument).Default(), ShouldPointTo, &p)
 		})
 	})
 }

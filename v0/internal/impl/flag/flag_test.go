@@ -2,7 +2,7 @@ package flag_test
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl"
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/arg"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/flag"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -15,11 +15,11 @@ func TestFlag_String(t *testing.T) {
 				ShouldEqual, "--fail")
 		})
 		Convey("Long flag, optional arg", func() {
-			So(flag.NewBuilder(impl.NewProvider()).Long("fail").Arg(arg.NewBuilder(impl.NewProvider()).Name("flump")).
+			So(flag.NewBuilder(impl.NewProvider()).Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).Name("flump")).
 				MustBuild().String(), ShouldEqual, "--fail=[flump]")
 		})
 		Convey("Long flag, required arg", func() {
-			So(flag.NewBuilder(impl.NewProvider()).Long("fail").Arg(arg.NewBuilder(impl.NewProvider()).Name("flump").
+			So(flag.NewBuilder(impl.NewProvider()).Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).Name("flump").
 				Require()).MustBuild().String(), ShouldEqual, "--fail=flump")
 		})
 		Convey("Short flag, no arg", func() {
@@ -27,11 +27,11 @@ func TestFlag_String(t *testing.T) {
 				ShouldEqual, "-f")
 		})
 		Convey("Short flag, optional arg", func() {
-			So(flag.NewBuilder(impl.NewProvider()).Short('f').Arg(arg.NewBuilder(impl.NewProvider()).Name("flump")).
+			So(flag.NewBuilder(impl.NewProvider()).Short('f').Arg(argument.NewBuilder(impl.NewProvider()).Name("flump")).
 				MustBuild().String(), ShouldEqual, "-f [flump]")
 		})
 		Convey("Short flag, required arg", func() {
-			So(flag.NewBuilder(impl.NewProvider()).Short('f').Arg(arg.NewBuilder(impl.NewProvider()).Name("flump").
+			So(flag.NewBuilder(impl.NewProvider()).Short('f').Arg(argument.NewBuilder(impl.NewProvider()).Name("flump").
 				Require()).MustBuild().String(), ShouldEqual, "-f flump")
 		})
 		Convey("Short & Long flag, no arg", func() {
@@ -39,12 +39,12 @@ func TestFlag_String(t *testing.T) {
 				ShouldEqual, "-f | --fail")
 		})
 		Convey("Short & Long flag, optional arg", func() {
-			So(flag.NewBuilder(impl.NewProvider()).Short('f').Long("fail").Arg(arg.NewBuilder(impl.NewProvider()).
+			So(flag.NewBuilder(impl.NewProvider()).Short('f').Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).
 				Name("flump")).MustBuild().String(), ShouldEqual,
 				"-f [flump] | --fail=[flump]")
 		})
 		Convey("Short & Long flag, required arg", func() {
-			So(flag.NewBuilder(impl.NewProvider()).Short('f').Long("fail").Arg(arg.NewBuilder(impl.NewProvider()).
+			So(flag.NewBuilder(impl.NewProvider()).Short('f').Long("fail").Arg(argument.NewBuilder(impl.NewProvider()).
 				Name("flump").Require()).MustBuild().String(), ShouldEqual,
 				"-f flump | --fail=flump")
 		})

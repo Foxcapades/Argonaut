@@ -3,7 +3,7 @@ package parse_test
 import (
 	"errors"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl"
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/arg"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
 	com2 "github.com/Foxcapades/Argonaut/v0/internal/impl/com"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/flag"
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/parse"
@@ -256,7 +256,7 @@ func TestParser_Parse(t *T) {
 		Convey("Required arg not provided", func() {
 			var str string
 			com := com2.NewBuilder(impl.NewProvider()).
-				Arg(arg.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
+				Arg(argument.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
 				MustBuild()
 			input := []string{"bar"}
 			parser := parse.NewParser()
@@ -268,7 +268,7 @@ func TestParser_Parse(t *T) {
 			var str string
 			var no bool
 			com := com2.NewBuilder(impl.NewProvider()).
-				Arg(arg.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
+				Arg(argument.NewBuilder(impl.NewProvider()).Bind(&str).Require()).
 				Flag(flag.NewBuilder(impl.NewProvider()).Short('v').Bind(&no, false)).
 				MustBuild()
 			input := []string{"bar", "-vv", "value"}
