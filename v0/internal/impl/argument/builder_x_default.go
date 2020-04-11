@@ -38,7 +38,7 @@ func (a *Builder) ValidateDefault() error {
 		a.RootDefault = tmp
 	}
 
-	if !util.Compatible(&a.RootDefault, &a.RootBinding) {
+	if a.RootDefault.Kind() != R.String && !util.Compatible(&a.RootDefault, &a.RootBinding) {
 		return InvalidDefaultValError(a)
 	}
 
@@ -55,8 +55,13 @@ func (a *Builder) ValidateDefaultProvider() error {
 	}
 
 	if !rType.Out(0).AssignableTo(a.RootBinding.Type()) {
+		// Second chance for Unmarshalable short circuit logic
+		// GetRootValue
+		if util.IsUnmarshaler(a.RootBinding.Type()) && rType.Out(0).AssignableTo(a.RootBinding.Type().Elem()) {
+			return nil
+		}
 		return argo.NewInvalidArgError(argo.ArgErrInvalidDefaultVal, a,
-			fmt.Sprintf(errBadType, rType, R.TypeOf(a.BindValue)))
+			fmt.Sprintf(errBadType, rType.Out(0), R.TypeOf(a.BindValue)))
 	}
 
 	if oLen == 2 && !rType.Out(1).AssignableTo(R.TypeOf((*error)(nil)).Elem()) {

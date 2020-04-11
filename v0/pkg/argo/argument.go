@@ -19,6 +19,8 @@ type Argument interface {
 	// argument.
 	Default() interface{}
 
+	RootDefaultValue() reflect.Value
+
 	// HasDefault returns whether or not this argument has a
 	// default value assigned.
 	//
@@ -51,6 +53,8 @@ type Argument interface {
 	// argument into which the CLI input should be
 	// unmarshaled.
 	Binding() interface{}
+
+	RootBindValue() reflect.Value
 
 	// HasBinding returns whether or not this argument has a
 	// binding attached to it.

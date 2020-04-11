@@ -31,14 +31,19 @@ type Argument struct {
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
-func (a *Argument) RawValue() string       { return a.RawInput }
-func (a *Argument) Default() interface{}   { return a.DefaultValue }
-func (a *Argument) HasDefault() bool       { return a.IsDefaultSet }
 func (a *Argument) Required() bool         { return a.IsRequired }
-func (a *Argument) SetRawValue(val string) { a.RawInput = val }
-func (a *Argument) Binding() interface{}   { return a.BindValue }
-func (a *Argument) HasBinding() bool       { return a.IsBindingSet }
 func (a *Argument) Parent() interface{}    { return a.ParentElement }
+
+func (a *Argument) RawValue() string       { return a.RawInput }
+func (a *Argument) SetRawValue(val string) { a.RawInput = val }
+
+func (a *Argument) Default() interface{}   { return a.DefaultValue }
+func (a *Argument) RootDefaultValue() reflect.Value { return a.RootDefault }
+func (a *Argument) HasDefault() bool       { return a.IsDefaultSet }
+
+func (a *Argument) Binding() interface{}   { return a.BindValue }
+func (a *Argument) RootBindValue() reflect.Value { return a.RootBinding }
+func (a *Argument) HasBinding() bool       { return a.IsBindingSet }
 
 func (a *Argument) IsFlagArg() bool {
 	if _, ok := a.ParentElement.(A.Flag); ok {
