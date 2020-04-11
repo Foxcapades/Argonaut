@@ -9,13 +9,13 @@ import (
 var unmarshalerType = R.TypeOf((*A.Unmarshaler)(nil)).Elem()
 
 func IsUnmarshalable(o interface{}) bool {
-	_, err := ToUnmarshalable("", R.ValueOf(o))
+	_, err := ToUnmarshalable("", R.ValueOf(o), false)
 	return err == nil
 }
 
-func ToUnmarshalable(arg string, ov R.Value) (R.Value, error) {
+func ToUnmarshalable(arg string, ov R.Value, skipPtr bool) (R.Value, error) {
 
-	if ov.Kind() != R.Ptr || ov.IsNil() {
+	if (!skipPtr && ov.Kind() != R.Ptr) || ov.IsNil() {
 		return R.Value{}, &A.InvalidUnmarshalError{Value: ov, Argument: arg}
 	}
 

@@ -34,7 +34,7 @@ func (v *ValueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 
 	ptrVal := R.ValueOf(val)
 
-	if ptrVal, err = U.ToUnmarshalable(raw, ptrVal); err != nil {
+	if ptrVal, err = U.ToUnmarshalable(raw, ptrVal, false); err != nil {
 		return err
 	}
 

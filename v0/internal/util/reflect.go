@@ -84,13 +84,17 @@ func IsByteSlice(t R.Type) bool {
 		t.Elem().Kind() == R.Uint8
 }
 
-func Compatible(val, test interface{}) bool {
-	vt := GetRootValue(R.ValueOf(val)).Type()
-	tt := R.TypeOf(test)
+//func Compatible(val, test interface{}) bool {
+//	vt := GetRootValue(R.ValueOf(val)).Type()
+//	tt := R.TypeOf(test)
+//
+//	if tt.Kind() == R.Ptr {
+//		return tt.Elem().AssignableTo(vt)
+//	}
+//
+//	return tt.AssignableTo(vt)
+//}
 
-	if tt.Kind() == R.Ptr {
-		return tt.Elem().AssignableTo(vt)
-	}
-
-	return tt.AssignableTo(vt)
+func Compatible(val, test *R.Value) bool {
+	return val.Type().AssignableTo(test.Type())
 }

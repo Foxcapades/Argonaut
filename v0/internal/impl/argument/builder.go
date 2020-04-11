@@ -4,7 +4,6 @@ import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	R "reflect"
 
-	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
@@ -13,86 +12,96 @@ func NewBuilder(A.Provider) A.ArgumentBuilder {
 }
 
 type Builder struct {
-	parent interface{}
+	ParentElement interface{}
 
-	required bool
-	hasDef   bool
-	hasBind  bool
-	error    error
-	defVal   interface{}
-	binding  interface{}
-	desc     trait.Described
-	name     trait.Named
+	IsRequired bool
+
+	Error error
+
+	IsDefaultSet bool
+	DefaultValue interface{}
+	RootDefault  R.Value
+
+	IsBindingSet bool
+	BindValue    interface{}
+	RootBinding  R.Value
+
+	DescriptionValue trait.Described
+
+	NameValue trait.Named
 }
 
-func (a *Builder) Name(name string) A.ArgumentBuilder { a.name.NameValue = name; return a }
+func (a *Builder) Name(name string) A.ArgumentBuilder { a.NameValue.NameValue = name; return a }
 
 func (a *Builder) Default(val interface{}) A.ArgumentBuilder {
-	a.hasDef = true
-	a.defVal = val
+	a.IsDefaultSet = true
+	a.DefaultValue = val
 	return a
 }
 
 func (a *Builder) HasDefaultProvider() bool {
-	return a.hasDef && R.TypeOf(a.defVal).Elem().Kind() == R.Func
+	return a.IsDefaultSet && R.TypeOf(a.DefaultValue).Elem().Kind() == R.Func
 }
 
 func (a *Builder) Bind(ptr interface{}) A.ArgumentBuilder {
-	a.hasBind = true
-	a.binding = ptr
+	a.IsBindingSet = true
+	a.BindValue = ptr
 	return a
 }
 
 func (a *Builder) Description(desc string) A.ArgumentBuilder {
-	a.desc.DescriptionValue = desc
+	a.DescriptionValue.DescriptionValue = desc
 	return a
 }
 
 func (a *Builder) Require() A.ArgumentBuilder {
-	a.required = true
+	a.IsRequired = true
 	return a
 }
 
 func (a *Builder) Required(req bool) A.ArgumentBuilder {
-	a.required = req
+	a.IsRequired = req
 	return a
 }
 
 func (a *Builder) Parent(par interface{}) A.ArgumentBuilder {
-	a.parent = par
+	a.ParentElement = par
 	return a
 }
 
-func (a *Builder) GetName() string         { return a.name.NameValue }
-func (a *Builder) HasName() bool           { return a.name.HasName() }
-func (a *Builder) GetDefault() interface{} { return a.defVal }
-func (a *Builder) HasDefault() bool        { return a.hasDef }
-func (a *Builder) GetBinding() interface{} { return a.binding }
-func (a *Builder) HasBinding() bool        { return a.hasBind }
+func (a *Builder) GetName() string         { return a.NameValue.NameValue }
+func (a *Builder) HasName() bool           { return a.NameValue.HasName() }
+func (a *Builder) GetDefault() interface{} { return a.DefaultValue }
+func (a *Builder) HasDefault() bool        { return a.IsDefaultSet }
+func (a *Builder) GetBinding() interface{} { return a.BindValue }
+func (a *Builder) HasBinding() bool        { return a.IsBindingSet }
 
 func (a *Builder) Build() (A.Argument, error) {
-	if a.hasBind {
-		// Binding is not usable
-		if !util.IsUnmarshalable(a.binding) {
-			return nil, A.NewInvalidArgError(A.ArgErrInvalidBindingBadType, a, "")
-		}
+	if err := a.ValidateDefault(); err != nil {
+		return nil, err
+	}
 
-		if a.hasDef {
-			if err := checkDefault(a); err != nil {
-				return nil, err
-			}
-		}
+	if err := a.ValidateBinding(); err != nil {
+		return nil, err
+	}
+
+	if err := a.ValidateParent(); err != nil {
+		return nil, err
 	}
 
 	return &Argument{
-		Named:     a.name,
-		defVal:    a.defVal,
-		bind:      a.binding,
-		Described: a.desc,
-		isReq:     a.required,
-		hasDef:    a.hasDef,
-		hasBind:   a.hasBind,
-		parent:    a.parent,
+		Named:     a.NameValue,
+		Described: a.DescriptionValue,
+
+		DefaultValue: a.DefaultValue,
+		RootDefault:  a.RootDefault,
+		IsDefaultSet: a.IsDefaultSet,
+		IsBindingSet: a.IsBindingSet,
+
+		BindValue:     a.BindValue,
+		RootBinding:   a.RootBinding,
+		IsRequired:    a.IsRequired,
+		ParentElement: a.ParentElement,
 	}, nil
 }
 

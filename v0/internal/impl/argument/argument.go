@@ -2,7 +2,6 @@ package argument
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
-	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"reflect"
 )
@@ -11,24 +10,19 @@ type Argument struct {
 	trait.Named
 	trait.Described
 
-	parent interface{}
+	ParentElement interface{}
 
-	defVal interface{}
-	bind   interface{}
-	raw    string
+	RawInput string
 
-	// Flags
-	isReq   bool
-	hasDef  bool
-	hasBind bool
+	IsRequired bool
 
-	index uint8
+	BindValue    interface{}
+	RootBinding  reflect.Value
+	IsBindingSet bool
 
-	// Root binding type, set lazily.
-	bt reflect.Type
-
-	// Default type, set lazily
-	dt reflect.Type
+	DefaultValue interface{}
+	RootDefault  reflect.Value
+	IsDefaultSet bool
 }
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
@@ -37,39 +31,35 @@ type Argument struct {
 //┃                                                                          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
-func (a *Argument) RawValue() string       { return a.raw }
-func (a *Argument) Default() interface{}   { return a.defVal }
-func (a *Argument) HasDefault() bool       { return a.hasDef }
-func (a *Argument) Required() bool         { return a.isReq }
-func (a *Argument) SetRawValue(val string) { a.raw = val }
-func (a *Argument) Binding() interface{}   { return a.bind }
-func (a *Argument) HasBinding() bool       { return a.hasBind }
-func (a *Argument) Parent() interface{}    { return a.parent }
+func (a *Argument) RawValue() string       { return a.RawInput }
+func (a *Argument) Default() interface{}   { return a.DefaultValue }
+func (a *Argument) HasDefault() bool       { return a.IsDefaultSet }
+func (a *Argument) Required() bool         { return a.IsRequired }
+func (a *Argument) SetRawValue(val string) { a.RawInput = val }
+func (a *Argument) Binding() interface{}   { return a.BindValue }
+func (a *Argument) HasBinding() bool       { return a.IsBindingSet }
+func (a *Argument) Parent() interface{}    { return a.ParentElement }
 
 func (a *Argument) IsFlagArg() bool {
-	if _, ok := a.parent.(A.Flag); ok {
+	if _, ok := a.ParentElement.(A.Flag); ok {
 		return true
 	}
 	return false
 }
 
 func (a *Argument) IsPositionalArg() bool {
-	if _, ok := a.parent.(A.Command); ok {
+	if _, ok := a.ParentElement.(A.Command); ok {
 		return true
 	}
 	return false
 }
 
 func (a *Argument) BindingType() reflect.Type {
-	if a.bind == nil {
+	if !a.HasBinding() {
 		return nil
 	}
 
-	if a.bt == nil {
-		a.bt = util.GetRootValue(reflect.ValueOf(a.Binding())).Type()
-	}
-
-	return a.bt
+	return a.RootBinding.Type()
 }
 
 func (a *Argument) DefaultType() reflect.Type {
@@ -77,11 +67,7 @@ func (a *Argument) DefaultType() reflect.Type {
 		return nil
 	}
 
-	if a.dt == nil {
-		a.dt = util.GetRootValue(reflect.ValueOf(a.defVal)).Type()
-	}
-
-	return a.dt
+	return a.RootDefault.Type()
 }
 
 func (a *Argument) String() string {
