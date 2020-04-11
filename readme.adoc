@@ -190,6 +190,7 @@ input.
 == Examples
 
 . https://github.com/Foxcapades/Argonaut/tree/master/examples/complex-type[Complex Types]
+. https://github.com/Foxcapades/Argonaut/tree/master/examples/number-extras[Number Format Extras]
 
 == TODO
 
