@@ -9,6 +9,13 @@ import (
 	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
+const (
+	errDefFnOutNum = "default value providers must return either 1 or 2 values"
+	err2ndOut      = "the second output type of a default value provider must " +
+		"be compatible with error"
+	errBadType = "default value type %s is not compatible with binding type %s"
+)
+
 func (a *Builder) ValidateDefault() error {
 	if !a.IsDefaultSet {
 		return nil
@@ -20,7 +27,7 @@ func (a *Builder) ValidateDefault() error {
 	}
 
 	if a.HasDefaultProvider() {
-		a.RootDefault = R.ValueOf(a.DefaultValue)
+		a.RootDefault = util.GetRootValue(R.ValueOf(a.DefaultValue))
 		return a.ValidateDefaultProvider()
 	}
 
@@ -44,7 +51,7 @@ func (a *Builder) ValidateDefaultProvider() error {
 
 	oLen := rType.NumOut()
 	if oLen == 0 || oLen > 2 {
-		return InvalidDefaultValError(a)
+		return argo.NewInvalidArgError(argo.ArgErrInvalidDefaultFn, a, errDefFnOutNum)
 	}
 
 	if !rType.Out(0).AssignableTo(a.RootBinding.Type()) {

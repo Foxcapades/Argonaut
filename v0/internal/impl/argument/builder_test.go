@@ -12,9 +12,12 @@ import (
 func TestArgumentBuilder_Bind(t *T) {
 	Convey("ArgumentBuilder.Bind", t, func() {
 		t := "flarf"
-		a := argument.NewBuilder(impl.NewProvider()).Bind(&t).MustBuild().(*argument.Argument)
-		So(a.Binding(), ShouldPointTo, &t)
-		So(a.HasBinding(), ShouldBeTrue)
+		a := &argument.Builder{}
+
+		a.Bind(&t)
+
+		So(a.BindValue, ShouldPointTo, &t)
+		So(a.IsBindingSet, ShouldBeTrue)
 	})
 }
 
@@ -22,15 +25,22 @@ func TestArgumentBuilder_Default(t *T) {
 	Convey("ArgumentBuilder.Default", t, func() {
 		Convey("Using a direct value", func() {
 			t := "flumps"
-			a := argument.NewBuilder(impl.NewProvider()).Default(t).MustBuild().(*argument.Argument)
-			So(a.Default(), ShouldResemble, t)
-			So(a.HasDefault(), ShouldBeTrue)
+			a := argument.Builder{}
+
+			a.Default(t)
+
+			So(a.DefaultValue, ShouldResemble, t)
+			So(a.IsDefaultSet, ShouldBeTrue)
 		})
+
 		Convey("Using an indirect value", func() {
 			t := "gampus"
-			a := argument.NewBuilder(impl.NewProvider()).Default(&t).MustBuild().(*argument.Argument)
-			So(a.Default(), ShouldPointTo, &t)
-			So(a.HasDefault(), ShouldBeTrue)
+			a := argument.Builder{}
+
+			a.Default(&t)
+
+			So(a.DefaultValue, ShouldPointTo, &t)
+			So(a.IsDefaultSet, ShouldBeTrue)
 		})
 	})
 }
@@ -38,25 +48,31 @@ func TestArgumentBuilder_Default(t *T) {
 func TestArgumentBuilder_Description(t *T) {
 	Convey("ArgumentBuilder.Description", t, func() {
 		v := "interior crocodile, alligator"
-		a := argument.NewBuilder(impl.NewProvider()).Description(v).MustBuild()
-		So(a.Description(), ShouldResemble, v)
-		So(a.HasDescription(), ShouldBeTrue)
+		a := argument.Builder{}
+
+		a.Description(v)
+
+		So(a.DescriptionValue.DescriptionValue, ShouldResemble, v)
 	})
 }
 
 func TestArgumentBuilder_Require(t *T) {
 	Convey("ArgumentBuilder.Require", t, func() {
-		a := argument.NewBuilder(impl.NewProvider()).Require().MustBuild()
-		So(a.Required(), ShouldBeTrue)
+		a := &argument.Builder{}
+		a.Require()
+		So(a.IsArgRequired, ShouldBeTrue)
 	})
 }
 
 func TestArgumentBuilder_Required(t *T) {
 	Convey("ArgumentBuilder.Required", t, func() {
-		a := argument.NewBuilder(impl.NewProvider()).Required(true).MustBuild()
-		So(a.Required(), ShouldBeTrue)
-		b := argument.NewBuilder(impl.NewProvider()).Required(false).MustBuild()
-		So(b.Required(), ShouldBeFalse)
+		a := argument.Builder{}
+		a.Required(true)
+		So(a.IsArgRequired, ShouldBeTrue)
+
+		b := argument.Builder{}
+		b.Required(false)
+		So(b.IsArgRequired, ShouldBeFalse)
 	})
 }
 

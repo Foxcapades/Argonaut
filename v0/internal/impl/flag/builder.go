@@ -7,103 +7,68 @@ import (
 )
 
 func NewBuilder(provider A.Provider) A.FlagBuilder {
-	return &builder{provider: provider}
+	return &Builder{Provider: provider}
 }
 
-type iFb = A.FlagBuilder
+type Builder struct {
+	Provider A.Provider
 
-type builder struct {
-	provider A.Provider
+	Error error
 
-	err   error
-	short byte
-	long  string
-	desc  trait.Described
+	ShortFlag  byte
+	IsShortSet bool
 
-	arg A.ArgumentBuilder
+	LongFlag  string
+	IsLongSet bool
 
-	shortSet bool
-	longSet  bool
+	DescriptionText trait.Described
 
-	hitBind *int
+	ArgBuilder A.ArgumentBuilder
 
-	onHit  A.FlagEventHandler
-	parent A.FlagGroup
+	UseCountBinding *int
+	OnHitCallback   A.FlagEventHandler
+
+	ParentElement A.FlagGroup
 }
 
-func (f *builder) GetShort() byte            { return f.short }
-func (f *builder) HasShort() bool            { return f.shortSet }
-func (f *builder) GetLong() string           { return f.long }
-func (f *builder) HasLong() bool             { return f.longSet }
-func (f *builder) GetDescription() string    { return f.desc.Description() }
-func (f *builder) HasDescription() bool      { return len(f.desc.DescriptionValue) > 0 }
-func (f *builder) GetArg() A.ArgumentBuilder { return f.arg }
-func (f *builder) HasArg() bool              { return f.arg != nil }
-
-func (f *builder) Short(flag byte) iFb             { f.shortSet = true; f.short = flag; return f }
-func (f *builder) OnHit(fn A.FlagEventHandler) iFb { f.onHit = fn; return f }
-func (f *builder) Long(flag string) iFb            { f.longSet = true; f.long = flag; return f }
-func (f *builder) Description(desc string) iFb     { f.desc.DescriptionValue = desc; return f }
-func (f *builder) Arg(arg A.ArgumentBuilder) iFb   { f.arg = arg; return f }
-func (f *builder) Parent(fg A.FlagGroup) iFb       { f.parent = fg; return f }
-func (f *builder) BindUseCount(ptr *int) iFb       { f.hitBind = ptr; return f }
-
-func (f *builder) Build() (out A.Flag, err error) {
-	if !(f.shortSet || f.longSet) {
+func (f *Builder) Build() (out A.Flag, err error) {
+	if !(f.IsShortSet || f.IsLongSet) {
 		return nil, A.NewInvalidFlagError(A.InvalidFlagNoFlags)
 	}
 
-	if f.longSet && !util.IsValidLongFlag(f.long) {
+	if f.IsLongSet && !util.IsValidLongFlag(f.LongFlag) {
 		return nil, A.NewInvalidFlagError(A.InvalidFlagBadLongFlag)
 	}
 
-	if f.shortSet && !util.IsValidShortFlag(f.short) {
+	if f.IsShortSet && !util.IsValidShortFlag(f.ShortFlag) {
 		return nil, A.NewInvalidFlagError(A.InvalidFlagBadShortFlag)
 	}
 
 	var arg A.Argument
 	tmp := new(Flag)
 
-	if f.arg != nil {
-		f.arg.Parent(tmp)
-		arg, err = f.arg.Build()
+	if f.ArgBuilder != nil {
+		f.ArgBuilder.Parent(tmp)
+		arg, err = f.ArgBuilder.Build()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	tmp.arg = arg
-	tmp.long = f.long
-	tmp.Described = f.desc
-	tmp.short = f.short
-	tmp.onHit = f.onHit
-	tmp.parent = f.parent
-	tmp.hitBinding = f.hitBind
+	tmp.ArgumentElement = arg
+	tmp.LongForm = f.LongFlag
+	tmp.Described = f.DescriptionText
+	tmp.ShortForm = f.ShortFlag
+	tmp.OnHitCallback = f.OnHitCallback
+	tmp.ParentElement = f.ParentElement
+	tmp.HitCountBinding = f.UseCountBinding
 	return tmp, nil
 }
 
-func (f *builder) MustBuild() A.Flag {
+func (f *Builder) MustBuild() A.Flag {
 	if f, e := f.Build(); e != nil {
 		panic(e)
 	} else {
 		return f
 	}
-}
-
-func (f *builder) Bind(ptr interface{}, required bool) iFb {
-	if f.arg == nil {
-		f.arg = f.provider.NewArg()
-	}
-
-	f.arg.Bind(ptr).Required(required)
-
-	return f
-}
-
-func (f *builder) Default(val interface{}) iFb {
-	if f.arg == nil {
-		f.arg = f.provider.NewArg()
-	}
-	f.arg.Default(val)
-	return f
 }

@@ -91,6 +91,8 @@ type ArgumentBuilder interface {
 	// based on the provided value.
 	Required(bool) ArgumentBuilder
 
+	IsRequired() bool
+
 	// Parent sets the parent element of type Command or Flag
 	// to this builder.
 	//

@@ -15,7 +15,7 @@ func IsUnmarshalable(o interface{}) bool {
 
 func ToUnmarshalable(arg string, ov R.Value, skipPtr bool) (R.Value, error) {
 
-	if (!skipPtr && ov.Kind() != R.Ptr) || ov.IsNil() {
+	if (!skipPtr && ov.Kind() != R.Ptr) || IsNil(&ov) {
 		return R.Value{}, &A.InvalidUnmarshalError{Value: ov, Argument: arg}
 	}
 
@@ -99,4 +99,13 @@ func validateContainerValue(t R.Type, ov R.Value) error {
 	}
 
 	return &A.InvalidTypeError{Value: ov}
+}
+
+func IsNil(v *R.Value) bool {
+	switch v.Kind() {
+	case R.Ptr, R.Chan, R.Func, R.Interface, R.Map, R.Slice:
+		return v.IsNil()
+	default:
+		return false
+	}
 }

@@ -1,11 +1,11 @@
 package render_test
 
 import (
-	. "github.com/Foxcapades/Argonaut/v0/internal/impl"
 	. "github.com/Foxcapades/Argonaut/v0/internal/impl/argument"
+	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
 	"github.com/Foxcapades/Argonaut/v0/internal/render"
-	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	. "github.com/smartystreets/goconvey/convey"
+	"reflect"
 	"strings"
 	. "testing"
 )
@@ -19,61 +19,53 @@ func TestArgName(t *T) {
 			bindMap   map[string]uint
 			bindSlice []float32
 			bindBytes []byte
-			bindPtr   *string
 		)
 
 		tests := []*struct {
 			name string
-			arg  A.ArgumentBuilder
+			arg  Argument
 			val  string
 		}{
 			{
 				"With Name",
-				NewBuilder(NewProvider()).Name("Hi"),
+				Argument{Named: trait.Named{NameValue: "Hi"}},
 				"Hi",
 			},
 			{
 				"With Int Type",
-				NewBuilder(NewProvider()).Bind(&bindInt),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindInt)},
 				"int",
 			},
 			{
 				"With Unsigned Int Type",
-				NewBuilder(NewProvider()).Bind(&bindUint),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindUint)},
 				"uint",
 			},
 			{
 				"With Float32 Type",
-				NewBuilder(NewProvider()).Bind(&bindFloat),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindFloat)},
 				"float",
 			},
 			{
 				"With Map Type",
-				NewBuilder(NewProvider()).Bind(&bindMap),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindMap)},
 				"string=uint",
 			},
 			{
 				"With Slice Type",
-				NewBuilder(NewProvider()).Bind(&bindSlice),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindSlice)},
 				"float",
 			},
 			{
 				"With Bytes Type",
-				NewBuilder(NewProvider()).Bind(&bindBytes),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindBytes)},
 				"bytes",
-			},
-			{
-				"With String Pointer Type",
-				NewBuilder(NewProvider()).Bind(&bindPtr),
-				"string",
 			},
 		}
 
 		for _, test := range tests {
 			Convey(test.name, func() {
-				arg, err := test.arg.Build()
-				So(err, ShouldBeNil)
-				So(render.ArgName(arg), ShouldEqual, test.val)
+				So(render.ArgName(&test.arg), ShouldEqual, test.val)
 			})
 		}
 	})
@@ -85,37 +77,35 @@ func TestFormatArgName(t *T) {
 	Convey("FormatArgName", t, func() {
 		tests := []*struct {
 			name string
-			arg  A.ArgumentBuilder
+			arg  Argument
 			val  string
 		}{
 			{
 				"Required With Name",
-				NewBuilder(NewProvider()).Name("Hi").Require(),
+				Argument{Named: trait.Named{NameValue: "Hi"}, IsRequired: true},
 				"<Hi>",
 			},
 			{
 				"Optional With Name",
-				NewBuilder(NewProvider()).Name("Hi"),
+				Argument{Named: trait.Named{NameValue: "Hi"}},
 				"[Hi]",
 			},
 			{
 				"Required With Type",
-				NewBuilder(NewProvider()).Bind(&bindType).Require(),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindType), IsRequired: true},
 				"<string=bytes>",
 			},
 			{
 				"Optional With Type",
-				NewBuilder(NewProvider()).Bind(&bindType),
+				Argument{IsBindingSet: true, RootBinding: reflect.ValueOf(bindType)},
 				"[string=bytes]",
 			},
 		}
 
 		for _, test := range tests {
 			Convey(test.name, func() {
-				arg, err := test.arg.Build()
-				So(err, ShouldBeNil)
 				tmp := strings.Builder{}
-				render.FormattedArgName(arg, &tmp)
+				render.FormattedArgName(&test.arg, &tmp)
 				So(tmp.String(), ShouldEqual, test.val)
 			})
 		}

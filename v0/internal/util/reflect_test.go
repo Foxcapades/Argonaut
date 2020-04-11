@@ -1,14 +1,31 @@
 package util
 
 import (
-	C "github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
+	"reflect"
 	"testing"
 )
 
-func TestSameTypeOrPointerTo(t *testing.T) {
-	C.Convey("Compatible", t, func() {
-		v := ""
-		C.So(Compatible(v, ""), C.ShouldBeTrue)
-		C.So(Compatible("", &v), C.ShouldBeTrue)
+func TestCompatible(t *testing.T) {
+	Convey("Compatible", t, func() {
+		Convey("With compatible values", func() {
+			var testVal1 string
+			var testVal2 string
+
+			a := reflect.ValueOf(testVal1)
+			b := reflect.ValueOf(testVal2)
+
+			So(Compatible(&a, &b), ShouldBeTrue)
+		})
+		Convey("With incomaptible values", func() {
+			var testVal1 string
+			var testVal2 int
+
+			a := reflect.ValueOf(testVal1)
+			b := reflect.ValueOf(testVal2)
+
+			So(Compatible(&a, &b), ShouldBeFalse)
+
+		})
 	})
 }

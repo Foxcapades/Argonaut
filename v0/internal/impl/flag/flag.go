@@ -9,48 +9,49 @@ import (
 type Flag struct {
 	trait.Described
 
-	parent A.FlagGroup
-	arg    A.Argument
-	hits   uint
-	long   string
-	short  byte
-	isReq  bool
+	ParentElement   A.FlagGroup
+	ArgumentElement A.Argument
 
-	hitBinding *int
-	onHit      A.FlagEventHandler
+	HitCount   uint
+	LongForm   string
+	ShortForm  byte
+	IsRequired bool
+
+	HitCountBinding *int
+	OnHitCallback   A.FlagEventHandler
 }
 
-func (f *Flag) Short() byte          { return f.short }
-func (f *Flag) HasShort() bool       { return f.short > 0 }
-func (f *Flag) Long() string         { return f.long }
-func (f *Flag) HasLong() bool        { return len(f.long) > 0 }
-func (f *Flag) Required() bool       { return f.isReq }
-func (f *Flag) HasArgument() bool    { return f.arg != nil }
-func (f *Flag) Argument() A.Argument { return f.arg }
-func (f *Flag) Hits() int            { return int(f.hits) }
+func (f *Flag) Short() byte          { return f.ShortForm }
+func (f *Flag) HasShort() bool       { return f.ShortForm > 0 }
+func (f *Flag) Long() string         { return f.LongForm }
+func (f *Flag) HasLong() bool        { return len(f.LongForm) > 0 }
+func (f *Flag) Required() bool       { return f.IsRequired }
+func (f *Flag) HasArgument() bool    { return f.ArgumentElement != nil }
+func (f *Flag) Argument() A.Argument { return f.ArgumentElement }
+func (f *Flag) Hits() int            { return int(f.HitCount) }
 func (f *Flag) IncrementHits() {
-	f.hits++
+	f.HitCount++
 
-	if f.hitBinding != nil {
-		*f.hitBinding++
+	if f.HitCountBinding != nil {
+		*f.HitCountBinding++
 	}
 
-	if f.onHit != nil {
-		f.onHit(f)
+	if f.OnHitCallback != nil {
+		f.OnHitCallback(f)
 	}
 }
-func (f *Flag) Parent() A.FlagGroup { return f.parent }
+func (f *Flag) Parent() A.FlagGroup { return f.ParentElement }
 
 func (f *Flag) String() (out string) {
 	var bld strings.Builder
 
 	if f.HasShort() {
 		bld.WriteByte('-')
-		bld.WriteByte(f.short)
+		bld.WriteByte(f.ShortForm)
 
 		if f.HasArgument() {
 			bld.WriteByte(' ')
-			bld.WriteString(f.arg.String())
+			bld.WriteString(f.ArgumentElement.String())
 		}
 	}
 
@@ -60,11 +61,11 @@ func (f *Flag) String() (out string) {
 		}
 
 		bld.WriteString("--")
-		bld.WriteString(f.long)
+		bld.WriteString(f.LongForm)
 
 		if f.HasArgument() {
 			bld.WriteByte('=')
-			bld.WriteString(f.arg.String())
+			bld.WriteString(f.ArgumentElement.String())
 		}
 	}
 

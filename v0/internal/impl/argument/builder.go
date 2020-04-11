@@ -2,6 +2,7 @@ package argument
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
+	"github.com/Foxcapades/Argonaut/v0/internal/util"
 	R "reflect"
 
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
@@ -14,7 +15,7 @@ func NewBuilder(A.Provider) A.ArgumentBuilder {
 type Builder struct {
 	ParentElement interface{}
 
-	IsRequired bool
+	IsArgRequired bool
 
 	Error error
 
@@ -40,7 +41,7 @@ func (a *Builder) Default(val interface{}) A.ArgumentBuilder {
 }
 
 func (a *Builder) HasDefaultProvider() bool {
-	return a.IsDefaultSet && R.TypeOf(a.DefaultValue).Elem().Kind() == R.Func
+	return a.IsDefaultSet && util.GetRootValue(R.ValueOf(a.DefaultValue)).Kind() == R.Func
 }
 
 func (a *Builder) Bind(ptr interface{}) A.ArgumentBuilder {
@@ -55,13 +56,17 @@ func (a *Builder) Description(desc string) A.ArgumentBuilder {
 }
 
 func (a *Builder) Require() A.ArgumentBuilder {
-	a.IsRequired = true
+	a.IsArgRequired = true
 	return a
 }
 
 func (a *Builder) Required(req bool) A.ArgumentBuilder {
-	a.IsRequired = req
+	a.IsArgRequired = req
 	return a
+}
+
+func (a *Builder) IsRequired() bool {
+	return a.IsArgRequired
 }
 
 func (a *Builder) Parent(par interface{}) A.ArgumentBuilder {
@@ -77,11 +82,11 @@ func (a *Builder) GetBinding() interface{} { return a.BindValue }
 func (a *Builder) HasBinding() bool        { return a.IsBindingSet }
 
 func (a *Builder) Build() (A.Argument, error) {
-	if err := a.ValidateDefault(); err != nil {
+	if err := a.ValidateBinding(); err != nil {
 		return nil, err
 	}
 
-	if err := a.ValidateBinding(); err != nil {
+	if err := a.ValidateDefault(); err != nil {
 		return nil, err
 	}
 
@@ -100,7 +105,7 @@ func (a *Builder) Build() (A.Argument, error) {
 
 		BindValue:     a.BindValue,
 		RootBinding:   a.RootBinding,
-		IsRequired:    a.IsRequired,
+		IsRequired:    a.IsArgRequired,
 		ParentElement: a.ParentElement,
 	}, nil
 }
