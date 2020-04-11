@@ -52,7 +52,7 @@ func TestArgumentBuilder_Description(t *T) {
 
 		a.Description(v)
 
-		So(a.DescriptionValue.DescriptionValue, ShouldResemble, v)
+		So(a.DescriptionValue.DescriptionText, ShouldResemble, v)
 	})
 }
 

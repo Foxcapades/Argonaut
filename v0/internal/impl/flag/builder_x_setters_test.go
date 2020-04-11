@@ -70,7 +70,7 @@ func TestFlagBuilder_Description(t *testing.T) {
 
 		convey.So(f.Description("bananas are superior to mangos"),
 			convey.ShouldNotBeNil)
-		convey.So(f.DescriptionText.DescriptionValue, convey.ShouldEqual,
+		convey.So(f.DescriptionText.DescriptionText, convey.ShouldEqual,
 			"bananas are superior to mangos")
 	})
 }

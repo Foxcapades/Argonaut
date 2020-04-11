@@ -51,7 +51,7 @@ func (a *Builder) Bind(ptr interface{}) A.ArgumentBuilder {
 }
 
 func (a *Builder) Description(desc string) A.ArgumentBuilder {
-	a.DescriptionValue.DescriptionValue = desc
+	a.DescriptionValue.DescriptionText = desc
 	return a
 }
 

@@ -46,8 +46,8 @@ func (c *Builder) GetArgs() []AAB        { return c.args }
 
 func (c *Builder) Examples(examples ...string) ACB { c.examples = examples; return c }
 
-func (c *Builder) Description(desc string) ACB { c.desc.DescriptionValue = desc; return c }
-func (c *Builder) HasDescription() bool        { return len(c.desc.DescriptionValue) > 0 }
+func (c *Builder) Description(desc string) ACB { c.desc.DescriptionText = desc; return c }
+func (c *Builder) HasDescription() bool        { return len(c.desc.DescriptionText) > 0 }
 func (c *Builder) GetDescription() string      { return c.desc.Description() }
 
 func (c *Builder) Warnings() []string { return c.warnings }
@@ -147,9 +147,9 @@ func (c *Builder) Build() (AC, error) {
 	}
 
 	out.Described = c.desc
-	out.groups = groups
-	out.arguments = args
-	out.unmarshal = c.unmarshaler
+	out.Groups = groups
+	out.PositionalArgs = args
+	out.ValueUnmarshaler = c.unmarshaler
 
 	return out, nil
 }

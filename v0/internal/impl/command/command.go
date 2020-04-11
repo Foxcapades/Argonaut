@@ -5,26 +5,26 @@ import (
 	"path"
 
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/trait"
+	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
 type Command struct {
 	trait.Described
 
-	// value unmarshaller
-	unmarshal AVU
+	ValueUnmarshaler argo.ValueUnmarshaler
 
 	// flag groups
-	groups []AFG
+	Groups []argo.FlagGroup
 
 	// positional arguments
-	arguments []AA
+	PositionalArgs []argo.Argument
 
 	// unknown inputs
-	unmapped []string
+	Unmapped []string
 
 	// passthrough values (values appearing after "--" on the
 	// cli)
-	passthroughs []string
+	Passthrough []string
 }
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
@@ -35,27 +35,27 @@ type Command struct {
 
 // See argo.Command#FlagGroups()
 func (c *Command) FlagGroups() []AFG {
-	return c.groups
+	return c.Groups
 }
 
 // See argo.Command#Arguments()
 func (c *Command) Arguments() []AA {
-	return c.arguments
+	return c.PositionalArgs
 }
 
 // See argo.Command#UnmappedInput()
 func (c *Command) UnmappedInput() []string {
-	return c.unmapped
+	return c.Unmapped
 }
 
 // See argo.Command#Passthroughs()
 func (c *Command) Passthroughs() []string {
-	return c.passthroughs
+	return c.Passthrough
 }
 
 // See argo.Command#Unmarshaller()
 func (c *Command) Unmarshaler() AVU {
-	return c.unmarshal
+	return c.ValueUnmarshaler
 }
 
 func (c *Command) String() string {
@@ -69,10 +69,10 @@ func (c *Command) Name() string {
 
 // See argo.Command#AppendUnmapped()
 func (c *Command) AppendUnmapped(val string) {
-	c.unmapped = append(c.unmapped, val)
+	c.Unmapped = append(c.Unmapped, val)
 }
 
 // See argo.Command#AppendPassthrough()
 func (c *Command) AppendPassthrough(val string) {
-	c.passthroughs = append(c.passthroughs, val)
+	c.Passthrough = append(c.Passthrough, val)
 }

@@ -9,11 +9,19 @@ type Group struct {
 	trait.Named
 	trait.Described
 
-	parent A.Command
+	ParentElement A.Command
 
-	flags []A.Flag
+	FlagElements []A.Flag
 }
 
-func (f *Group) Flags() []A.Flag   { return f.flags }
-func (f *Group) HasFlags() bool    { return len(f.flags) > 0 }
-func (f *Group) Parent() A.Command { return f.parent }
+func (f *Group) Flags() []A.Flag {
+	return f.FlagElements
+}
+
+func (f *Group) HasFlags() bool {
+	return len(f.FlagElements) > 0
+}
+
+func (f *Group) Parent() A.Command {
+	return f.ParentElement
+}

@@ -38,7 +38,7 @@ func (f *Builder) Long(flag string) argo.FlagBuilder {
 }
 
 func (f *Builder) Description(desc string) argo.FlagBuilder {
-	f.DescriptionText.DescriptionValue = desc
+	f.DescriptionText.DescriptionText = desc
 	return f
 }
 

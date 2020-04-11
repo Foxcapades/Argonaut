@@ -23,7 +23,7 @@ func (f *Builder) GetDescription() string {
 }
 
 func (f *Builder) HasDescription() bool {
-	return len(f.DescriptionText.DescriptionValue) > 0
+	return len(f.DescriptionText.DescriptionText) > 0
 }
 
 func (f *Builder) GetArg() argo.ArgumentBuilder {
