@@ -6,16 +6,9 @@ import (
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
 )
 
-var unmarshalerType = R.TypeOf((*A.Unmarshaler)(nil)).Elem()
-
-func IsUnmarshalable(o interface{}) bool {
-	_, err := ToUnmarshalable("", R.ValueOf(o), false)
-	return err == nil
-}
-
 func ToUnmarshalable(arg string, ov R.Value, skipPtr bool) (R.Value, error) {
 
-	if (!skipPtr && ov.Kind() != R.Ptr) || IsNil(&ov) {
+	if !skipPtr && (ov.Kind() != R.Ptr || IsNil(&ov)) {
 		return R.Value{}, &A.InvalidUnmarshalError{Value: ov, Argument: arg}
 	}
 
@@ -90,11 +83,23 @@ func validateContainerValue(t R.Type, ov R.Value) error {
 		if IsByteSlice(t.Elem()) {
 			return nil
 		}
+		if IsUnmarshaler(t.Elem()) {
+			return nil
+		}
+		if IsInterface(t.Elem()) {
+			return nil
+		}
 
 		return &A.InvalidTypeError{Value: ov}
 	}
 
 	if IsByteSlice(t) {
+		return nil
+	}
+	if IsUnmarshaler(t) {
+		return nil
+	}
+	if IsInterface(t) {
 		return nil
 	}
 

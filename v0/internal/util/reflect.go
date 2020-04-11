@@ -71,6 +71,16 @@ func GetRootValue(v R.Value) R.Value {
 	return v
 }
 
+var unmarshalerType = R.TypeOf((*A.Unmarshaler)(nil)).Elem()
+
+func IsUnmarshaler(t R.Type) bool {
+	return t.AssignableTo(unmarshalerType)
+}
+
+func IsInterface(t R.Type) bool {
+	return t.Kind() == R.Interface
+}
+
 func IsBasicKind(k R.Kind) bool {
 	return k == R.String || k == R.Bool || IsNumericKind(k)
 }
