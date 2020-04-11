@@ -33,9 +33,9 @@ func flagGroup(fg A.FlagGroup, out *strings.Builder) {
 
 	for i, flag := range fg.Flags() {
 		out.WriteString(fgPadding)
-		writePadded(result.shorts[i], result.sLen, out)
+		WritePadded(result.shorts[i], result.sLen, out)
 		out.WriteString(fgDivider)
-		writePadded(result.longs[i], result.lLen, out)
+		WritePadded(result.longs[i], result.lLen, out)
 
 		if flag.HasDescription() {
 			out.WriteString(fgPadding)

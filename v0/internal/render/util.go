@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func writePadded(str string, ln int, out *strings.Builder) {
+func WritePadded(str string, ln int, out *strings.Builder) {
 	its := ln - len(str)
 	out.WriteString(str)
 	for i := 0; i < its; i++ {
