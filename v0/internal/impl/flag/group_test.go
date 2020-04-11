@@ -15,7 +15,7 @@ func TestGroup_Flags(t *testing.T) {
 
 		convey.So(test.Flags(), convey.ShouldResemble, []argo.Flag(nil))
 
-		test.FlagElements = []argo.Flag{val1}
+		test.FlagNodes = []argo.Flag{val1}
 		convey.So(test.Flags(), convey.ShouldResemble, []argo.Flag{val1})
 	})
 }
@@ -27,7 +27,7 @@ func TestGroup_HasFlags(t *testing.T) {
 
 		convey.So(test.HasFlags(), convey.ShouldBeFalse)
 
-		test.FlagElements = []argo.Flag{val1}
+		test.FlagNodes = []argo.Flag{val1}
 		convey.So(test.HasFlags(), convey.ShouldBeTrue)
 	})
 }

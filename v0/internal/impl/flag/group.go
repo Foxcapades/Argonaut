@@ -11,15 +11,15 @@ type Group struct {
 
 	ParentElement A.Command
 
-	FlagElements []A.Flag
+	FlagNodes []A.Flag
 }
 
 func (f *Group) Flags() []A.Flag {
-	return f.FlagElements
+	return f.FlagNodes
 }
 
 func (f *Group) HasFlags() bool {
-	return len(f.FlagElements) > 0
+	return len(f.FlagNodes) > 0
 }
 
 func (f *Group) Parent() A.Command {
