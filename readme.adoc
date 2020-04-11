@@ -3,8 +3,8 @@
 :pygments-style: monokai
 :toc: preamble
 
+image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version&style=flat-square[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
 image:https://goreportcard.com/badge/github.com/Foxcapades/Argonaut[link=https://goreportcard.com/report/github.com/Foxcapades/Argonaut]
-
 
 ++++
 <p align="center" role="Header">
