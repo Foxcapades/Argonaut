@@ -19,27 +19,27 @@ func TestFlagBuilder_Build(t *T) {
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
 
-			e, o := b.(A.InvalidFlagError)
+			e, o := b.(A.FlagBuilderError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, A.InvalidFlagNoFlags)
+			So(e.Type(), ShouldEqual, A.FlagBuilderErrNoFlags)
 		})
 
 		Convey("Invalid Short Flag", func() {
 			a, b := flag.NewBuilder(provider).Short(0).Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			e, o := b.(A.InvalidFlagError)
+			e, o := b.(A.FlagBuilderError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, A.InvalidFlagBadShortFlag)
+			So(e.Type(), ShouldEqual, A.FlagBuilderErrBadShortFlag)
 		})
 
 		Convey("Invalid Long Flag", func() {
 			a, b := flag.NewBuilder(provider).Long(" ").Build()
 			So(a, ShouldBeNil)
 			So(b, ShouldNotBeNil)
-			e, o := b.(A.InvalidFlagError)
+			e, o := b.(A.FlagBuilderError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, A.InvalidFlagBadLongFlag)
+			So(e.Type(), ShouldEqual, A.FlagBuilderErrBadLongFlag)
 		})
 
 		Convey("Invalid Argument", func() {
@@ -65,9 +65,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(A.InvalidFlagError)
+			e, o := err.(A.FlagBuilderError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, A.InvalidFlagNoFlags)
+			So(e.Type(), ShouldEqual, A.FlagBuilderErrNoFlags)
 		})
 
 		Convey("Invalid Short Flag", func() {
@@ -78,9 +78,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(A.InvalidFlagError)
+			e, o := err.(A.FlagBuilderError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, A.InvalidFlagBadShortFlag)
+			So(e.Type(), ShouldEqual, A.FlagBuilderErrBadShortFlag)
 		})
 
 		Convey("Invalid Long Flag", func() {
@@ -91,9 +91,9 @@ func TestFlagBuilder_MustBuild(t *T) {
 			}
 
 			So(fn, ShouldPanic)
-			e, o := err.(A.InvalidFlagError)
+			e, o := err.(A.FlagBuilderError)
 			So(o, ShouldBeTrue)
-			So(e.Type(), ShouldEqual, A.InvalidFlagBadLongFlag)
+			So(e.Type(), ShouldEqual, A.FlagBuilderErrBadLongFlag)
 		})
 
 		Convey("Invalid Argument", func() {

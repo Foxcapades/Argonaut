@@ -1,13 +1,13 @@
 package trait
 
 type Described struct {
-	DescriptionText string
+	DescTxt string
 }
 
 func (d *Described) Description() string {
-	return d.DescriptionText
+	return d.DescTxt
 }
 
 func (d *Described) HasDescription() bool {
-	return len(d.DescriptionText) > 0
+	return len(d.DescTxt) > 0
 }

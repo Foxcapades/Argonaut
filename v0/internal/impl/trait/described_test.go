@@ -10,7 +10,7 @@ func TestDescribed_Description(t *T) {
 	Convey("Described.Description", t, func() {
 		var test Described
 		So(test.Description(), ShouldEqual, "")
-		test.DescriptionText = "test"
+		test.DescTxt = "test"
 		So(test.Description(), ShouldEqual, "test")
 	})
 }
@@ -19,7 +19,7 @@ func TestDescribed_HasDescription(t *T) {
 	Convey("Described.HasDescription", t, func() {
 		var test Described
 		So(test.HasDescription(), ShouldBeFalse)
-		test.DescriptionText = "foo"
+		test.DescTxt = "foo"
 		So(test.HasDescription(), ShouldBeTrue)
 	})
 }

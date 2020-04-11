@@ -32,7 +32,7 @@ type Builder struct {
 	NameValue trait.Named
 }
 
-func (a *Builder) Name(name string) A.ArgumentBuilder { a.NameValue.NameValue = name; return a }
+func (a *Builder) Name(name string) A.ArgumentBuilder { a.NameValue.NameTxt = name; return a }
 
 func (a *Builder) Default(val interface{}) A.ArgumentBuilder {
 	a.IsDefaultSet = true
@@ -51,7 +51,7 @@ func (a *Builder) Bind(ptr interface{}) A.ArgumentBuilder {
 }
 
 func (a *Builder) Description(desc string) A.ArgumentBuilder {
-	a.DescriptionValue.DescriptionText = desc
+	a.DescriptionValue.DescTxt = desc
 	return a
 }
 
@@ -74,7 +74,7 @@ func (a *Builder) Parent(par interface{}) A.ArgumentBuilder {
 	return a
 }
 
-func (a *Builder) GetName() string         { return a.NameValue.NameValue }
+func (a *Builder) GetName() string         { return a.NameValue.NameTxt }
 func (a *Builder) HasName() bool           { return a.NameValue.HasName() }
 func (a *Builder) GetDefault() interface{} { return a.DefaultValue }
 func (a *Builder) HasDefault() bool        { return a.IsDefaultSet }

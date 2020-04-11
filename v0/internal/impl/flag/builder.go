@@ -33,15 +33,15 @@ type Builder struct {
 
 func (f *Builder) Build() (out A.Flag, err error) {
 	if !(f.IsShortSet || f.IsLongSet) {
-		return nil, A.NewInvalidFlagError(A.InvalidFlagNoFlags)
+		return nil, A.NewFlagBuilderError(A.FlagBuilderErrNoFlags, f)
 	}
 
 	if f.IsLongSet && !util.IsValidLongFlag(f.LongFlag) {
-		return nil, A.NewInvalidFlagError(A.InvalidFlagBadLongFlag)
+		return nil, A.NewFlagBuilderError(A.FlagBuilderErrBadLongFlag, f)
 	}
 
 	if f.IsShortSet && !util.IsValidShortFlag(f.ShortFlag) {
-		return nil, A.NewInvalidFlagError(A.InvalidFlagBadShortFlag)
+		return nil, A.NewFlagBuilderError(A.FlagBuilderErrBadShortFlag, f)
 	}
 
 	var arg A.Argument

@@ -1,13 +1,13 @@
 package trait
 
 type Named struct {
-	NameValue string
+	NameTxt string
 }
 
 func (n *Named) Name() string {
-	return n.NameValue
+	return n.NameTxt
 }
 
 func (n *Named) HasName() bool {
-	return len(n.NameValue) > 0
+	return len(n.NameTxt) > 0
 }

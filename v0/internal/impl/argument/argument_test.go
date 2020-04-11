@@ -13,13 +13,13 @@ import (
 
 func TestArgument_Name(t *T) {
 	Convey("Argument.Name", t, func() {
-		So((&Argument{Named: Named{NameValue: "foo"}}).Name(), ShouldEqual, "foo")
+		So((&Argument{Named: Named{NameTxt: "foo"}}).Name(), ShouldEqual, "foo")
 	})
 }
 
 func TestArgument_HasName(t *T) {
 	Convey("Argument.HasName", t, func() {
-		So((&Argument{Named: Named{NameValue: "straps"}}).HasName(), ShouldBeTrue)
+		So((&Argument{Named: Named{NameTxt: "straps"}}).HasName(), ShouldBeTrue)
 		So((&Argument{}).HasName(), ShouldBeFalse)
 	})
 }
@@ -90,7 +90,7 @@ func TestArgument_IsPositionalArg(t *T) {
 func TestArgument_String(t *T) {
 	Convey("Argument.String", t, func() {
 		So((&Argument{}).String(), ShouldEqual, "arg")
-		So((&Argument{Named: Named{NameValue: "foo"}}).String(), ShouldEqual,
+		So((&Argument{Named: Named{NameTxt: "foo"}}).String(), ShouldEqual,
 			"foo")
 	})
 }

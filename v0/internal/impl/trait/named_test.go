@@ -10,7 +10,7 @@ func TestNamed_Name(t *T) {
 	Convey("Named.Name", t, func() {
 		var test Named
 		So(test.Name(), ShouldEqual, "")
-		test.NameValue = "test"
+		test.NameTxt = "test"
 		So(test.Name(), ShouldEqual, "test")
 	})
 }
@@ -19,7 +19,7 @@ func TestNamed_HasName(t *T) {
 	Convey("Named.HasName", t, func() {
 		var test Named
 		So(test.HasName(), ShouldBeFalse)
-		test.NameValue = "foo"
+		test.NameTxt = "foo"
 		So(test.HasName(), ShouldBeTrue)
 	})
 }

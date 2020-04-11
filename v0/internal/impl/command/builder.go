@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/Foxcapades/Argonaut/v0/internal/impl/props"
 	"os"
 
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
@@ -20,7 +19,7 @@ func NewBuilder(provider AP) ACB {
 		fGroups:     []AFGB{provider.NewFlagGroup().Name("Options")},
 		parser:      parse.NewParser(),
 		unmarshaler: marsh.NewDefaultedValueUnmarshaler(),
-		options:     props.DefaultCommandOptions(),
+		options:     A.DefaultCommandOptions(),
 	}
 }
 
@@ -37,7 +36,7 @@ type Builder struct {
 	warnings []string
 	examples []string
 
-	options props.CommandOptions
+	options A.CommandOptions
 }
 
 func (c *Builder) DisableHelp() ACB      { c.options.IncludeHelp = false; return c }
@@ -46,8 +45,8 @@ func (c *Builder) GetArgs() []AAB        { return c.args }
 
 func (c *Builder) Examples(examples ...string) ACB { c.examples = examples; return c }
 
-func (c *Builder) Description(desc string) ACB { c.desc.DescriptionText = desc; return c }
-func (c *Builder) HasDescription() bool        { return len(c.desc.DescriptionText) > 0 }
+func (c *Builder) Description(desc string) ACB { c.desc.DescTxt = desc; return c }
+func (c *Builder) HasDescription() bool        { return len(c.desc.DescTxt) > 0 }
 func (c *Builder) GetDescription() string      { return c.desc.Description() }
 
 func (c *Builder) Warnings() []string { return c.warnings }

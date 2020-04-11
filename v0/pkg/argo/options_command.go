@@ -1,4 +1,4 @@
-package props
+package argo
 
 func DefaultCommandOptions() CommandOptions {
 	return CommandOptions{

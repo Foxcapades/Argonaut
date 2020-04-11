@@ -11,7 +11,7 @@ import (
 func TestCommand_Description(t *testing.T) {
 	convey.Convey("Command.Description", t, func() {
 		str := "knee deep in the hoopla"
-		convey.So((&command.Command{Described: trait.Described{DescriptionText: str}}).
+		convey.So((&command.Command{Described: trait.Described{DescTxt: str}}).
 			Description(), convey.ShouldEqual, str)
 	})
 }

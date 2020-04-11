@@ -28,7 +28,7 @@ func TestArgName(t *T) {
 		}{
 			{
 				"With Name",
-				Argument{Named: trait.Named{NameValue: "Hi"}},
+				Argument{Named: trait.Named{NameTxt: "Hi"}},
 				"Hi",
 			},
 			{
@@ -82,12 +82,12 @@ func TestFormatArgName(t *T) {
 		}{
 			{
 				"Required With Name",
-				Argument{Named: trait.Named{NameValue: "Hi"}, IsRequired: true},
+				Argument{Named: trait.Named{NameTxt: "Hi"}, IsRequired: true},
 				"<Hi>",
 			},
 			{
 				"Optional With Name",
-				Argument{Named: trait.Named{NameValue: "Hi"}},
+				Argument{Named: trait.Named{NameTxt: "Hi"}},
 				"[Hi]",
 			},
 			{

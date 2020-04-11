@@ -6,47 +6,6 @@ import (
 )
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
-//┃     Invalid Flag Config     ┃//
-//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
-
-type InvalidFlagErrorType uint8
-
-const (
-	InvalidFlagNoFlags InvalidFlagErrorType = iota
-	InvalidFlagBadShortFlag
-	InvalidFlagBadLongFlag
-)
-
-type InvalidFlagError interface {
-	error
-	Type() InvalidFlagErrorType
-}
-
-func NewInvalidFlagError(errType InvalidFlagErrorType) error {
-	return &invalidFlagError{eType: errType}
-}
-
-type invalidFlagError struct {
-	eType InvalidFlagErrorType
-}
-
-func (i *invalidFlagError) Type() InvalidFlagErrorType {
-	return i.eType
-}
-
-func (i *invalidFlagError) Error() string {
-	switch i.eType {
-	case InvalidFlagNoFlags:
-		return `Flags must have a short and/or long flag set`
-	case InvalidFlagBadLongFlag:
-		return `Long flags may only contain alphanumeric characters, underscores, and dashes`
-	case InvalidFlagBadShortFlag:
-		return `Short flags must be alphanumeric`
-	}
-	panic(fmt.Errorf("invalid flag error type %d", i.eType))
-}
-
-//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
 //┃     Nil or Non-Ptr          ┃//
 //┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 

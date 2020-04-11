@@ -1,4 +1,4 @@
-package props
+package argo
 
 func DefaultArgumentOptions() ArgumentOptions {
 	return ArgumentOptions{

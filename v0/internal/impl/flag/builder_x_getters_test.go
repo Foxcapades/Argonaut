@@ -11,14 +11,14 @@ import (
 
 func TestBuilder_GetDescription(t *T) {
 	Convey("flag.Builder.GetDescription", t, func() {
-		So((&Builder{DescriptionText: Described{DescriptionText: "foo"}}).
+		So((&Builder{DescriptionText: Described{DescTxt: "foo"}}).
 			GetDescription(), ShouldEqual, "foo")
 	})
 }
 
 func TestBuilder_HasDescription(t *T) {
 	Convey("flag.Builder.HasDescription", t, func() {
-		So((&Builder{DescriptionText: Described{DescriptionText: "foo"}}).
+		So((&Builder{DescriptionText: Described{DescTxt: "foo"}}).
 			HasDescription(), ShouldBeTrue)
 	})
 }

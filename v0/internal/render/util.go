@@ -13,8 +13,13 @@ func writePadded(str string, ln int, out *strings.Builder) {
 	}
 }
 
-func isBreakChar(b byte) bool {
-	return b == ' ' || b == '-'
+// IsBreakChar returns true if the given character is one
+// that can be followed immediately by a line break
+func IsBreakChar(b byte) bool {
+	// TODO: '-' needs to be handled differently than spaces
+	//       spaces are removed from the output, however the
+	//       dash should be maintained.
+	return b == ' ' || b == '\n' || b == '\t' || b == '\r' /*|| b == '-'*/
 }
 
 func BreakFmt(str string, offset, width int, out *strings.Builder) {
@@ -46,7 +51,7 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 				out.Write(buf)
 			}
 
-			if isBreakChar(b) {
+			if IsBreakChar(b) {
 				out.WriteString(str[lastSplit:i])
 				lastBreak = i
 				lastSplit = i + 1
@@ -69,7 +74,7 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 			}
 		}
 
-		if isBreakChar(b) {
+		if IsBreakChar(b) {
 			lastBreak = i
 		}
 	}
