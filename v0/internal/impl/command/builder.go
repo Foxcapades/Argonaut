@@ -124,14 +124,18 @@ func (c *Builder) Build() (AC, error) {
 	}
 
 	// Build groups
-	groups := make([]AFG, len(c.fGroups))
+	groups := make([]AFG, 0, len(c.fGroups))
 
-	for i, fg := range c.fGroups {
+	for _, fg := range c.fGroups {
+		if len(fg.GetFlags()) == 0 {
+			continue
+		}
+
 		fg.Parent(out)
 		if g, err := fg.Build(); err != nil {
 			return nil, err
 		} else {
-			groups[i] = g
+			groups = append(groups, g)
 		}
 	}
 
