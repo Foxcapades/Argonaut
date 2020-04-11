@@ -22,11 +22,11 @@ type GBuilder struct {
 // Getters
 //
 
-func (f *GBuilder) GetName() string           {
+func (f *GBuilder) GetName() string {
 	return f.NameTxt.NameTxt
 }
 
-func (f *GBuilder) GetDescription() string    {
+func (f *GBuilder) GetDescription() string {
 	return f.DescTxt.DescTxt
 }
 
@@ -38,16 +38,19 @@ func (f *GBuilder) GetFlags() []A.FlagBuilder {
 // Setters
 //
 
-func (f *GBuilder) Parent(com A.Command) A.FlagGroupBuilder    {
-	f.ParentNode = com; return f
+func (f *GBuilder) Parent(com A.Command) A.FlagGroupBuilder {
+	f.ParentNode = com
+	return f
 }
 
-func (f *GBuilder) Name(name string) A.FlagGroupBuilder        {
-	f.NameTxt.NameTxt = name; return f
+func (f *GBuilder) Name(name string) A.FlagGroupBuilder {
+	f.NameTxt.NameTxt = name
+	return f
 }
 
 func (f *GBuilder) Description(desc string) A.FlagGroupBuilder {
-	f.DescTxt.DescTxt = desc; return f
+	f.DescTxt.DescTxt = desc
+	return f
 }
 
 //

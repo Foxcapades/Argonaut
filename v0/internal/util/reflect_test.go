@@ -17,7 +17,7 @@ func TestCompatible(t *testing.T) {
 
 			So(Compatible(&a, &b), ShouldBeTrue)
 		})
-		Convey("With incomaptible values", func() {
+		Convey("With incompatible values", func() {
 			var testVal1 string
 			var testVal2 int
 

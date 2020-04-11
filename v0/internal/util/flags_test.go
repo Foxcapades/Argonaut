@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func TestIsValidShortFlag(t *testing.T) {
 	Convey("util.IsValidShortFlag()", t, func() {
 		for k, v := range validShortFlags {
