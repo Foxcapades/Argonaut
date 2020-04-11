@@ -5,6 +5,7 @@
 
 image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
 image:https://goreportcard.com/badge/github.com/Foxcapades/Argonaut[link=https://goreportcard.com/report/github.com/Foxcapades/Argonaut]
+image:https://travis-ci.org/Foxcapades/Argonaut.svg?branch=master["Build Status", link="https://travis-ci.org/Foxcapades/Argonaut"]
 image:https://img.shields.io/codecov/c/github/Foxcapades/Argonaut[Codecov, link=https://codecov.io/gh/Foxcapades/Argonaut]
 
 ++++
