@@ -11,6 +11,18 @@ func (p *Parser) complete() {
 	TraceStart("Parser.complete")
 	defer TraceEnd(func() []interface{} { return nil })
 
+	if p.waiting != nil {
+		if p.waiting.Argument().HasDefault() {
+			p.assignDefault(p.waiting.Argument())
+			p.waiting = nil
+		} else if p.isBoolArg(p.waiting.Argument()) {
+			util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
+		} else {
+			// TODO: make this a real error
+			panic("missing required arg")
+		}
+	}
+
 	// Assign defaults to positional args
 	for _, arg := range p.com.Arguments() {
 		p.assignDefault(arg)
@@ -21,18 +33,6 @@ func (p *Parser) complete() {
 		for _, flag := range group.Flags() {
 			if flag.HasArgument() {
 				p.assignDefault(flag.Argument())
-			}
-		}
-	}
-
-	if p.waiting != nil {
-		// waiting may have been hit with defaults
-		if p.waiting.Argument().RawValue() == "" {
-			if p.isBoolArg(p.waiting.Argument()) {
-				util.Must(p.com.Unmarshaler().Unmarshal("true", p.popArg().Binding()))
-			} else {
-				// TODO: make this a real error
-				panic("missing required arg")
 			}
 		}
 	}

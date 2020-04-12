@@ -99,7 +99,7 @@ func TestArgumentBuilder_Build(t *T) {
 		})
 
 		Convey("type mismatch", func() {
-			e := ""
+			e := true
 			f := 3
 			a, b := argument.NewBuilder(impl.NewProvider()).Default(e).Bind(&f).Build()
 			So(a, ShouldBeNil)
@@ -108,7 +108,7 @@ func TestArgumentBuilder_Build(t *T) {
 			So(d, ShouldBeTrue)
 			So(c.Type(), ShouldEqual, A.ArgErrInvalidDefaultVal)
 			So(R.TypeOf(c.Builder().GetBinding()).Elem().Kind(), ShouldEqual, R.Int)
-			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.String)
+			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.Bool)
 		})
 	})
 }
@@ -142,7 +142,7 @@ func TestArgumentBuilder_MustBuild(t *T) {
 		})
 
 		Convey("type mismatch", func() {
-			e := ""
+			e := true
 			f := 3
 			fn, b := prep(argument.NewBuilder(impl.NewProvider()).Default(e).Bind(&f))
 			So(fn, ShouldPanic)
@@ -150,7 +150,7 @@ func TestArgumentBuilder_MustBuild(t *T) {
 			So(d, ShouldBeTrue)
 			So(c.Type(), ShouldEqual, A.ArgErrInvalidDefaultVal)
 			So(R.TypeOf(c.Builder().GetBinding()).Elem().Kind(), ShouldEqual, R.Int)
-			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.String)
+			So(R.TypeOf(c.Builder().GetDefault()).Kind(), ShouldEqual, R.Bool)
 		})
 	})
 }
