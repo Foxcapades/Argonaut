@@ -52,15 +52,20 @@ func (p *Parser) handleShortFlag() {
 			Trace("argument is bool")
 			if util.IsBool(p.argument()[p.charI:]) {
 				Trace("input is also bool")
-				util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
+				str := p.eatString()
+				util.Must(p.com.Unmarshaler().Unmarshal(str, arg.Binding()))
+				arg.SetRawValue(str)
 			} else {
 				Trace("input is not bool")
 				util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+				arg.SetRawValue("true")
 				p.handleShortFlag()
 			}
 			return
 		}
-		util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
+		str := p.eatString()
+		util.Must(p.com.Unmarshaler().Unmarshal(str, arg.Binding()))
+		arg.SetRawValue(str)
 		return
 	}
 
@@ -71,9 +76,12 @@ func (p *Parser) handleShortFlag() {
 		if p.isBoolArg(arg) {
 			Trace("cur flag argument is bool")
 			util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+			arg.SetRawValue("true")
 		}
 		p.handleShortFlag()
 	} else {
-		util.Must(p.com.Unmarshaler().Unmarshal(p.eatString(), arg.Binding()))
+		str := p.eatString()
+		util.Must(p.com.Unmarshaler().Unmarshal(str, arg.Binding()))
+		arg.SetRawValue(str)
 	}
 }

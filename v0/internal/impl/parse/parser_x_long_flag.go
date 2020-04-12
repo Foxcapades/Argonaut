@@ -41,6 +41,7 @@ func (p *Parser) handleLongFlag() {
 			// Boolean case
 			if p.isBoolArg(arg) {
 				util.Must(p.com.Unmarshaler().Unmarshal("true", arg.Binding()))
+				arg.SetRawValue("true")
 				return
 			}
 
@@ -51,4 +52,5 @@ func (p *Parser) handleLongFlag() {
 	}
 
 	util.Must(p.com.Unmarshaler().Unmarshal(split[1], arg.Binding()))
+	arg.SetRawValue(split[1])
 }
