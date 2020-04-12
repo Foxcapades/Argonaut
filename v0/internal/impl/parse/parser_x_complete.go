@@ -43,7 +43,6 @@ func (p *Parser) complete() {
 	}
 }
 
-
 func (p *Parser) assignDefault(arg A.Argument) {
 	if !arg.HasDefault() || arg.RawValue() != "" {
 		return

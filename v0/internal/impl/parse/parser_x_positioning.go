@@ -27,4 +27,3 @@ func (p *Parser) nextArg() (out bool) {
 	out = p.argI < len(p.input)
 	return
 }
-

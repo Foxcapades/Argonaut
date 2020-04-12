@@ -12,7 +12,6 @@ type Demo struct {
 	IntVal   int
 	FloatVal float32
 	HexVal   argo.Hex64
-
 }
 
 func main() {

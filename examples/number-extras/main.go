@@ -9,9 +9,9 @@ import (
 )
 
 type Inputs struct {
-	Hex    []argo.Hex
-	UHex   map[string]argo.UHex
-	Octal  []argo.Octal
+	Hex   []argo.Hex
+	UHex  map[string]argo.UHex
+	Octal []argo.Octal
 }
 
 func main() {
