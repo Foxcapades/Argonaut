@@ -19,10 +19,12 @@ func IsBreakChar(b byte) bool {
 	// TODO: '-' needs to be handled differently than spaces
 	//       spaces are removed from the output, however the
 	//       dash should be maintained.
-	return b == ' ' || b == '\n' || b == '\t' || b == '\r' /*|| b == '-'*/
+	return b == ' ' || b == '\t' /*|| b == '-'*/
 }
 
 func BreakFmt(str string, offset, width int, out *strings.Builder) {
+	str = strings.ReplaceAll(strings.ReplaceAll(str, "\r\n", "\n"), "\r", "\n")
+
 	size := width - offset
 	stln := len(str)
 
@@ -51,7 +53,7 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 				out.Write(buf)
 			}
 
-			if IsBreakChar(b) {
+			if IsBreakChar(b) || b == '\n' {
 				out.WriteString(str[lastSplit:i])
 				lastBreak = i
 				lastSplit = i + 1
@@ -76,6 +78,10 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 
 		if IsBreakChar(b) {
 			lastBreak = i
+		} else if b == '\n' {
+			out.WriteString(str[lastSplit:i])
+			lastBreak = i
+			lastSplit = i + 1
 		}
 	}
 

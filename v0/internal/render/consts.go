@@ -13,5 +13,5 @@ const (
 	dblLineBreak = "\n\n"
 	sngLineBreak = '\n'
 	sngSpace     = ' '
-	maxWidth     = 80
+	maxWidth     = 100
 )

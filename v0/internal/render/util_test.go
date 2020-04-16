@@ -12,7 +12,7 @@ import (
 
 func TestIsBreakChar(t *testing.T) {
 	Convey("render.IsBreakChar()", t, func() {
-		ws := []byte{' ', '\t', '\r', '\n'}
+		ws := []byte{' ', '\t'}
 		Convey("Should return true for whitespace characters", func() {
 
 			for _, test := range ws {

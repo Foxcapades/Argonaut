@@ -12,6 +12,7 @@ const (
 	fgShortAssign = sngSpace
 	fgLongAssign  = '='
 	fgDivider     = " | "
+	fgEmptyDiv    = "   "
 	fgPadding     = "  "
 )
 
@@ -32,9 +33,19 @@ func flagGroup(fg A.FlagGroup, out *strings.Builder) {
 	pad := result.sLen + result.lLen + len(fgDivider) + (len(fgPadding) * 2)
 
 	for i, flag := range fg.Flags() {
+		hasShort := result.shorts[i] != ""
+		hasLong := result.longs[i] != ""
+
 		out.WriteString(fgPadding)
+
 		WritePadded(result.shorts[i], result.sLen, out)
-		out.WriteString(fgDivider)
+
+		if hasLong && hasShort {
+			out.WriteString(fgDivider)
+		} else {
+			out.WriteString(fgEmptyDiv)
+		}
+
 		WritePadded(result.longs[i], result.lLen, out)
 
 		if flag.HasDescription() {
