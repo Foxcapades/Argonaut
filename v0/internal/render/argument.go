@@ -13,6 +13,10 @@ const (
 )
 
 func FormattedArgName(a aa, out *strings.Builder) {
+	if a.HasBinding() && a.BindingType().Kind() == R.Bool {
+		return
+	}
+
 	if a.Required() {
 		out.WriteByte(argReqPrefix)
 		out.WriteString(ArgName(a))
@@ -47,6 +51,8 @@ func FormatArgType(kind R.Type) string {
 		return "int"
 	case R.Float32, R.Float64:
 		return "float"
+	case R.Bool:
+
 	}
 	return kind.String()
 }

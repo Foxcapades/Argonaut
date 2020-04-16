@@ -79,7 +79,8 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 		if IsBreakChar(b) {
 			lastBreak = i
 		} else if b == '\n' {
-			out.WriteString(str[lastSplit:i])
+			out.WriteString(str[lastSplit : i+1])
+			out.Write(buf)
 			lastBreak = i
 			lastSplit = i + 1
 		}
