@@ -15,7 +15,7 @@ func (p *Parser) handleShortFlag() {
 
 	// Invalid flag character
 	if !ok {
-		p.extra = append(p.extra, string([]byte{'-', p.char()}))
+		p.com.AppendUnmapped(string([]byte{'-', p.char()}))
 		if p.nextChar() {
 			p.handleShortFlag()
 		}

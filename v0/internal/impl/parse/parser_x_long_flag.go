@@ -17,7 +17,7 @@ func (p *Parser) handleLongFlag() {
 
 	// Unrecognized flag
 	if !ok {
-		p.extra = append(p.extra, rest)
+		p.com.AppendUnmapped(rest)
 		return
 	}
 

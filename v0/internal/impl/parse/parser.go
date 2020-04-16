@@ -24,12 +24,6 @@ type Parser struct {
 	// CLI input
 	input []string
 
-	// Unrecognized params
-	extra []string
-
-	// values after the "--" end of flags marker.
-	passthrough []string
-
 	// index of the current argument
 	argI int
 
@@ -63,11 +57,11 @@ func (p *Parser) Parse(args []string, command A.Command) (err error) {
 }
 
 func (p *Parser) Unrecognized() []string {
-	return p.extra
+	return p.com.UnmappedInput()
 }
 
 func (p *Parser) Passthroughs() []string {
-	return p.passthrough
+	return p.com.Passthroughs()
 }
 
 //┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
@@ -146,7 +140,7 @@ func (p *Parser) parseNext() {
 	// End of flags marker
 	if !p.nextChar() {
 		for p.nextArg() {
-			p.passthrough = append(p.passthrough, p.argument())
+			p.com.AppendPassthrough(p.argument())
 		}
 		return
 	}
@@ -180,7 +174,7 @@ func (p *Parser) handleArg() {
 		delete(p.reqs, pointerFor(arg))
 	} else {
 		Trace("no arg, extra input")
-		p.extra = append(p.extra, p.argument())
+		p.com.AppendUnmapped(p.argument())
 	}
 }
 

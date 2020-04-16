@@ -27,9 +27,9 @@ type CommandBuilder interface {
 
 	MustBuild() Command
 
-	Parse() (extra []string, err error)
+	Parse() (com Command, err error)
 
-	MustParse() []string
+	MustParse() Command
 
 	Warnings() []string
 }

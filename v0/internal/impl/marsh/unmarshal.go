@@ -2,11 +2,10 @@ package marsh
 
 import (
 	"github.com/Foxcapades/Argonaut/v0/internal/impl/props"
-	R "reflect"
-	S "strconv"
-
 	U "github.com/Foxcapades/Argonaut/v0/internal/util"
 	A "github.com/Foxcapades/Argonaut/v0/pkg/argo"
+	R "reflect"
+	S "strconv"
 )
 
 type iProps = A.UnmarshalIntegerProps
@@ -53,6 +52,7 @@ func (v *ValueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	case R.Float32:
 		return unmarshalFloat(ptrVal, raw, 32)
 	case R.Int64:
+		// TODO: Handle durations
 		return unmarshalInt(ptrVal, raw, 64, &v.props.Integers)
 	case R.Float64:
 		return unmarshalFloat(ptrVal, raw, 64)
@@ -80,48 +80,15 @@ func (v *ValueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 		return unmarshalBool(ptrVal, raw)
 	case R.Interface:
 		ptrVal.Set(R.ValueOf(raw))
+	case R.Struct:
+		// TODO: handle time
+		fallthrough
 
 	default:
 		panic("invalid unmarshal state")
 	}
 
 	return
-}
-
-func unmarshalInt(v R.Value, raw string, size int, props *iProps) error {
-	if tmp, e := U.ParseInt(raw, size, props); e != nil {
-		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
-	} else {
-		v.SetInt(tmp)
-	}
-	return nil
-}
-
-func unmarshalUInt(v R.Value, raw string, size int, props *iProps) error {
-	if tmp, e := U.ParseUInt(raw, size, props); e != nil {
-		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
-	} else {
-		v.SetUint(tmp)
-	}
-	return nil
-}
-
-func unmarshalFloat(v R.Value, raw string, size int) error {
-	if tmp, e := S.ParseFloat(raw, size); e != nil {
-		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
-	} else {
-		v.SetFloat(tmp)
-	}
-	return nil
-}
-
-func unmarshalBool(v R.Value, raw string) error {
-	if tmp, e := U.ParseBool(raw); e != nil {
-		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
-	} else {
-		v.SetBool(tmp)
-	}
-	return nil
 }
 
 func (v *ValueUnmarshaler) unmarshalSlice(val R.Value, raw string) error {
@@ -196,4 +163,40 @@ func (v *ValueUnmarshaler) unmarshalValue(vt R.Type, raw string) (R.Value, error
 	}
 
 	panic("invalid state")
+}
+
+func unmarshalInt(v R.Value, raw string, size int, props *iProps) error {
+	if tmp, e := U.ParseInt(raw, size, props); e != nil {
+		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
+	} else {
+		v.SetInt(tmp)
+	}
+	return nil
+}
+
+func unmarshalUInt(v R.Value, raw string, size int, props *iProps) error {
+	if tmp, e := U.ParseUInt(raw, size, props); e != nil {
+		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
+	} else {
+		v.SetUint(tmp)
+	}
+	return nil
+}
+
+func unmarshalFloat(v R.Value, raw string, size int) error {
+	if tmp, e := S.ParseFloat(raw, size); e != nil {
+		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
+	} else {
+		v.SetFloat(tmp)
+	}
+	return nil
+}
+
+func unmarshalBool(v R.Value, raw string) error {
+	if tmp, e := U.ParseBool(raw); e != nil {
+		return &A.FormatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
+	} else {
+		v.SetBool(tmp)
+	}
+	return nil
 }

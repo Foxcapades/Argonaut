@@ -165,18 +165,18 @@ func (c *Builder) MustBuild() AC {
 	return com
 }
 
-func (c *Builder) Parse() (extra []string, err error) {
-	com, err := c.Build()
+func (c *Builder) Parse() (com A.Command, err error) {
+	com, err = c.Build()
 	if err != nil {
 		return nil, err
 	}
 
 	err = c.parser.Parse(os.Args, com)
 
-	return c.parser.Passthroughs(), err
+	return com, err
 }
 
-func (c *Builder) MustParse() []string {
+func (c *Builder) MustParse() A.Command {
 	if a, b := c.Parse(); b != nil {
 		panic(b)
 	} else {

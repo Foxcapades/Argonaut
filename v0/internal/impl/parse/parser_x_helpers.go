@@ -20,8 +20,6 @@ func (p *Parser) setup(args []string, com A.Command) {
 	p.args = com.Arguments()
 	p.input = args
 	p.com = com
-	p.extra = nil
-	p.passthrough = nil
 	p.argI = 0
 	p.charI = 0
 	p.waiting = nil

@@ -7,5 +7,8 @@ type Command interface {
 	Arguments() []Argument
 	FlagGroups() []FlagGroup
 	UnmappedInput() []string
+	AppendUnmapped(string)
 	Unmarshaler() ValueUnmarshaler
+	Passthroughs() []string
+	AppendPassthrough(string)
 }
