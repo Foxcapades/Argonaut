@@ -25,6 +25,7 @@ func command(com ac, out *strings.Builder) {
 
 	appendComFlagGroups(com, out)
 	appendArguments(com, out)
+	out.WriteByte('\n')
 }
 
 func appendComFlags(com ac, out *strings.Builder) {
