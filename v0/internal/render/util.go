@@ -83,8 +83,8 @@ func BreakFmt(str string, offset, width int, out *strings.Builder) {
 			// first line we are reading.
 			if lastSplit > 0 {
 				out.WriteByte('\n')
+				out.Write(buf)
 			}
-			out.Write(buf)
 			out.WriteString(str[lastSplit:i])
 			lastBreak = i
 			lastSplit = i + 1
