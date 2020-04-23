@@ -29,6 +29,30 @@ func NewFlag() argo.FlagBuilder {
 	return Provider().NewFlag()
 }
 
+// SlFlag is a shorthand for creating a new FlagBuilder then
+// setting the short flag, long flag, and description.
+//
+// Same as calling `NewFlag().Short(short).Long(long).Description(desc)`
+func SlFlag(short byte, long, desc string) argo.FlagBuilder {
+	return NewFlag().Short(short).Long(long).Description(desc)
+}
+
+// SFlag is a shorthand for creating a new FlagBuilder then
+// setting the short flag and description.
+//
+// Same as calling `NewFlag().Short(short).Description(desc)`
+func SFlag(short byte, desc string) argo.FlagBuilder {
+	return NewFlag().Short(short).Description(desc)
+}
+
+// LFlag is a shorthand for creating a new FlagBuilder then
+// setting the long flag and description.
+//
+// Same as calling `NewFlag().Long(long).Description(desc)`
+func LFlag(long, desc string) argo.FlagBuilder {
+	return NewFlag().Long(long).Description(desc)
+}
+
 // NewFlagGroup returns a new instance of a FlagGroupBuilder
 // from the current provider
 //
