@@ -1,8 +1,8 @@
 package event
 
 import (
-	"github.com/Foxcapades/Argonaut/v1/internal/chars"
-	"github.com/Foxcapades/Argonaut/v1/internal/util"
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 func NewEmitter(args []string) Emitter {

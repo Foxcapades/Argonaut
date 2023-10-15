@@ -59,22 +59,20 @@ func (a ArgumentErrorType) String() string {
 	panic("Invalid ArgumentErrorType")
 }
 
-// ArgumentError represents an error encountered when
-// attempting to build or handle an Argument.
+// ArgumentError represents an error encountered when attempting to build or
+// handle an Argument.
 type ArgumentError interface {
-	Error
+	error
 
 	// Type returns the specific type of this error.
 	//
 	// See ArgumentErrorType for more details.
 	Type() ArgumentErrorType
 
-	// Is returns whether or not this error is of the type
-	// given.
+	// Is returns whether this error is of the type given.
 	Is(errorType ArgumentErrorType) bool
 
-	// Builder returns the ArgumentBuilder in which this error
-	// was encountered.
+	// Builder returns the ArgumentBuilder in which this error was encountered.
 	Builder() ArgumentBuilder
 }
 
@@ -114,10 +112,6 @@ func (i *InvalidArgError) Is(kind ArgumentErrorType) bool {
 
 func (i *InvalidArgError) Builder() ArgumentBuilder {
 	return i.build
-}
-
-func (i InvalidArgError) StrictOnly() bool {
-	return false
 }
 
 func (i *InvalidArgError) Error() string {

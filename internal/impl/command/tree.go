@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 type tree struct {

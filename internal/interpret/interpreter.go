@@ -1,9 +1,9 @@
 package interpret
 
 import (
-	"github.com/Foxcapades/Argonaut/v1/internal/event"
-	"github.com/Foxcapades/Argonaut/v1/internal/parse"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/event"
+	"github.com/Foxcapades/Argonaut/internal/parse"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func CommandInterpreter(args []string, command argo.Command) Interpreter {

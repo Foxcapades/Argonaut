@@ -3,7 +3,7 @@ package flagutil
 import (
 	"fmt"
 
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func PrintFlagNames(flag argo.Flag) string {

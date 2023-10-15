@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/marsh"
-	"github.com/Foxcapades/Argonaut/v1/internal/xerr"
-	"github.com/Foxcapades/Argonaut/v1/internal/xref"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/marsh"
+	"github.com/Foxcapades/Argonaut/internal/xerr"
+	"github.com/Foxcapades/Argonaut/internal/xref"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func NewBuilder() argo.ArgumentBuilder {

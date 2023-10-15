@@ -51,7 +51,7 @@ type CommandBuilder interface {
 
 	// WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
 	// instance attached to this CommandBuilder.
-	WithFlag(flag FlagBuilder)
+	WithFlag(flag FlagBuilder) CommandBuilder
 
 	// HasFlags indicates whether this CommandBuilder instance has any FlagBuilder
 	// instances attached.
@@ -59,7 +59,7 @@ type CommandBuilder interface {
 
 	// WithArgument appends the given ArgumentBuilder to this CommandBuilder's
 	// list of positional arguments.
-	WithArgument(arg ArgumentBuilder)
+	WithArgument(arg ArgumentBuilder) CommandBuilder
 
 	// HasArguments indicates whether this CommandBuilder has any ArgumentBuilder
 	// instances attached to it.

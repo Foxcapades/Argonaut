@@ -1,6 +1,6 @@
 package flag
 
-import "github.com/Foxcapades/Argonaut/v1/pkg/argo"
+import "github.com/Foxcapades/Argonaut/pkg/argo"
 
 // implements argo.FlagGroup
 type group struct {

@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/xraw"
-	"github.com/Foxcapades/Argonaut/v1/internal/xref"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/xraw"
+	"github.com/Foxcapades/Argonaut/internal/xref"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 var unmarshalerType = reflect.TypeOf((*argo.Unmarshaler)(nil)).Elem()

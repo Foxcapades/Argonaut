@@ -3,11 +3,11 @@ package cli
 import (
 	"errors"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/argument"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/command"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/flag"
-	"github.com/Foxcapades/Argonaut/v1/internal/interpret"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/impl/argument"
+	"github.com/Foxcapades/Argonaut/internal/impl/command"
+	"github.com/Foxcapades/Argonaut/internal/impl/flag"
+	"github.com/Foxcapades/Argonaut/internal/interpret"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func Command() argo.CommandBuilder {

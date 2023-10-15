@@ -3,10 +3,10 @@ package flag
 import (
 	"errors"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/chars"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/argument"
-	"github.com/Foxcapades/Argonaut/v1/internal/xerr"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/impl/argument"
+	"github.com/Foxcapades/Argonaut/internal/xerr"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func NewBuilder() argo.FlagBuilder {

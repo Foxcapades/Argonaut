@@ -1,6 +1,6 @@
 package event
 
-import "github.com/Foxcapades/Argonaut/v1/internal/chars"
+import "github.com/Foxcapades/Argonaut/internal/chars"
 
 type Consumer = func(Event)
 

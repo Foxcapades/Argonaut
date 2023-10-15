@@ -3,10 +3,10 @@ package command
 import (
 	"errors"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/chars"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/command/comutil"
-	"github.com/Foxcapades/Argonaut/v1/internal/xerr"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/impl/command/comutil"
+	"github.com/Foxcapades/Argonaut/internal/xerr"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func GroupBuilder(name string) argo.CommandGroupBuilder {

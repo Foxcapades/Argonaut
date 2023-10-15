@@ -3,7 +3,7 @@ package util
 import (
 	"fmt"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/xmath"
+	"github.com/Foxcapades/Argonaut/internal/xmath"
 )
 
 type Deque[T any] interface {

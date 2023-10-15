@@ -1,14 +1,14 @@
 package command
 
 import (
-	"github.com/Foxcapades/Argonaut/v1/internal/consts"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/command/comutil"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/flag"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/flag/flagutil"
-	"github.com/Foxcapades/Argonaut/v1/internal/interpret"
-	"github.com/Foxcapades/Argonaut/v1/internal/util"
-	"github.com/Foxcapades/Argonaut/v1/internal/xerr"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/consts"
+	"github.com/Foxcapades/Argonaut/internal/impl/command/comutil"
+	"github.com/Foxcapades/Argonaut/internal/impl/flag"
+	"github.com/Foxcapades/Argonaut/internal/impl/flag/flagutil"
+	"github.com/Foxcapades/Argonaut/internal/interpret"
+	"github.com/Foxcapades/Argonaut/internal/util"
+	"github.com/Foxcapades/Argonaut/internal/xerr"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func TreeBuilder() argo.CommandTreeBuilder {

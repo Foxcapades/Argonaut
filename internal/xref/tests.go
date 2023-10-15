@@ -3,7 +3,7 @@ package xref
 import (
 	"reflect"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/marsh"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 var numericKinds = map[reflect.Kind]bool{
@@ -21,7 +21,7 @@ var numericKinds = map[reflect.Kind]bool{
 	reflect.Float64: true,
 }
 
-var unmarshalerType = reflect.TypeOf((*marsh.Unmarshaler)(nil)).Elem()
+var unmarshalerType = reflect.TypeOf((*argo.Unmarshaler)(nil)).Elem()
 
 func GetRootValue(v reflect.Value) reflect.Value {
 	// Used for recursion detection

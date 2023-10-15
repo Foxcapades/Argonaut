@@ -1,6 +1,6 @@
 package flag
 
-import "github.com/Foxcapades/Argonaut/v1/pkg/argo"
+import "github.com/Foxcapades/Argonaut/pkg/argo"
 
 func NewLongFlagRef(name, value string, hasValue bool) argo.FlagRef {
 	return ref{long: name, value: value, hasValue: hasValue}

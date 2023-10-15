@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/marsh"
-	"github.com/Foxcapades/Argonaut/v1/internal/xraw"
-	"github.com/Foxcapades/Argonaut/v1/internal/xref"
+	"github.com/Foxcapades/Argonaut/internal/marsh"
+	"github.com/Foxcapades/Argonaut/internal/xraw"
+	"github.com/Foxcapades/Argonaut/internal/xref"
 )
 
 // implements argo.Argument

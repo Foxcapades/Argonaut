@@ -3,8 +3,8 @@ package parse
 import (
 	"strings"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/chars"
-	"github.com/Foxcapades/Argonaut/v1/internal/event"
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/event"
 )
 
 type ChunkConsumer = func(Element)

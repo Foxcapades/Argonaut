@@ -1,6 +1,6 @@
 package command
 
-import "github.com/Foxcapades/Argonaut/v1/pkg/argo"
+import "github.com/Foxcapades/Argonaut/pkg/argo"
 
 // implements argo.CommandLeaf
 type commandLeaf struct {

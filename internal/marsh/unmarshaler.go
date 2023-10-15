@@ -1,6 +1,6 @@
 package marsh
 
-import "github.com/Foxcapades/Argonaut/v1/pkg/argo"
+import "github.com/Foxcapades/Argonaut/pkg/argo"
 
 type Unmarshaler = argo.Unmarshaler
 

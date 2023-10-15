@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func NewMultiError() argo.MultiError {
@@ -18,10 +18,6 @@ func NewMultiError() argo.MultiError {
 type multiError struct {
 	errs    []error
 	strings map[string]bool
-}
-
-func (m multiError) StrictOnly() bool {
-	return false
 }
 
 func (m multiError) Error() string {
@@ -39,23 +35,6 @@ func (m multiError) Error() string {
 
 func (m multiError) Errors() []error {
 	return m.errs
-}
-
-func (m multiError) NonStrictErrors() []error {
-	out := make([]error, 0, len(m.errs))
-
-	for _, err := range m.errs {
-		var e argo.Error
-		if errors.As(err, &e) {
-			if !e.StrictOnly() {
-				out = append(out, e)
-			}
-		} else {
-			out = append(out, err)
-		}
-	}
-
-	return out
 }
 
 func (m multiError) AppendError(err error) {

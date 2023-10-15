@@ -1,3 +1,3 @@
-module github.com/Foxcapades/Argonaut/v1
+module github.com/Foxcapades/Argonaut
 
 go 1.21

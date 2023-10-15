@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Foxcapades/Argonaut/v1/internal/chars"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/flag"
-	"github.com/Foxcapades/Argonaut/v1/internal/impl/flag/flagutil"
-	"github.com/Foxcapades/Argonaut/v1/internal/xerr"
-	"github.com/Foxcapades/Argonaut/v1/pkg/argo"
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/impl/flag"
+	"github.com/Foxcapades/Argonaut/internal/impl/flag/flagutil"
+	"github.com/Foxcapades/Argonaut/internal/xerr"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func NewLeafBuilder(name string) argo.CommandLeafBuilder {
