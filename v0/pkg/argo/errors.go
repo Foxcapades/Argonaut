@@ -5,9 +5,9 @@ import (
 	R "reflect"
 )
 
-//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
-//┃     Nil or Non-Ptr          ┃//
-//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+// ┃     Nil or Non-Ptr          ┃//
+// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
 type InvalidUnmarshalError struct {
 	Value    R.Value
@@ -21,9 +21,9 @@ func (i *InvalidUnmarshalError) Error() string {
 	return "Attempted to unmarshal into a non-pointer"
 }
 
-//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
-//┃     Invalid Type            ┃//
-//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+// ┃     Invalid Type            ┃//
+// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
 type InvalidTypeError struct {
 	Value R.Value
@@ -33,9 +33,9 @@ func (i *InvalidTypeError) Error() string {
 	return fmt.Sprintf("Cannot unmarshal type %s", i.Value.Type())
 }
 
-//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
-//┃     Invalid Format          ┃//
-//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+// ┃     Invalid Format          ┃//
+// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
 type FormatError struct {
 	Value    R.Value
@@ -48,9 +48,9 @@ func (f *FormatError) Error() string {
 	return fmt.Sprintf(errFormat, f.Kind)
 }
 
-//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
-//┃     Missing Argument        ┃//
-//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+// ┃     Missing Argument        ┃//
+// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
 type MissingRequiredArgumentError interface {
 	error
@@ -97,14 +97,14 @@ func (m *missingArgError) Error() string {
 }
 
 func (m *missingArgError) Argument() Argument {
-	panic("implement me")
+	return m.arg
 }
 
-//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
-//┃                                                                          ┃//
-//┃      Internals                                                           ┃//
-//┃                                                                          ┃//
-//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
+// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓//
+// ┃                                                                          ┃//
+// ┃      Internals                                                           ┃//
+// ┃                                                                          ┃//
+// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛//
 
 const (
 	errInvalidFlag     = `Cannot set flag key "%s": %s`
@@ -115,7 +115,7 @@ const (
 func printFlag(f Flag) string {
 	if f.HasLong() {
 		if f.HasShort() {
-			return fmt.Sprintf("--%s / -%c", f.Long(), f.Short())
+			return fmt.Sprintf("--%s | -%c", f.Long(), f.Short())
 		}
 		return fmt.Sprintf("--%s", f.Long())
 	}
