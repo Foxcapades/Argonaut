@@ -14,7 +14,7 @@ type commandInterpreter struct {
 	command argo.Command
 }
 
-func (c commandInterpreter) Run() error {
+func (c *commandInterpreter) Run() error {
 	var err error
 	boundary := false
 
@@ -108,7 +108,7 @@ FOR:
 	return nil
 }
 
-func (c commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) {
+func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) {
 	remainder := e.Data[0]
 
 	for i := 0; i < len(e.Data[0]); i++ {
@@ -263,7 +263,7 @@ func (c commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) {
 	return false, nil
 }
 
-func (c commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) {
+func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) {
 	block := e.Data[0]
 
 	if len(block) == 0 {
@@ -334,7 +334,7 @@ func (c commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) {
 	panic("illegal state")
 }
 
-func (c commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
+func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 	f := c.command.FindLongFlag(e.Data[0])
 
 	if f == nil {
@@ -422,7 +422,7 @@ func (c commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 	return false, f.Hit()
 }
 
-func (c commandInterpreter) interpretLongPair(e *parse.Element) (bool, error) {
+func (c *commandInterpreter) interpretLongPair(e *parse.Element) (bool, error) {
 	if found, err := c.command.TryFlag(flag.NewLongFlagRef(e.Data[0], e.Data[1], true)); err != nil {
 		return false, err
 	} else if !found {

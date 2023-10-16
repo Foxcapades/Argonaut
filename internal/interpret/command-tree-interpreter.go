@@ -159,7 +159,7 @@ FOR:
 	return nil
 }
 
-func (c commandTreeInterpreter) interpretShortSolo(element *parse.Element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unmapped *[]string) error {
 	remainder := element.Data[0]
 
 	for i := 0; i < len(element.Data[0]); i++ {
@@ -316,7 +316,7 @@ func (c commandTreeInterpreter) interpretShortSolo(element *parse.Element, unmap
 	return nil
 }
 
-func (c commandTreeInterpreter) interpretShortPair(element *parse.Element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unmapped *[]string) error {
 	block := element.Data[0]
 
 	if len(block) == 0 {
@@ -387,7 +387,7 @@ func (c commandTreeInterpreter) interpretShortPair(element *parse.Element, unmap
 	panic("illegal state")
 }
 
-func (c commandTreeInterpreter) interpretLongSolo(element *parse.Element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretLongSolo(element *parse.Element, unmapped *[]string) error {
 	f := c.current.FindLongFlag(element.Data[0])
 
 	if f == nil {
@@ -477,7 +477,7 @@ func (c commandTreeInterpreter) interpretLongSolo(element *parse.Element, unmapp
 	return f.Hit()
 }
 
-func (c commandTreeInterpreter) interpretLongPair(element *parse.Element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretLongPair(element *parse.Element, unmapped *[]string) error {
 	if found, err := c.current.TryFlag(flag.NewLongFlagRef(element.Data[0], element.Data[1], true)); err != nil {
 		return err
 	} else if !found {
