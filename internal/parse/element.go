@@ -20,7 +20,7 @@ func (e Element) String() string {
 	case ElementTypePlainText:
 		return e.Data[0]
 	case ElementTypeEnd:
-		return "\000"
+		return string(byte(0))
 	default:
 		panic("illegal state")
 	}

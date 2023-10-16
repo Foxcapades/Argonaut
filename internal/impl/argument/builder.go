@@ -140,7 +140,7 @@ func (a *argumentBuilder) validateBinding() error {
 	if tmp, err := marsh.ToUnmarshalable("", reflect.ValueOf(a.bind), false); err != nil {
 		return argo.NewInvalidArgError(argo.ArgErrInvalidBindingBadType, a, "")
 	} else {
-		a.bind = tmp
+		a.rootBind = tmp
 	}
 
 	return nil

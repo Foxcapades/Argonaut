@@ -22,6 +22,7 @@ type leafBuilder struct {
 	parent      argo.CommandNode
 	name        string
 	description string
+	umapLabel   string
 	aliases     []string
 	arguments   []argo.ArgumentBuilder
 	flagGroups  []argo.FlagGroupBuilder
@@ -56,6 +57,19 @@ func (l *leafBuilder) WithFlagGroup(flagGroup argo.FlagGroupBuilder) argo.Comman
 func (l *leafBuilder) WithFlag(flag argo.FlagBuilder) argo.CommandLeafBuilder {
 	l.flagGroups[0].WithFlag(flag)
 	return l
+}
+
+func (l *leafBuilder) WithUnmappedLabel(label string) argo.CommandLeafBuilder {
+	l.umapLabel = label
+	return l
+}
+
+func (l leafBuilder) HasUnmappedLabel() bool {
+	return len(l.umapLabel) > 0
+}
+
+func (l leafBuilder) GetUnmappedLabel() string {
+	return l.umapLabel
 }
 
 func (l *leafBuilder) Build() (argo.CommandLeaf, error) {

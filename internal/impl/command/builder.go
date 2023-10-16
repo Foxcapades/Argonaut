@@ -17,6 +17,7 @@ func Builder() argo.CommandBuilder {
 
 type builder struct {
 	description string
+	unmapLabel  string
 	flagGroups  []argo.FlagGroupBuilder
 	arguments   []argo.ArgumentBuilder
 }
@@ -45,6 +46,19 @@ func (b builder) HasFlagGroups() bool {
 
 func (b builder) GetFlagGroups() []argo.FlagGroupBuilder {
 	return b.flagGroups
+}
+
+func (b *builder) WithUnmappedLabel(label string) argo.CommandBuilder {
+	b.unmapLabel = label
+	return b
+}
+
+func (b builder) HasUnmappedLabel() bool {
+	return len(b.unmapLabel) > 0
+}
+
+func (b builder) GetUnmappedLabel() string {
+	return b.unmapLabel
 }
 
 func (b *builder) WithFlag(flag argo.FlagBuilder) argo.CommandBuilder {
@@ -115,8 +129,9 @@ func (b builder) build() (argo.Command, error) {
 	}
 
 	return &command{
-		description: b.description,
-		flagGroups:  flagGroups,
-		arguments:   arguments,
+		description:   b.description,
+		flagGroups:    flagGroups,
+		arguments:     arguments,
+		unmappedLabel: b.unmapLabel,
 	}, nil
 }

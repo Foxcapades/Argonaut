@@ -52,7 +52,7 @@ func (g groupBuilder) GetFlags() []argo.FlagBuilder {
 
 func (g *groupBuilder) Build() (argo.FlagGroup, error) {
 	errs := xerr.NewMultiError()
-	flags := make([]argo.Flag, len(g.flags))
+	flags := make([]argo.Flag, 0, len(g.flags))
 
 	// Ensure the group name is not blank
 	if chars.IsBlank(g.name) {

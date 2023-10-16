@@ -14,17 +14,31 @@ func GroupBuilder(name string) argo.CommandGroupBuilder {
 }
 
 type groupBuilder struct {
-	name     string
-	parent   argo.CommandNode
-	branches []argo.CommandBranchBuilder
-	leaves   []argo.CommandLeafBuilder
+	name        string
+	description string
+	parent      argo.CommandNode
+	branches    []argo.CommandBranchBuilder
+	leaves      []argo.CommandLeafBuilder
 }
 
 func (g *groupBuilder) Parent(node argo.CommandNode) {
 	g.parent = node
 }
 
-func (g *groupBuilder) AddBranch(branch argo.CommandBranchBuilder) argo.CommandGroupBuilder {
+func (g *groupBuilder) WithDescription(description string) argo.CommandGroupBuilder {
+	g.description = description
+	return g
+}
+
+func (g groupBuilder) HasDescription() bool {
+	return len(g.description) > 0
+}
+
+func (g groupBuilder) GetDescription() string {
+	return g.description
+}
+
+func (g *groupBuilder) WithBranch(branch argo.CommandBranchBuilder) argo.CommandGroupBuilder {
 	g.branches = append(g.branches, branch)
 	return g
 }
@@ -33,7 +47,7 @@ func (g groupBuilder) GetBranches() []argo.CommandBranchBuilder {
 	return g.branches
 }
 
-func (g *groupBuilder) AddLeaf(leaf argo.CommandLeafBuilder) argo.CommandGroupBuilder {
+func (g *groupBuilder) WithLeaf(leaf argo.CommandLeafBuilder) argo.CommandGroupBuilder {
 	g.leaves = append(g.leaves, leaf)
 	return g
 }
@@ -87,5 +101,5 @@ func (g *groupBuilder) Build() (argo.CommandGroup, error) {
 		return nil, errs
 	}
 
-	return group{g.name, branches, leaves}, nil
+	return group{g.name, g.description, branches, leaves}, nil
 }

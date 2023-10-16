@@ -36,12 +36,12 @@ func (t *treeBuilder) WithHelpDisabled() argo.CommandTreeBuilder {
 }
 
 func (t *treeBuilder) WithBranch(branch argo.CommandBranchBuilder) argo.CommandTreeBuilder {
-	t.commandGroups[0].AddBranch(branch)
+	t.commandGroups[0].WithBranch(branch)
 	return t
 }
 
 func (t *treeBuilder) WithLeaf(leaf argo.CommandLeafBuilder) argo.CommandTreeBuilder {
-	t.commandGroups[0].AddLeaf(leaf)
+	t.commandGroups[0].WithLeaf(leaf)
 	return t
 }
 

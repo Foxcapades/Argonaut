@@ -25,4 +25,8 @@ type Command interface {
 	PassthroughInputs() []string
 	HasPassthroughInputs() bool
 	AppendPassthrough(val string)
+
+	GetUnmappedLabel() string
+
+	HasUnmappedLabel() bool
 }

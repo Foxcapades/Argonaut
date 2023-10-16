@@ -21,6 +21,7 @@ func (c commandTreeInterpreter) Run() error {
 	passthroughs := make([]string, 0, 10)
 	unmapped := make([]string, 0, 10)
 
+FOR:
 	for {
 		element := c.parser.Next()
 
@@ -80,7 +81,7 @@ func (c commandTreeInterpreter) Run() error {
 			c.boundary = true
 
 		case parse.ElementTypeEnd:
-			break
+			break FOR
 
 		default:
 			panic("illegal state: unrecognized parser element type")

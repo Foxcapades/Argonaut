@@ -30,17 +30,57 @@ type argument struct {
 	unmarshal marsh.ValueUnmarshaler
 }
 
-func (a argument) Name() string  { return a.name }
-func (a argument) HasName() bool { return len(a.name) > 0 }
+func (a argument) Name() string {
+	return a.name
+}
 
-func (a argument) Description() string  { return a.desc }
-func (a argument) HasDescription() bool { return len(a.desc) > 0 }
+func (a argument) HasName() bool {
+	return len(a.name) > 0
+}
 
-func (a argument) WasHit() bool { return a.isUsed }
+func (a argument) Description() string {
+	return a.desc
+}
 
-func (a argument) RawValue() string { return a.raw }
+func (a argument) HasDescription() bool {
+	return len(a.desc) > 0
+}
 
-func (a argument) IsRequired() bool { return a.required }
+func (a argument) Binding() any {
+	return a.bindVal
+}
+
+func (a argument) HasBinding() bool {
+	return a.isBindSet
+}
+
+func (a argument) BindingType() reflect.Type {
+	return a.rootBind.Type()
+}
+
+func (a argument) Default() any {
+	return a.defVal
+}
+
+func (a argument) HasDefault() bool {
+	return a.isDefSet
+}
+
+func (a argument) DefaultType() reflect.Type {
+	return a.rootDef.Type()
+}
+
+func (a argument) WasHit() bool {
+	return a.isUsed
+}
+
+func (a argument) RawValue() string {
+	return a.raw
+}
+
+func (a argument) IsRequired() bool {
+	return a.required
+}
 
 func (a *argument) SetDefault() error {
 	// If there is no binding set, what are we going to set to the default value?
@@ -117,18 +157,7 @@ func (a *argument) SetValue(rawString string) error {
 		return nil
 	}
 
-	if a.unmarshal != nil {
-		var tmp any
-
-		if err := a.unmarshal.Unmarshal(rawString, &tmp); err != nil {
-			return err
-		}
-
-		a.rootBind.Set(reflect.ValueOf(tmp))
-
-		return nil
-	}
-
+	// TODO: why is this here?
 	if a.isBoolArg() {
 		if _, err := xraw.ParseBool(rawString); err != nil {
 			return err

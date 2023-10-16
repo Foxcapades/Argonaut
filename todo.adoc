@@ -1,0 +1,24 @@
+= TODO
+
+* [ ] Validate that optional positional arguments do not appear before required
+      positional arguments.  Maybe make the optional argument required if it
+      appears before a non-required argument and emit a warning?
+
+* [ ] Add the "help" flag callback to all commands and commandnodes that do not have
+      the "disableHelp" flag set.
+
+* [ ] Render command aliases in the help text.
+
+* [ ] Ensure command name/alias uniqueness only in build-tree and build-branch.
+      It is pointless to check at the command-group level as you will just need
+      to check at the tree/branch level again anyway to ensure the level itself
+      is good.
+
+* [ ] The "Usage:" help line for subcommands should print the full command path
+      to the command in question.  For example `docker compose up [OPTIONS] [SERVICES...]`
+
+* [ ] ExpectUnmapped(label string)
++
+--
+Example: `ExpectUnmapped("SERVICES...")`
+--

@@ -111,18 +111,16 @@ func (p *Parser) consumeLongFlag(dashes int, name string) Element {
 
 		p.sb.WriteString(name)
 
-		for {
-			next := p.emitter.Next()
+		next := p.emitter.Next()
 
-			if next.Kind == event.KindBreak {
-				tmp := p.sb.String()
-				p.sb.Reset()
-				p.state = stateNone
-				return textElement(tmp)
-			}
-
-			p.sb.WriteString(next.Data)
+		if next.Kind == event.KindBreak {
+			tmp := p.sb.String()
+			p.sb.Reset()
+			p.state = stateNone
+			return textElement(tmp)
 		}
+
+		panic("illegal state: expected break, but got " + next.Kind.String())
 	}
 
 	// So, it actually is a long flag.
@@ -132,22 +130,19 @@ func (p *Parser) consumeLongFlag(dashes int, name string) Element {
 	// - equals
 	// - break
 
-	var flagName string
-
 	switch next.Kind {
 
 	// We hit a break, meaning we have something like "--flag" as our input arg.
 	case event.KindBreak:
-		tmp := p.sb.String()
-		p.sb.Reset()
-
-		return longSoloElement(tmp)
+		return longSoloElement(name)
 
 	// We hit an equals, meaning we have something like "--flag=value" as our
 	// input arg.  This means we need to keep eating to get the flag argument.
 	case event.KindEquals:
-		flagName = p.sb.String()
-		p.sb.Reset()
+		// continue
+
+	default:
+		panic("illegal state: expected break or equals, got " + next.Kind.String())
 	}
 
 	// If we made it here, then we had an equals character and are now expecting
@@ -169,7 +164,7 @@ func (p *Parser) consumeLongFlag(dashes int, name string) Element {
 	tmp := p.sb.String()
 	p.sb.Reset()
 
-	return longPairElement(flagName, tmp)
+	return longPairElement(name, tmp)
 }
 
 func (p *Parser) consumeShortFlag(flags string) Element {

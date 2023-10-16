@@ -1,5 +1,7 @@
 package argo
 
+import "reflect"
+
 // Argument represents a positional or flag argument that may be attached
 // directly to a Command or CommandLeaf, or may be attached to a Flag.
 type Argument interface {
@@ -12,6 +14,18 @@ type Argument interface {
 
 	// HasName tests whether this Argument has a custom name assigned.
 	HasName() bool
+
+	Binding() any
+
+	HasBinding() bool
+
+	BindingType() reflect.Type
+
+	Default() any
+
+	HasDefault() bool
+
+	DefaultType() reflect.Type
 
 	// Description returns the description attached to this Argument.
 	//

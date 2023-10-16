@@ -30,6 +30,12 @@ type CommandLeafBuilder interface {
 	// Descriptions are used when rendering help text.
 	WithDescription(desc string) CommandLeafBuilder
 
+	WithUnmappedLabel(label string) CommandLeafBuilder
+
+	GetUnmappedLabel() string
+
+	HasUnmappedLabel() bool
+
 	// WithArgument adds a positional argument to the CommandLeaf being built.
 	WithArgument(argument ArgumentBuilder) CommandLeafBuilder
 

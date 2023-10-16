@@ -8,11 +8,12 @@ import (
 )
 
 type command struct {
-	description string
-	flagGroups  []argo.FlagGroup
-	arguments   []argo.Argument
-	unmapped    []string
-	passthrough []string
+	description   string
+	unmappedLabel string
+	flagGroups    []argo.FlagGroup
+	arguments     []argo.Argument
+	unmapped      []string
+	passthrough   []string
 }
 
 func (c command) Name() string {
@@ -33,6 +34,14 @@ func (c command) FlagGroups() []argo.FlagGroup {
 
 func (c command) HasFlagGroups() bool {
 	return len(c.flagGroups) > 0
+}
+
+func (c command) HasUnmappedLabel() bool {
+	return len(c.unmappedLabel) > 0
+}
+
+func (c command) GetUnmappedLabel() string {
+	return c.unmappedLabel
 }
 
 func (c command) FindShortFlag(b byte) argo.Flag {

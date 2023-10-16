@@ -61,6 +61,12 @@ type CommandBuilder interface {
 	// list of positional arguments.
 	WithArgument(arg ArgumentBuilder) CommandBuilder
 
+	WithUnmappedLabel(label string) CommandBuilder
+
+	GetUnmappedLabel() string
+
+	HasUnmappedLabel() bool
+
 	// HasArguments indicates whether this CommandBuilder has any ArgumentBuilder
 	// instances attached to it.
 	HasArguments() bool

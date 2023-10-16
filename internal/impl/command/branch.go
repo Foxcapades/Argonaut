@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/Foxcapades/Argonaut/internal/consts"
 	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
@@ -105,6 +106,10 @@ func (c commandBranch) Matches(name string) bool {
 
 func (c commandBranch) CommandGroups() []argo.CommandGroup {
 	return c.commandGroups
+}
+
+func (c commandBranch) HasCustomCommandGroups() bool {
+	return len(c.commandGroups) > 1 || c.commandGroups[0].Name() != consts.DefaultGroupName
 }
 
 // Find Short Flag /////////////////////////////////////////////////////////////

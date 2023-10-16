@@ -9,3 +9,20 @@ const (
 	KindBreak
 	KindEnd
 )
+
+func (k Kind) String() string {
+	switch k {
+	case KindDash:
+		return "dash"
+	case KindText:
+		return "text"
+	case KindEquals:
+		return "equals"
+	case KindBreak:
+		return "break"
+	case KindEnd:
+		return "end"
+	default:
+		return "invalid"
+	}
+}

@@ -26,10 +26,10 @@ func (e *Emitter) Next() Event {
 func (e *Emitter) queueNext() {
 	if e.argumentIndex >= len(e.arguments) {
 		e.next.Offer(endEvent())
+	} else {
+		e.scan(e.arguments[e.argumentIndex])
+		e.argumentIndex++
 	}
-
-	e.scan(e.arguments[e.argumentIndex])
-	e.argumentIndex++
 }
 
 func (e *Emitter) scan(arg string) {

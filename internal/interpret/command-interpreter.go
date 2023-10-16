@@ -18,6 +18,7 @@ func (c commandInterpreter) Run() error {
 	var err error
 	boundary := false
 
+FOR:
 	for {
 		element := c.parser.Next()
 
@@ -64,7 +65,7 @@ func (c commandInterpreter) Run() error {
 			continue
 
 		case parse.ElementTypeEnd:
-			break
+			break FOR
 
 		default:
 			panic("illegal state")

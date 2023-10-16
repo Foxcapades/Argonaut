@@ -1,9 +1,10 @@
 package chars
 
 const (
-	StrDash   = "-"
-	StrEquals = "="
-	StrEmpty  = ""
+	StrDash       = "-"
+	StrEquals     = "="
+	StrEmpty      = ""
+	StrDoubleDash = "--"
 )
 
 func NextWhitespace(s string) int {

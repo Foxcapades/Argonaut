@@ -52,7 +52,7 @@ func (c *commandBranchBuilder) WithCommandGroup(group argo.CommandGroupBuilder) 
 }
 
 func (c *commandBranchBuilder) WithBranch(branch argo.CommandBranchBuilder) argo.CommandBranchBuilder {
-	c.comGroups[0].AddBranch(branch)
+	c.comGroups[0].WithBranch(branch)
 	return c
 }
 
@@ -62,7 +62,7 @@ func (c *commandBranchBuilder) WithAliases(aliases ...string) argo.CommandBranch
 }
 
 func (c *commandBranchBuilder) WithLeaf(leaf argo.CommandLeafBuilder) argo.CommandBranchBuilder {
-	c.comGroups[0].AddLeaf(leaf)
+	c.comGroups[0].WithLeaf(leaf)
 	return c
 }
 

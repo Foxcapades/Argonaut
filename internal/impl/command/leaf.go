@@ -6,6 +6,7 @@ import "github.com/Foxcapades/Argonaut/pkg/argo"
 type commandLeaf struct {
 	name        string
 	desc        string
+	uLabel      string
 	parent      argo.CommandNode
 	aliases     []string
 	flags       []argo.FlagGroup
@@ -30,17 +31,46 @@ func (c commandLeaf) HasOnHit() bool {
 	return c.onHit != nil
 }
 
-func (c commandLeaf) Aliases() []string { return c.aliases }
-func (c commandLeaf) HasAliases() bool  { return len(c.aliases) > 0 }
+func (c commandLeaf) Aliases() []string {
+	return c.aliases
+}
 
-func (c commandLeaf) Description() string  { return c.desc }
-func (c commandLeaf) HasDescription() bool { return len(c.desc) > 0 }
+func (c commandLeaf) HasAliases() bool {
+	return len(c.aliases) > 0
+}
 
-func (c commandLeaf) FlagGroups() []argo.FlagGroup { return c.flags }
-func (c commandLeaf) HasFlagGroups() bool          { return len(c.flags) > 0 }
+func (c commandLeaf) Description() string {
+	return c.desc
+}
 
-func (c commandLeaf) Arguments() []argo.Argument { return c.args }
-func (c commandLeaf) HasArguments() bool         { return len(c.args) > 0 }
+func (c commandLeaf) HasDescription() bool {
+	return len(c.desc) > 0
+}
+
+func (c commandLeaf) FlagGroups() []argo.FlagGroup {
+	return c.flags
+}
+
+func (c commandLeaf) HasFlagGroups() bool {
+	return len(c.flags) > 0
+}
+
+func (c commandLeaf) HasUnmappedLabel() bool {
+	return len(c.uLabel) > 0
+}
+
+func (c commandLeaf) GetUnmappedLabel() string {
+	return c.uLabel
+}
+
+func (c commandLeaf) Arguments() []argo.Argument {
+	return c.args
+}
+
+func (c commandLeaf) HasArguments() bool {
+	return len(c.args) > 0
+}
+
 func (c *commandLeaf) AppendArgument(val string) error {
 	for _, arg := range c.args {
 		if !arg.WasHit() {
@@ -52,13 +82,29 @@ func (c *commandLeaf) AppendArgument(val string) error {
 	return nil
 }
 
-func (c commandLeaf) UnmappedInputs() []string   { return c.unmapped }
-func (c commandLeaf) HasUnmappedInputs() bool    { return len(c.unmapped) > 0 }
-func (c *commandLeaf) AppendUnmapped(val string) { c.unmapped = append(c.unmapped, val) }
+func (c commandLeaf) UnmappedInputs() []string {
+	return c.unmapped
+}
 
-func (c commandLeaf) PassthroughInputs() []string   { return c.passthrough }
-func (c commandLeaf) HasPassthroughInputs() bool    { return len(c.passthrough) > 0 }
-func (c *commandLeaf) AppendPassthrough(val string) { c.passthrough = append(c.passthrough, val) }
+func (c commandLeaf) HasUnmappedInputs() bool {
+	return len(c.unmapped) > 0
+}
+
+func (c *commandLeaf) AppendUnmapped(val string) {
+	c.unmapped = append(c.unmapped, val)
+}
+
+func (c commandLeaf) PassthroughInputs() []string {
+	return c.passthrough
+}
+
+func (c commandLeaf) HasPassthroughInputs() bool {
+	return len(c.passthrough) > 0
+}
+
+func (c *commandLeaf) AppendPassthrough(val string) {
+	c.passthrough = append(c.passthrough, val)
+}
 
 func (c commandLeaf) Matches(name string) bool {
 	if c.name == name {
