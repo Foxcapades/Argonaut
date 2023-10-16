@@ -32,4 +32,10 @@ type CommandTree interface {
 	SelectCommand(leaf CommandLeaf)
 
 	IsHelpDisabled() bool
+
+	HasCallback() bool
+
+	RunCallback()
 }
+
+type CommandTreeCallback = func(com CommandTree)

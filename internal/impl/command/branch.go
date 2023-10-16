@@ -13,7 +13,7 @@ type commandBranch struct {
 	aliases       []string
 	flagGroups    []argo.FlagGroup
 	commandGroups []argo.CommandGroup
-	onHit         argo.BranchHitCallback
+	callback      argo.CommandBranchCallback
 }
 
 // Find Child //////////////////////////////////////////////////////////////////
@@ -30,14 +30,14 @@ func (c commandBranch) FindChild(name string) argo.CommandNode {
 
 // On Hit //////////////////////////////////////////////////////////////////////
 
-func (c commandBranch) CallOnHit() {
-	if c.onHit != nil {
-		c.onHit(c)
+func (c commandBranch) RunCallback() {
+	if c.callback != nil {
+		c.callback(c)
 	}
 }
 
-func (c commandBranch) HasOnHitCallback() bool {
-	return c.onHit != nil
+func (c commandBranch) HasCallback() bool {
+	return c.callback != nil
 }
 
 // Parent //////////////////////////////////////////////////////////////////////

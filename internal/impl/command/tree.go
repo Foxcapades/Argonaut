@@ -10,10 +10,11 @@ import (
 
 type tree struct {
 	description   string
+	disableHelp   bool
 	flagGroups    []argo.FlagGroup
 	commandGroups []argo.CommandGroup
 	selected      argo.CommandLeaf
-	disableHelp   bool
+	callback      argo.CommandTreeCallback
 }
 
 func (_ tree) Name() string {
@@ -46,6 +47,16 @@ func (t *tree) HasFlagGroups() bool {
 
 func (t tree) CommandGroups() []argo.CommandGroup {
 	return t.commandGroups
+}
+
+func (t tree) HasCallback() bool {
+	return t.callback != nil
+}
+
+func (t tree) RunCallback() {
+	if t.callback != nil {
+		t.callback(&t)
+	}
 }
 
 func (t tree) HasCustomCommandGroups() bool {

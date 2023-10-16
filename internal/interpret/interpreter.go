@@ -11,7 +11,11 @@ func CommandInterpreter(args []string, command argo.Command) Interpreter {
 }
 
 func CommandTreeInterpreter(args []string, command argo.CommandTree) Interpreter {
-	return &commandTreeInterpreter{parse.NewParser(event.NewEmitter(args)), command, false}
+	return &commandTreeInterpreter{
+		parser:  parse.NewParser(event.NewEmitter(args)),
+		current: command,
+		tree:    command,
+	}
 }
 
 type Interpreter interface {

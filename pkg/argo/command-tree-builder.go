@@ -3,6 +3,16 @@ package argo
 type CommandTreeBuilder interface {
 	WithDescription(desc string) CommandTreeBuilder
 
+	HasDescription() bool
+
+	GetDescription() string
+
+	WithCallback(cb CommandTreeCallback) CommandTreeBuilder
+
+	HasCallback() bool
+
+	GetCallback() CommandTreeCallback
+
 	WithHelpDisabled() CommandTreeBuilder
 
 	WithBranch(branch CommandBranchBuilder) CommandTreeBuilder

@@ -13,7 +13,7 @@ type commandLeaf struct {
 	args        []argo.Argument
 	unmapped    []string
 	passthrough []string
-	onHit       argo.CommandLeafCallback
+	callback    argo.CommandLeafCallback
 }
 
 func (c commandLeaf) Parent() argo.CommandNode { return c.parent }
@@ -21,14 +21,14 @@ func (c commandLeaf) HasParent() bool          { return c.parent != nil }
 
 func (c commandLeaf) Name() string { return c.name }
 
-func (c commandLeaf) CallOnHit() {
-	if c.onHit != nil {
-		c.onHit(&c)
+func (c commandLeaf) RunCallback() {
+	if c.callback != nil {
+		c.callback(&c)
 	}
 }
 
-func (c commandLeaf) HasOnHit() bool {
-	return c.onHit != nil
+func (c commandLeaf) HasCallback() bool {
+	return c.callback != nil
 }
 
 func (c commandLeaf) Aliases() []string {

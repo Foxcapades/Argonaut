@@ -41,6 +41,10 @@ type CommandBranchBuilder interface {
 	// Descriptions are used when rendering help text.
 	WithDescription(desc string) CommandBranchBuilder
 
+	HasDescription() bool
+
+	GetDescription() string
+
 	// WithHelpDisabled disables the automatic '-h | --help' flag that is enabled
 	// by default.
 	WithHelpDisabled() CommandBranchBuilder
@@ -70,6 +74,12 @@ type CommandBranchBuilder interface {
 	// Custom flag groups are primarily used for categorizing flags in the
 	// rendered help text.
 	WithFlagGroup(flagGroup FlagGroupBuilder) CommandBranchBuilder
+
+	WithCallback(cb CommandBranchCallback) CommandBranchBuilder
+
+	HasCallback() bool
+
+	GetCallback() CommandBranchCallback
 
 	// Build attempts to construct a CommandBranch configuration set on this
 	// CommandBranchBuilder instance.

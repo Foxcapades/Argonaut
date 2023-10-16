@@ -28,17 +28,60 @@ type commandBranchBuilder struct {
 	flagGroups   []argo.FlagGroupBuilder
 	aliases      []string
 	parent       argo.CommandNode
+	callback     argo.CommandBranchCallback
 }
 
-func (c commandBranchBuilder) GetName() string { return c.name }
+func (c commandBranchBuilder) GetName() string {
+	return c.name
+}
 
-func (c commandBranchBuilder) GetAliases() []string { return c.aliases }
+func (c *commandBranchBuilder) Parent(node argo.CommandNode) {
+	c.parent = node
+}
 
-func (c *commandBranchBuilder) Parent(node argo.CommandNode) { c.parent = node }
+// Aliases /////////////////////////////////////////////////////////////////////
+
+func (c *commandBranchBuilder) WithAliases(aliases ...string) argo.CommandBranchBuilder {
+	c.aliases = aliases
+	return c
+}
+
+func (c commandBranchBuilder) GetAliases() []string {
+	return c.aliases
+}
+
+func (c commandBranchBuilder) HasAliases() bool {
+	return len(c.aliases) > 0
+}
+
+// Description /////////////////////////////////////////////////////////////////
 
 func (c *commandBranchBuilder) WithDescription(desc string) argo.CommandBranchBuilder {
 	c.desc = desc
 	return c
+}
+
+func (c commandBranchBuilder) HasDescription() bool {
+	return len(c.desc) > 0
+}
+
+func (c commandBranchBuilder) GetDescription() string {
+	return c.desc
+}
+
+// Callback ////////////////////////////////////////////////////////////////////
+
+func (c *commandBranchBuilder) WithCallback(cb argo.CommandBranchCallback) argo.CommandBranchBuilder {
+	c.callback = cb
+	return c
+}
+
+func (c commandBranchBuilder) HasCallback() bool {
+	return c.callback != nil
+}
+
+func (c commandBranchBuilder) GetCallback() argo.CommandBranchCallback {
+	return c.callback
 }
 
 func (c *commandBranchBuilder) WithHelpDisabled() argo.CommandBranchBuilder {
@@ -53,11 +96,6 @@ func (c *commandBranchBuilder) WithCommandGroup(group argo.CommandGroupBuilder) 
 
 func (c *commandBranchBuilder) WithBranch(branch argo.CommandBranchBuilder) argo.CommandBranchBuilder {
 	c.comGroups[0].WithBranch(branch)
-	return c
-}
-
-func (c *commandBranchBuilder) WithAliases(aliases ...string) argo.CommandBranchBuilder {
-	c.aliases = aliases
 	return c
 }
 
@@ -135,6 +173,7 @@ func (c *commandBranchBuilder) Build() (argo.CommandBranch, error) {
 	out.commandGroups = commandGroups
 	out.parent = c.parent
 	out.aliases = c.aliases
+	out.callback = c.callback
 
 	return out, nil
 }

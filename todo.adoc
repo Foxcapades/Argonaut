@@ -7,18 +7,31 @@
 * [ ] Add the "help" flag callback to all commands and commandnodes that do not have
       the "disableHelp" flag set.
 
-* [ ] Render command aliases in the help text.
+* [x] Render command aliases in the help text.
 
 * [ ] Ensure command name/alias uniqueness only in build-tree and build-branch.
       It is pointless to check at the command-group level as you will just need
       to check at the tree/branch level again anyway to ensure the level itself
       is good.
 
-* [ ] The "Usage:" help line for subcommands should print the full command path
+* [x] The "Usage:" help line for subcommands should print the full command path
       to the command in question.  For example `docker compose up [OPTIONS] [SERVICES...]`
 
-* [ ] ExpectUnmapped(label string)
+* [x] ExpectUnmapped(label string)
 +
 --
 Example: `ExpectUnmapped("SERVICES...")`
 --
+
+* [ ] Document default groups.
+
+* [ ] Build default help printer and meta command group.
++
+--
+This flag should be appended, at build time, to either the default group (if
+there are no custom flag groups) or its own meta flag group.
+--
+** [ ] Command
+** [ ] Command Tree
+** [ ] Command Branch
+** [ ] Command Leaf

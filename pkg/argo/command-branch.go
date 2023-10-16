@@ -34,9 +34,9 @@ type CommandBranch interface {
 	// string.
 	Matches(name string) bool
 
-	CallOnHit()
+	RunCallback()
 
-	HasOnHitCallback() bool
+	HasCallback() bool
 }
 
-type BranchHitCallback = func(branch CommandBranch)
+type CommandBranchCallback = func(branch CommandBranch)

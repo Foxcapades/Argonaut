@@ -4,9 +4,9 @@ type CommandLeaf interface {
 	CommandNode
 	Command
 
-	HasOnHit() bool
+	HasCallback() bool
 
-	CallOnHit()
+	RunCallback()
 
 	// Aliases returns the aliases for this CommandLeaf.
 	Aliases() []string

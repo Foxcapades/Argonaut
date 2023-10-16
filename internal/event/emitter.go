@@ -6,7 +6,7 @@ import (
 )
 
 func NewEmitter(args []string) Emitter {
-	return Emitter{arguments: args, next: util.NewDeque[Event](6)}
+	return Emitter{arguments: args, next: util.NewDeque[Event](6), argumentIndex: 1}
 }
 
 type Emitter struct {

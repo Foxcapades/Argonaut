@@ -23,11 +23,33 @@ type treeBuilder struct {
 	help          bool
 	commandGroups []argo.CommandGroupBuilder
 	flagGroups    []argo.FlagGroupBuilder
+	callback      argo.CommandTreeCallback
 }
 
 func (t *treeBuilder) WithDescription(desc string) argo.CommandTreeBuilder {
 	t.desc = desc
 	return t
+}
+
+func (t treeBuilder) HasDescription() bool {
+	return len(t.desc) > 0
+}
+
+func (t treeBuilder) GetDescription() string {
+	return t.desc
+}
+
+func (t *treeBuilder) WithCallback(cb argo.CommandTreeCallback) argo.CommandTreeBuilder {
+	t.callback = cb
+	return t
+}
+
+func (t treeBuilder) HasCallback() bool {
+	return t.callback != nil
+}
+
+func (t treeBuilder) GetCallback() argo.CommandTreeCallback {
+	return t.callback
 }
 
 func (t *treeBuilder) WithHelpDisabled() argo.CommandTreeBuilder {
@@ -95,9 +117,12 @@ func (t treeBuilder) Build() (argo.CommandTree, error) {
 		}
 	}
 
+	tree := new(tree)
+
 	commandGroups := make([]argo.CommandGroup, 0, len(t.commandGroups))
 	comutil.MassUniqueNames(t.commandGroups, errs)
 	for _, builder := range t.commandGroups {
+		builder.Parent(tree)
 		if builder.HasSubcommands() {
 			if group, err := builder.Build(); err != nil {
 				errs.AppendError(err)
@@ -111,9 +136,10 @@ func (t treeBuilder) Build() (argo.CommandTree, error) {
 		return nil, errs
 	}
 
-	return &tree{
-		description:   t.desc,
-		flagGroups:    flagGroups,
-		commandGroups: commandGroups,
-	}, nil
+	tree.description = t.desc
+	tree.flagGroups = flagGroups
+	tree.commandGroups = commandGroups
+	tree.callback = t.callback
+
+	return tree, nil
 }

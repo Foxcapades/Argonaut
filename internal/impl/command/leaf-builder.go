@@ -26,38 +26,99 @@ type leafBuilder struct {
 	aliases     []string
 	arguments   []argo.ArgumentBuilder
 	flagGroups  []argo.FlagGroupBuilder
+	callback    argo.CommandLeafCallback
 }
 
-func (l *leafBuilder) GetName() string { return l.name }
-
-func (l *leafBuilder) GetAliases() []string { return l.aliases }
-
-func (l *leafBuilder) Parent(node argo.CommandNode) { l.parent = node }
-
-func (l *leafBuilder) WithDescription(desc string) argo.CommandLeafBuilder {
-	l.description = desc
-	return l
+func (l *leafBuilder) GetName() string {
+	return l.name
 }
+
+func (l *leafBuilder) Parent(node argo.CommandNode) {
+	l.parent = node
+}
+
+// Aliases /////////////////////////////////////////////////////////////////////
 
 func (l *leafBuilder) WithAliases(aliases ...string) argo.CommandLeafBuilder {
 	l.aliases = append(l.aliases, aliases...)
 	return l
 }
 
+func (l leafBuilder) GetAliases() []string {
+	return l.aliases
+}
+
+func (l leafBuilder) HasAliases() bool {
+	return len(l.aliases) > 0
+}
+
+// Description /////////////////////////////////////////////////////////////////
+
+func (l *leafBuilder) WithDescription(desc string) argo.CommandLeafBuilder {
+	l.description = desc
+	return l
+}
+
+func (l leafBuilder) HasDescription() bool {
+	return len(l.description) > 0
+}
+
+func (l leafBuilder) GetDescription() string {
+	return l.description
+}
+
+// Arguments ///////////////////////////////////////////////////////////////////
+
 func (l *leafBuilder) WithArgument(argument argo.ArgumentBuilder) argo.CommandLeafBuilder {
 	l.arguments = append(l.arguments, argument)
 	return l
 }
+
+func (l leafBuilder) HasArguments() bool {
+	return len(l.arguments) > 0
+}
+
+func (l leafBuilder) GetArguments() []argo.ArgumentBuilder {
+	return l.arguments
+}
+
+// Flag Groups /////////////////////////////////////////////////////////////////
 
 func (l *leafBuilder) WithFlagGroup(flagGroup argo.FlagGroupBuilder) argo.CommandLeafBuilder {
 	l.flagGroups = append(l.flagGroups, flagGroup)
 	return l
 }
 
+func (l leafBuilder) HasCustomFlagGroups() bool {
+	return len(l.flagGroups) > 1
+}
+
+func (l leafBuilder) GetFlagGroups() []argo.FlagGroupBuilder {
+	return l.flagGroups
+}
+
+func (l leafBuilder) GetCustomFlagGroups() []argo.FlagGroupBuilder {
+	return l.flagGroups[1:]
+}
+
+// Flags ///////////////////////////////////////////////////////////////////////
+
 func (l *leafBuilder) WithFlag(flag argo.FlagBuilder) argo.CommandLeafBuilder {
 	l.flagGroups[0].WithFlag(flag)
 	return l
 }
+
+func (l leafBuilder) HasFlags() bool {
+	for _, g := range l.flagGroups {
+		if g.HasFlags() {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Unmapped ////////////////////////////////////////////////////////////////////
 
 func (l *leafBuilder) WithUnmappedLabel(label string) argo.CommandLeafBuilder {
 	l.umapLabel = label
@@ -71,6 +132,23 @@ func (l leafBuilder) HasUnmappedLabel() bool {
 func (l leafBuilder) GetUnmappedLabel() string {
 	return l.umapLabel
 }
+
+// Callback ////////////////////////////////////////////////////////////////////
+
+func (l *leafBuilder) WithCallback(cb argo.CommandLeafCallback) argo.CommandLeafBuilder {
+	l.callback = cb
+	return l
+}
+
+func (l leafBuilder) HasCallback() bool {
+	return l.callback != nil
+}
+
+func (l leafBuilder) GetCallback() argo.CommandLeafCallback {
+	return l.callback
+}
+
+// Build ///////////////////////////////////////////////////////////////////////
 
 func (l *leafBuilder) Build() (argo.CommandLeaf, error) {
 	errs := xerr.NewMultiError()
@@ -120,11 +198,12 @@ func (l *leafBuilder) Build() (argo.CommandLeaf, error) {
 	}
 
 	return &commandLeaf{
-		name:    l.name,
-		desc:    l.description,
-		aliases: l.aliases,
-		parent:  l.parent,
-		flags:   flagGroups,
-		args:    arguments,
+		name:     l.name,
+		desc:     l.description,
+		aliases:  l.aliases,
+		parent:   l.parent,
+		flags:    flagGroups,
+		args:     arguments,
+		callback: l.callback,
 	}, nil
 }

@@ -15,9 +15,13 @@ type commandTreeInterpreter struct {
 	parser   parse.Parser
 	current  argo.CommandNode
 	boundary bool
+
+	tree     argo.CommandTree
+	branches []argo.CommandBranch
+	leaf     argo.CommandLeaf
 }
 
-func (c commandTreeInterpreter) Run() error {
+func (c *commandTreeInterpreter) Run() error {
 	passthroughs := make([]string, 0, 10)
 	unmapped := make([]string, 0, 10)
 
@@ -49,6 +53,13 @@ FOR:
 			} else if node, ok := c.current.(argo.CommandParent); ok {
 				if child := node.FindChild(element.String()); child != nil {
 					c.current = child
+
+					if branch, ok := child.(argo.CommandBranch); ok {
+						c.branches = append(c.branches, branch)
+					} else if leaf, ok := child.(argo.CommandLeaf); ok {
+						c.leaf = leaf
+					}
+
 				} else {
 					// TODO: wrap this error in an "invalid subcommand" error or some such.
 					return fmt.Errorf("unrecognized subcommand %s", element.String())
@@ -129,6 +140,20 @@ FOR:
 
 	if len(errs.Errors()) > 0 {
 		return errs
+	}
+
+	if c.tree.HasCallback() {
+		c.tree.RunCallback()
+	}
+
+	for _, b := range c.branches {
+		if b.HasCallback() {
+			b.RunCallback()
+		}
+	}
+
+	if c.leaf.HasCallback() {
+		c.leaf.RunCallback()
 	}
 
 	return nil
