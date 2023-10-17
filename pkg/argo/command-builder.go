@@ -57,8 +57,13 @@ type CommandBuilder interface {
 	//       my-command [FILE...]
 	WithUnmappedLabel(label string) CommandBuilder
 
+	// Parse reads the given arguments and attempts to populate the built Command
+	// instance based on the values parsed from the given inputs.
 	Parse(args []string) (Command, error)
 
+	// MustParse is the same as Parse, however if an error is encountered while
+	// building the Command or parsing the input arguments, this method will
+	// panic.
 	MustParse(args []string) Command
 }
 
@@ -110,7 +115,7 @@ func (b commandBuilder) Parse(args []string) (Command, error) {
 	if cmd, err := b.build(); err != nil {
 		return nil, err
 	} else {
-		if err = CommandInterpreter(args, cmd).Run(); err != nil {
+		if err = newCommandInterpreter(args, cmd).Run(); err != nil {
 			return nil, err
 		}
 

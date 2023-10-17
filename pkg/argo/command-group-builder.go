@@ -82,7 +82,7 @@ func (g *commandGroupBuilder) build() (CommandGroup, error) {
 
 	branches := make([]CommandBranch, 0, len(g.branches))
 	for _, builder := range g.branches {
-		builder.Parent(g.parent)
+		builder.parent(g.parent)
 		if branch, err := builder.build(); err != nil {
 			errs.AppendError(err)
 		} else {

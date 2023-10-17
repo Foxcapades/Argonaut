@@ -34,14 +34,11 @@ type CommandTree interface {
 	// SelectedCommand returns the leaf command that was selected in the CLI call.
 	SelectedCommand() CommandLeaf
 
-	// SelectCommand selects the given leaf command.
-	SelectCommand(leaf CommandLeaf)
+	selectCommand(leaf CommandLeaf)
 
-	IsHelpDisabled() bool
+	hasCallback() bool
 
-	HasCallback() bool
-
-	RunCallback()
+	executeCallback()
 }
 
 type CommandTreeCallback = func(com CommandTree)
@@ -87,11 +84,11 @@ func (t commandTree) CommandGroups() []CommandGroup {
 	return t.commandGroups
 }
 
-func (t commandTree) HasCallback() bool {
+func (t commandTree) hasCallback() bool {
 	return t.callback != nil
 }
 
-func (t commandTree) RunCallback() {
+func (t commandTree) executeCallback() {
 	if t.callback != nil {
 		t.callback(&t)
 	}
@@ -101,12 +98,8 @@ func (t commandTree) SelectedCommand() CommandLeaf {
 	return t.selected
 }
 
-func (t *commandTree) SelectCommand(leaf CommandLeaf) {
+func (t *commandTree) selectCommand(leaf CommandLeaf) {
 	t.selected = leaf
-}
-
-func (t commandTree) IsHelpDisabled() bool {
-	return t.disableHelp
 }
 
 func (t commandTree) FindChild(name string) CommandNode {

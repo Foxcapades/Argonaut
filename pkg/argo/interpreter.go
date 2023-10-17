@@ -1,6 +1,6 @@
 package argo
 
-func CommandInterpreter(args []string, command Command) Interpreter {
+func newCommandInterpreter(args []string, command Command) interpreter {
 	return &commandInterpreter{
 		parser:   newParser(newEmitter(args)),
 		command:  command,
@@ -8,7 +8,7 @@ func CommandInterpreter(args []string, command Command) Interpreter {
 	}
 }
 
-func CommandTreeInterpreter(args []string, command CommandTree) Interpreter {
+func newCommandTreeInterpreter(args []string, command CommandTree) interpreter {
 	return &commandTreeInterpreter{
 		parser:  newParser(newEmitter(args)),
 		current: command,
@@ -17,6 +17,6 @@ func CommandTreeInterpreter(args []string, command CommandTree) Interpreter {
 	}
 }
 
-type Interpreter interface {
+type interpreter interface {
 	Run() error
 }

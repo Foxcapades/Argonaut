@@ -168,8 +168,8 @@ FOR:
 		return errs
 	}
 
-	if c.tree.HasCallback() {
-		c.tree.RunCallback()
+	if c.tree.hasCallback() {
+		c.tree.executeCallback()
 	}
 
 	for _, b := range c.branches {
@@ -178,9 +178,11 @@ FOR:
 		}
 	}
 
-	if c.leaf.HasCallback() {
-		c.leaf.RunCallback()
+	if c.leaf.hasCallback() {
+		c.leaf.executeCallback()
 	}
+
+	c.tree.selectCommand(c.leaf)
 
 	return nil
 }

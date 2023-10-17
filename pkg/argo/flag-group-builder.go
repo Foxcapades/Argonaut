@@ -2,11 +2,18 @@ package argo
 
 import "errors"
 
+// A FlagGroupBuilder is used to build a group or category of flags that go
+// together.  This is primarily used for rendering help text.
+//
+// FlagGroups are not required but allow for organizing the help text when there
+// are many flags attached to a command.
 type FlagGroupBuilder interface {
-	GetName() string
+	getName() string
 
+	// WithDescription sets a description value on this FlagGroupBuilder.
 	WithDescription(desc string) FlagGroupBuilder
 
+	// WithFlag appends the given FlagBuilder instance to this FlagGroupBuilder.
 	WithFlag(flag FlagBuilder) FlagGroupBuilder
 
 	hasFlags() bool
@@ -27,7 +34,7 @@ type flagGroupBuilder struct {
 	flags []FlagBuilder
 }
 
-func (g flagGroupBuilder) GetName() string {
+func (g flagGroupBuilder) getName() string {
 	return g.name
 }
 

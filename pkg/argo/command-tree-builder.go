@@ -5,6 +5,24 @@ import (
 	"os"
 )
 
+// A CommandTreeBuilder is a builder type used to construct a CommandTree
+// instance.
+//
+// A CommandTree is a command that consists of branching subcommands.  Examples
+// of such commands include the `go` command, `docker`, or `kubectl`.
+//
+// To use the Docker command example we have a command tree that includes the
+// following:
+//     docker
+//      |- compose
+//      |   |- build
+//      |   |- down
+//      |   |- ...
+//      |- container
+//      |   |- exec
+//      |   |- ls
+//      |   |- ...
+//      |- ...
 type CommandTreeBuilder interface {
 	WithDescription(desc string) CommandTreeBuilder
 
@@ -88,7 +106,7 @@ func (t commandTreeBuilder) Parse(args []string) (CommandTree, error) {
 		return nil, err
 	}
 
-	err = CommandTreeInterpreter(args, ct).Run()
+	err = newCommandTreeInterpreter(args, ct).Run()
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +116,7 @@ func (t commandTreeBuilder) Parse(args []string) (CommandTree, error) {
 
 func (t commandTreeBuilder) MustParse(args []string) CommandTree {
 	ct := mustReturn(t.build())
-	must(CommandTreeInterpreter(args, ct).Run())
+	must(newCommandTreeInterpreter(args, ct).Run())
 	return ct
 }
 

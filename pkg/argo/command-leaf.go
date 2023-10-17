@@ -4,9 +4,9 @@ type CommandLeaf interface {
 	CommandNode
 	Command
 
-	HasCallback() bool
+	hasCallback() bool
 
-	RunCallback()
+	executeCallback()
 
 	// Aliases returns the aliases for this CommandLeaf.
 	Aliases() []string
@@ -39,13 +39,13 @@ func (c commandLeaf) HasParent() bool     { return c.parent != nil }
 
 func (c commandLeaf) Name() string { return c.name }
 
-func (c commandLeaf) RunCallback() {
+func (c commandLeaf) executeCallback() {
 	if c.callback != nil {
 		c.callback(&c)
 	}
 }
 
-func (c commandLeaf) HasCallback() bool {
+func (c commandLeaf) hasCallback() bool {
 	return c.callback != nil
 }
 

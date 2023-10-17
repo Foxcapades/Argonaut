@@ -24,12 +24,12 @@ func uniqueNames(
 	errs MultiError,
 ) {
 	for _, branch := range branches {
-		names[branch.GetName()]++
-		if names[branch.GetName()] == 2 {
-			errs.AppendError(fmt.Errorf("conflicting subcommand name/alias: %s", branch.GetName()))
+		names[branch.getName()]++
+		if names[branch.getName()] == 2 {
+			errs.AppendError(fmt.Errorf("conflicting subcommand name/alias: %s", branch.getName()))
 		}
 
-		for _, alias := range branch.GetAliases() {
+		for _, alias := range branch.getAliases() {
 			names[alias]++
 			if names[alias] == 2 {
 				errs.AppendError(fmt.Errorf("conflicting subcommand name/alias: %s", alias))

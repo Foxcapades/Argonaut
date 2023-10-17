@@ -21,7 +21,7 @@ type CommandBranchBuilder interface {
 	//
 	// CommandBranch names are required and thus are set at the time that the
 	// CommandBranchBuilder instance is constructed.
-	GetName() string
+	getName() string
 
 	// WithAliases appends the given alias strings to this CommandBranchBuilder's
 	// alias list.
@@ -35,21 +35,17 @@ type CommandBranchBuilder interface {
 	WithAliases(aliases ...string) CommandBranchBuilder
 
 	// GetAliases returns the aliases assigned to this CommandBranchBuilder.
-	GetAliases() []string
+	getAliases() []string
 
 	// Parent sets the parent CommandNode for the CommandBranch being built.
 	//
 	// Values set using this method before build time will be disregarded.
-	Parent(node CommandNode)
+	parent(node CommandNode)
 
 	// WithDescription sets a description value for the CommandBranch being built.
 	//
 	// Descriptions are used when rendering help text.
 	WithDescription(desc string) CommandBranchBuilder
-
-	HasDescription() bool
-
-	GetDescription() string
 
 	// WithHelpDisabled disables the automatic '-h | --help' flag that is enabled
 	// by default.
@@ -83,10 +79,6 @@ type CommandBranchBuilder interface {
 
 	WithCallback(cb CommandBranchCallback) CommandBranchBuilder
 
-	HasCallback() bool
-
-	GetCallback() CommandBranchCallback
-
 	build() (CommandBranch, error)
 }
 
@@ -105,61 +97,35 @@ type commandBranchBuilder struct {
 	comGroups    []CommandGroupBuilder
 	flagGroups   []FlagGroupBuilder
 	aliases      []string
-	parent       CommandNode
+	parentNode   CommandNode
 	callback     CommandBranchCallback
 }
 
-func (c commandBranchBuilder) GetName() string {
+func (c commandBranchBuilder) getName() string {
 	return c.name
 }
 
-func (c *commandBranchBuilder) Parent(node CommandNode) {
-	c.parent = node
+func (c *commandBranchBuilder) parent(node CommandNode) {
+	c.parentNode = node
 }
-
-// Aliases /////////////////////////////////////////////////////////////////////
 
 func (c *commandBranchBuilder) WithAliases(aliases ...string) CommandBranchBuilder {
 	c.aliases = aliases
 	return c
 }
 
-func (c commandBranchBuilder) GetAliases() []string {
+func (c commandBranchBuilder) getAliases() []string {
 	return c.aliases
 }
-
-func (c commandBranchBuilder) HasAliases() bool {
-	return len(c.aliases) > 0
-}
-
-// Description /////////////////////////////////////////////////////////////////
 
 func (c *commandBranchBuilder) WithDescription(desc string) CommandBranchBuilder {
 	c.desc = desc
 	return c
 }
 
-func (c commandBranchBuilder) HasDescription() bool {
-	return len(c.desc) > 0
-}
-
-func (c commandBranchBuilder) GetDescription() string {
-	return c.desc
-}
-
-// Callback ////////////////////////////////////////////////////////////////////
-
 func (c *commandBranchBuilder) WithCallback(cb CommandBranchCallback) CommandBranchBuilder {
 	c.callback = cb
 	return c
-}
-
-func (c commandBranchBuilder) HasCallback() bool {
-	return c.callback != nil
-}
-
-func (c commandBranchBuilder) GetCallback() CommandBranchCallback {
-	return c.callback
 }
 
 func (c *commandBranchBuilder) WithHelpDisabled() CommandBranchBuilder {
@@ -208,7 +174,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 	}
 
 	// Ensure a parent is set
-	if c.parent == nil {
+	if c.parentNode == nil {
 		panic("illegal state: attempted to build a command branch with no parent set")
 	}
 
@@ -227,7 +193,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 
 		// If the default group name has been changed to a custom name then enable
 		// the meta group.
-		if c.flagGroups[0].GetName() != defaultGroupName {
+		if c.flagGroups[0].getName() != defaultGroupName {
 			metaGroup = true
 		}
 
@@ -319,7 +285,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 
 	out.flagGroups = flagGroups
 	out.commandGroups = commandGroups
-	out.parent = c.parent
+	out.parent = c.parentNode
 	out.aliases = c.aliases
 	out.callback = c.callback
 

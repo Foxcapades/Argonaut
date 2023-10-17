@@ -18,9 +18,23 @@ type Argument interface {
 	// HasName tests whether this Argument has a custom name assigned.
 	HasName() bool
 
+	// Default returns the default value or value provider attached to this
+	// Argument, if such a value exists.
+	//
+	// If this Argument does not have a default value or provider set, this method
+	// will return nil.
 	Default() any
+
+	// HasDefault indicates whether a default value has been set on this
+	// Argument.
 	HasDefault() bool
-	DefaultType() reflect.Type
+
+	// defaultType returns the reflect.Type value for the configured default
+	// value.
+	//
+	// If no default value has been set on this Argument, this method will return
+	// nil.
+	defaultType() reflect.Type
 
 	// Description returns the description attached to this Argument.
 	//
@@ -116,7 +130,7 @@ func (a argument) HasDefault() bool {
 	return a.isDefSet
 }
 
-func (a argument) DefaultType() reflect.Type {
+func (a argument) defaultType() reflect.Type {
 	return a.rootDef.Type()
 }
 
