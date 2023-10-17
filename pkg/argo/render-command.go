@@ -33,7 +33,7 @@ func renderCommandLeaf(leaf CommandLeaf) string {
 	if leaf.HasAliases() {
 		out.WriteByte(charLF)
 		out.WriteString(subLinePadding[0])
-		out.WriteString("Subcommand Aliases: ")
+		out.WriteString("Aliases: ")
 
 		aliases := leaf.Aliases()
 		slices.Sort(aliases)
@@ -156,7 +156,7 @@ func renderCommandBranch(branch CommandBranch) string {
 	if branch.HasAliases() {
 		out.WriteByte(charLF)
 		out.WriteString(subLinePadding[0])
-		out.WriteString("Subcommand Aliases: ")
+		out.WriteString("Aliases: ")
 
 		aliases := branch.Aliases()
 		slices.Sort(aliases)
@@ -182,6 +182,8 @@ func renderCommandBranch(branch CommandBranch) string {
 		renderFlagGroups(branch.FlagGroups(), 0, &out)
 		out.WriteByte(charLF)
 	}
+
+	out.WriteByte(charLF)
 
 	renderCommandGroups(branch.CommandGroups(), 0, &out)
 
