@@ -29,16 +29,34 @@ func renderCommandLeaf(leaf CommandLeaf) string {
 	out := strings.Builder{}
 	renderCommandLeafUsage(leaf, &out)
 	out.WriteByte(charLF)
+
+	if leaf.HasAliases() {
+		out.WriteByte(charLF)
+		out.WriteString(subLinePadding[0])
+		out.WriteString("Subcommand Aliases: ")
+
+		aliases := leaf.Aliases()
+		slices.Sort(aliases)
+
+		for i, alias := range aliases {
+			if i > 0 {
+				out.WriteString(", ")
+			}
+			out.WriteString(alias)
+		}
+		out.WriteByte(charLF)
+	}
+
 	renderCommandBackHalf(leaf, &out)
 	return out.String()
 }
 
 func renderCommandBackHalf(com Command, out *strings.Builder) {
+
 	// If the command has a description, append it.
 	if com.HasDescription() {
 		out.WriteByte(charLF)
-		breakFmt(com.Description(), subLinePadding[0], helpTextMaxWidth, out)
-		out.WriteByte(charLF)
+		breakFmt(com.Description(), descriptionPadding[0], helpTextMaxWidth, out)
 	}
 
 	// Figure out if we have any printable arguments.
@@ -59,9 +77,12 @@ func renderCommandBackHalf(com Command, out *strings.Builder) {
 	}
 
 	if com.HasFlagGroups() {
+		if com.HasDescription() {
+			out.WriteByte(charLF)
+		}
+
 		out.WriteByte(charLF)
 		renderFlagGroups(com.FlagGroups(), 0, out)
-		out.WriteByte(charLF)
 	}
 
 	if writeArgs {
@@ -243,9 +264,11 @@ func renderCommandGroup(
 		sb.WriteString(group.Name())
 	}
 
+	sb.WriteByte(charLF)
+
 	if group.HasDescription() {
-		sb.WriteByte(charLF)
 		breakFmt(group.Description(), descriptionPadding[padding], helpTextMaxWidth, sb)
+		sb.WriteByte(charLF)
 	}
 
 	ordered := make([]string, 0, len(group.Leaves())+len(group.Branches()))
@@ -262,11 +285,9 @@ func renderCommandGroup(
 
 	slices.Sort(ordered)
 
-	for _, name := range ordered {
-		sb.WriteByte(charLF)
-
-		if group.HasDescription() {
-			sb.WriteByte(charLF)
+	for i, name := range ordered {
+		if i > 0 {
+			sb.WriteString(paragraphBreak)
 		}
 
 		sb.WriteString(headerPadding[padding+1])
@@ -323,11 +344,12 @@ func renderCommandTree(tree CommandTree) string {
 	hf := tree.HasFlagGroups()
 
 	if hd {
-		breakFmt(tree.Description(), subLinePadding[0], helpTextMaxWidth, &out)
+		breakFmt(tree.Description(), descriptionPadding[0], helpTextMaxWidth, &out)
 		out.WriteByte(charLF)
 	}
 
 	if hf {
+		out.WriteByte(charLF)
 		renderFlagGroups(tree.FlagGroups(), 0, &out)
 		out.WriteByte(charLF)
 	}
@@ -342,6 +364,7 @@ func renderCommandTree(tree CommandTree) string {
 
 func renderCommandTreeUsageBlock(tree CommandTree, out *strings.Builder) {
 	out.WriteString(comPrefix)
+	out.WriteString(subLinePadding[0])
 	out.WriteString(tree.Name())
 
 	if tree.HasFlagGroups() {

@@ -40,10 +40,10 @@ func renderFlag(flag Flag, padding uint8, sb *strings.Builder) {
 	if flag.HasDescription() {
 		sb.WriteByte(charLF)
 		breakFmt(flag.Description(), descriptionPadding[padding], helpTextMaxWidth, sb)
-		sb.WriteByte(charLF)
 	}
 
 	if flag.HasArgument() {
+		sb.WriteByte(charLF)
 		renderArgument(flag.Argument(), padding+1, sb)
 	}
 }
@@ -112,7 +112,7 @@ func renderFlagGroup(
 	// Render every flag in the group.
 	for i, flag := range group.Flags() {
 		if i > 0 {
-			out.WriteByte(charLF)
+			out.WriteString(paragraphBreak)
 		}
 
 		renderFlag(flag, padding+1, out)
