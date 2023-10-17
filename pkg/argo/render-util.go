@@ -2,10 +2,30 @@ package argo
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 )
 
-const helpTextMaxWidth uint8 = 100
+var helpTextMaxWidth = 100
+
+func init() {
+	cmd := exec.Command("tput", "cols")
+	cmd.Stdin = os.Stdin
+
+	out, err := cmd.Output()
+	if err != nil {
+		return
+	}
+
+	width, err := strconv.Atoi(strings.TrimSpace(string(out)))
+	if err != nil {
+		return
+	}
+
+	helpTextMaxWidth = min(width-20, 100)
+}
 
 const (
 	flagDivider    = " | "
@@ -40,18 +60,19 @@ func isBreakChar(b byte) bool {
 	return b == charSpace || b == charTab
 }
 
-func breakFmt(str, prefix string, width uint8, out *strings.Builder) {
+func breakFmt(str, prefix string, width int, out *strings.Builder) {
 	str = strings.ReplaceAll(strings.ReplaceAll(str, "\r\n", "\n"), "\r", "\n")
 
-	size := int(width) - len(prefix)
+	size := width - len(prefix)
 	stln := len(str)
 
 	if size < 1 {
 		panic(fmt.Errorf("cannot break string into lengths of %d", size))
 	}
 
+	out.WriteString(prefix)
+
 	if stln <= size {
-		out.WriteString(prefix)
 		out.WriteString(str)
 		return
 	}

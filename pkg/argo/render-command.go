@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	comPrefix = "Usage:\n  "
+	comPrefix = "Usage:\n"
 	comOpts   = " [options]"
 	comArgs   = "Positional Arguments"
 )
@@ -14,6 +14,7 @@ const (
 func renderCommand(com Command) string {
 	out := strings.Builder{}
 	renderCommandUsageBlock(com, &out)
+	out.WriteByte(charLF)
 	renderCommandBackHalf(com, &out)
 	return out.String()
 }
@@ -27,6 +28,7 @@ func renderCommandUsageBlock(com Command, out *strings.Builder) {
 func renderCommandLeaf(leaf CommandLeaf) string {
 	out := strings.Builder{}
 	renderCommandLeafUsage(leaf, &out)
+	out.WriteByte(charLF)
 	renderCommandBackHalf(leaf, &out)
 	return out.String()
 }
@@ -36,6 +38,7 @@ func renderCommandBackHalf(com Command, out *strings.Builder) {
 	if com.HasDescription() {
 		out.WriteByte(charLF)
 		breakFmt(com.Description(), subLinePadding[0], helpTextMaxWidth, out)
+		out.WriteByte(charLF)
 	}
 
 	// Figure out if we have any printable arguments.
@@ -56,12 +59,13 @@ func renderCommandBackHalf(com Command, out *strings.Builder) {
 	}
 
 	if com.HasFlagGroups() {
-		out.WriteString(paragraphBreak)
+		out.WriteByte(charLF)
 		renderFlagGroups(com.FlagGroups(), 0, out)
+		out.WriteByte(charLF)
 	}
 
 	if writeArgs {
-		out.WriteString(paragraphBreak)
+		out.WriteByte(charLF)
 		out.WriteString(headerPadding[0])
 		out.WriteString(comArgs)
 
@@ -123,12 +127,15 @@ func renderCommandBranch(branch CommandBranch) string {
 	out := strings.Builder{}
 
 	renderCommandBranchUsage(branch, &out)
+	out.WriteByte(charLF)
 
 	hd := branch.HasDescription()
 	hf := branch.HasFlagGroups()
 
 	if branch.HasAliases() {
-		out.WriteString(" (")
+		out.WriteByte(charLF)
+		out.WriteString(subLinePadding[0])
+		out.WriteString("Subcommand Aliases: ")
 
 		aliases := branch.Aliases()
 		slices.Sort(aliases)
@@ -139,23 +146,23 @@ func renderCommandBranch(branch CommandBranch) string {
 			}
 			out.WriteString(alias)
 		}
-
-		out.WriteByte(')')
+		out.WriteByte(charLF)
 	}
 
 	if hd {
 		out.WriteByte(charLF)
 		breakFmt(branch.Description(), descriptionPadding[0], helpTextMaxWidth, &out)
+		out.WriteByte(charLF)
 	}
 
 	// render flags
 	if hf {
-		out.WriteString(paragraphBreak)
+		out.WriteByte(charLF)
 		renderFlagGroups(branch.FlagGroups(), 0, &out)
+		out.WriteByte(charLF)
 	}
 
-	out.WriteString(paragraphBreak)
-	renderCommandGroups(branch.CommandGroups(), 0, &out, hf || hd)
+	renderCommandGroups(branch.CommandGroups(), 0, &out)
 
 	out.WriteByte(charLF)
 
@@ -213,13 +220,13 @@ const (
 	defaultComGroupName = "Commands"
 )
 
-func renderCommandGroups(groups []CommandGroup, padding uint8, sb *strings.Builder, forceHeaders bool) {
+func renderCommandGroups(groups []CommandGroup, padding uint8, sb *strings.Builder) {
 	for i, group := range groups {
 		if i > 0 {
 			sb.WriteString(paragraphBreak)
 		}
 
-		renderCommandGroup(group, padding, sb, forceHeaders || len(groups) > 1)
+		renderCommandGroup(group, padding, sb)
 	}
 }
 
@@ -227,7 +234,6 @@ func renderCommandGroup(
 	group CommandGroup,
 	padding uint8,
 	sb *strings.Builder,
-	forceHeader bool,
 ) {
 	sb.WriteString(headerPadding[padding])
 
@@ -311,22 +317,23 @@ func renderCommandTree(tree CommandTree) string {
 	out := strings.Builder{}
 
 	renderCommandTreeUsageBlock(tree, &out)
+	out.WriteByte(charLF)
 
 	hd := tree.HasDescription()
 	hf := tree.HasFlagGroups()
 
 	if hd {
-		out.WriteString(paragraphBreak)
 		breakFmt(tree.Description(), subLinePadding[0], helpTextMaxWidth, &out)
+		out.WriteByte(charLF)
 	}
 
 	if hf {
-		out.WriteString(paragraphBreak)
 		renderFlagGroups(tree.FlagGroups(), 0, &out)
+		out.WriteByte(charLF)
 	}
 
-	out.WriteString(paragraphBreak)
-	renderCommandGroups(tree.CommandGroups(), 0, &out, hd || hf)
+	out.WriteByte(charLF)
+	renderCommandGroups(tree.CommandGroups(), 0, &out)
 
 	out.WriteByte(charLF)
 

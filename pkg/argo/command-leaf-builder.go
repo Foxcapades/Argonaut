@@ -68,7 +68,7 @@ type CommandLeafBuilder interface {
 func NewCommandLeafBuilder(name string) CommandLeafBuilder {
 	return &commandLeafBuilder{
 		name:       name,
-		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder("default")},
+		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(defaultGroupName)},
 	}
 }
 
