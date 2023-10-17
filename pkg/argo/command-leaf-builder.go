@@ -1,11 +1,15 @@
 package argo
 
+import (
+	"errors"
+	"fmt"
+	"os"
+)
+
 // CommandLeafBuilder defines a builder type that is used to construct
 // CommandLeaf instances.
 type CommandLeafBuilder interface {
-
-	// GetName returns the name assigned to this CommandLeafBuilder.
-	GetName() string
+	getName() string
 
 	// WithAliases attaches the given aliases to this CommandLeafBuilder.
 	//
@@ -17,18 +21,12 @@ type CommandLeafBuilder interface {
 	// the CommandLeaf.
 	WithAliases(aliases ...string) CommandLeafBuilder
 
-	// GetAliases returns the aliases that have been attached to this
-	// CommandLeafBuilder.
-	GetAliases() []string
-
-	// Parent sets the parent node for this CommandLeafBuilder.  Values set with
-	// this method before build time will be disregarded.
-	Parent(node CommandNode)
-
 	// WithDescription sets a description for the CommandLeaf to be built.
 	//
 	// Descriptions are used when rendering help text.
 	WithDescription(desc string) CommandLeafBuilder
+
+	WithHelpDisabled() CommandLeafBuilder
 
 	// WithUnmappedLabel provides a label for unmapped inputs.
 	//
@@ -46,30 +44,10 @@ type CommandLeafBuilder interface {
 	//       my-leaf [ITEMS...]
 	WithUnmappedLabel(label string) CommandLeafBuilder
 
-	// GetUnmappedLabel returns the label configured on this builder for unmapped
-	// cli inputs.
-	//
-	// If no unmapped value label has been set, this method returns an empty
-	// string.
-	GetUnmappedLabel() string
-
-	// HasUnmappedLabel indicates whether an unmapped value label has been set on
-	// this CommandLeafBuilder instance.
-	HasUnmappedLabel() bool
-
 	// WithCallback sets a callback on the CommandLeaf to be built that will be
 	// executed when the command leaf is used, after any tree or branch callbacks
 	// that were set on parent nodes.
 	WithCallback(cb CommandLeafCallback) CommandLeafBuilder
-
-	// GetCallback returns the callback set on this CommandLeafBuilder instance.
-	//
-	// If no callback has been set, this method returns nil.
-	GetCallback() CommandLeafCallback
-
-	// HasCallback indicates whether a CommandLeafCallback has been set on this
-	// CommandLeafBuilder instance.
-	HasCallback() bool
 
 	// WithArgument adds a positional argument to the CommandLeaf being built.
 	WithArgument(argument ArgumentBuilder) CommandLeafBuilder
@@ -81,6 +59,211 @@ type CommandLeafBuilder interface {
 	// being built.
 	WithFlag(flag FlagBuilder) CommandLeafBuilder
 
-	// Build attempts to build a CommandLeaf from the values set on this builder.
-	Build() (CommandLeaf, error)
+	getAliases() []string
+	parent(node CommandNode)
+
+	build() (CommandLeaf, error)
+}
+
+func NewCommandLeafBuilder(name string) CommandLeafBuilder {
+	return &commandLeafBuilder{
+		name:       name,
+		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder("default")},
+	}
+}
+
+type commandLeafBuilder struct {
+	parentNode  CommandNode
+	disableHelp bool
+	name        string
+	description string
+	umapLabel   string
+	aliases     []string
+	arguments   []ArgumentBuilder
+	flagGroups  []FlagGroupBuilder
+	callback    CommandLeafCallback
+}
+
+// PUBLIC API //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func (l *commandLeafBuilder) WithAliases(aliases ...string) CommandLeafBuilder {
+	l.aliases = append(l.aliases, aliases...)
+	return l
+}
+
+func (l *commandLeafBuilder) WithDescription(desc string) CommandLeafBuilder {
+	l.description = desc
+	return l
+}
+
+func (l *commandLeafBuilder) WithArgument(argument ArgumentBuilder) CommandLeafBuilder {
+	l.arguments = append(l.arguments, argument)
+	return l
+}
+
+func (l *commandLeafBuilder) WithFlagGroup(flagGroup FlagGroupBuilder) CommandLeafBuilder {
+	l.flagGroups = append(l.flagGroups, flagGroup)
+	return l
+}
+
+func (l *commandLeafBuilder) WithFlag(flag FlagBuilder) CommandLeafBuilder {
+	l.flagGroups[0].WithFlag(flag)
+	return l
+}
+
+func (l *commandLeafBuilder) WithUnmappedLabel(label string) CommandLeafBuilder {
+	l.umapLabel = label
+	return l
+}
+
+func (l *commandLeafBuilder) WithCallback(cb CommandLeafCallback) CommandLeafBuilder {
+	l.callback = cb
+	return l
+}
+
+func (l *commandLeafBuilder) WithHelpDisabled() CommandLeafBuilder {
+	l.disableHelp = true
+	return l
+}
+
+// INTERNALS ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func (l *commandLeafBuilder) getName() string {
+	return l.name
+}
+
+func (l *commandLeafBuilder) hasFlags() bool {
+	for _, group := range l.flagGroups {
+		if group.hasFlags() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (l *commandLeafBuilder) hasCustomFlagGroups() bool {
+	return len(l.flagGroups) > 1
+}
+
+func (l *commandLeafBuilder) parent(node CommandNode) {
+	l.parentNode = node
+}
+
+func (l commandLeafBuilder) getAliases() []string {
+	return l.aliases
+}
+
+func (l *commandLeafBuilder) build() (CommandLeaf, error) {
+	errs := newMultiError()
+
+	// Ensure the group name is not blank
+	if isBlank(l.name) {
+		errs.AppendError(errors.New("command leaf names must not be blank"))
+	}
+
+	// Ensure the aliases are all not blank
+	for _, alias := range l.aliases {
+		if isBlank(alias) {
+			errs.AppendError(errors.New("command leaf aliases must not be blank"))
+		}
+	}
+
+	if l.parentNode == nil {
+		panic("illegal state: attempted to build a command leaf with no parent set")
+	}
+
+	leaf := new(commandLeaf)
+
+	leaf.args = make([]Argument, 0, len(l.arguments))
+	for _, builder := range l.arguments {
+		if arg, err := builder.build(); err != nil {
+			errs.AppendError(err)
+		} else {
+			leaf.args = append(leaf.args, arg)
+		}
+	}
+
+	uniqueFlagNames(l.flagGroups, errs)
+	leaf.flags = make([]FlagGroup, 0, len(l.flagGroups))
+	for _, builder := range l.flagGroups {
+		if builder.hasFlags() {
+			if fg, err := builder.build(); err != nil {
+				errs.AppendError(err)
+			} else {
+				leaf.flags = append(leaf.flags, fg)
+			}
+		}
+	}
+
+	if !l.disableHelp {
+		useShortH := true
+		useLongH := true
+
+		for _, group := range leaf.flags {
+			for _, flag := range group.Flags() {
+				if flag.ShortForm() == 'h' {
+					useShortH = false
+				}
+				if flag.LongForm() == "help" {
+					useLongH = false
+				}
+			}
+		}
+
+		if useShortH || useLongH {
+			if len(leaf.flags) == 0 || leaf.flags[0].Name() != defaultGroupName || leaf.flags[0].size() > 5 {
+				group, err := NewFlagGroupBuilder("Meta Flags").
+					WithFlag(makeLeafHelp(useShortH, useLongH, leaf)).
+					build()
+
+				if err != nil {
+					errs.AppendError(err)
+				} else {
+					leaf.flags = append(leaf.flags, group)
+				}
+			} else {
+				flag, err := makeLeafHelp(useShortH, useLongH, leaf).build()
+
+				if err != nil {
+					errs.AppendError(err)
+				} else {
+					group := leaf.flags[0].(*flagGroup)
+					group.flags = append(group.flags, flag)
+				}
+			}
+		}
+	}
+
+	if len(errs.Errors()) > 0 {
+		return nil, errs
+	}
+
+	leaf.name = l.name
+	leaf.desc = l.description
+	leaf.aliases = l.aliases
+	leaf.parent = l.parentNode
+	leaf.callback = l.callback
+
+	return leaf, nil
+}
+
+func makeLeafHelp(short, long bool, leaf CommandLeaf) FlagBuilder {
+	builder := NewFlagBuilder().
+		isHelpFlag().
+		WithCallback(func(flag Flag) {
+			fmt.Println(renderCommandLeaf(leaf))
+			os.Exit(0)
+		}).
+		WithDescription("Prints this help text.")
+
+	if short {
+		builder.WithShortForm('h')
+	}
+
+	if long {
+		builder.WithLongForm("help")
+	}
+
+	return builder
 }

@@ -33,8 +33,51 @@ type FlagGroup interface {
 	// long flag name.  If one could not be found, this method returns nil.
 	FindLongFlag(name string) Flag
 
-	// TryFlag searches this FlagGroup's contents for a Flag instance matching the
-	// given FlagRef, then increments that flag's hit counter, additionally
-	// attempting to set the Flag's Argument value if one is present.
-	TryFlag(ref FlagRef) (bool, error)
+	size() int
+}
+
+type flagGroup struct {
+	name  string
+	desc  string
+	flags []Flag
+}
+
+func (f flagGroup) Name() string {
+	return f.name
+}
+
+func (f flagGroup) Description() string {
+	return f.desc
+}
+
+func (f flagGroup) HasDescription() bool {
+	return len(f.desc) > 0
+}
+
+func (f flagGroup) Flags() []Flag {
+	return f.flags
+}
+
+func (f flagGroup) FindShortFlag(c byte) Flag {
+	for _, flag := range f.flags {
+		if flag.HasShortForm() && flag.ShortForm() == c {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (f flagGroup) FindLongFlag(name string) Flag {
+	for _, flag := range f.flags {
+		if flag.HasLongForm() && flag.LongForm() == name {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (f flagGroup) size() int {
+	return len(f.flags)
 }

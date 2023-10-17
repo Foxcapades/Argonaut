@@ -1,5 +1,11 @@
 package argo
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+)
+
 // CommandTree represents the root of a tree of subcommands.
 //
 // The command tree consists of branch and leaf nodes.  The branch nodes can be
@@ -39,3 +45,101 @@ type CommandTree interface {
 }
 
 type CommandTreeCallback = func(com CommandTree)
+
+type commandTree struct {
+	description   string
+	disableHelp   bool
+	flagGroups    []FlagGroup
+	commandGroups []CommandGroup
+	selected      CommandLeaf
+	callback      CommandTreeCallback
+}
+
+func (_ commandTree) Name() string {
+	return filepath.Base(os.Args[0])
+}
+
+func (_ commandTree) Parent() CommandNode {
+	return nil
+}
+
+func (_ commandTree) HasParent() bool {
+	return false
+}
+
+func (t commandTree) Description() string {
+	return t.description
+}
+
+func (t commandTree) HasDescription() bool {
+	return len(t.description) > 0
+}
+
+func (t commandTree) FlagGroups() []FlagGroup {
+	return t.flagGroups
+}
+
+func (t *commandTree) HasFlagGroups() bool {
+	return len(t.flagGroups) > 0
+}
+
+func (t commandTree) CommandGroups() []CommandGroup {
+	return t.commandGroups
+}
+
+func (t commandTree) HasCallback() bool {
+	return t.callback != nil
+}
+
+func (t commandTree) RunCallback() {
+	if t.callback != nil {
+		t.callback(&t)
+	}
+}
+
+func (t commandTree) SelectedCommand() CommandLeaf {
+	return t.selected
+}
+
+func (t *commandTree) SelectCommand(leaf CommandLeaf) {
+	t.selected = leaf
+}
+
+func (t commandTree) IsHelpDisabled() bool {
+	return t.disableHelp
+}
+
+func (t commandTree) FindChild(name string) CommandNode {
+	for _, group := range t.commandGroups {
+		if child := group.FindChild(name); child != nil {
+			return child
+		}
+	}
+
+	return nil
+}
+
+func (t commandTree) FindShortFlag(b byte) Flag {
+	for _, group := range t.flagGroups {
+		if flag := group.FindShortFlag(b); flag != nil {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (t commandTree) FindLongFlag(name string) Flag {
+	for _, group := range t.FlagGroups() {
+		if flag := group.FindLongFlag(name); flag != nil {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (t commandTree) onIncomplete() {
+	fmt.Println(renderCommandTree(&t))
+	os.Exit(1)
+}

@@ -1,5 +1,7 @@
 package argo
 
+import "errors"
+
 type FlagBuilder interface {
 
 	// WithShortForm sets the short-form flag character that the flag may be
@@ -16,16 +18,15 @@ type FlagBuilder interface {
 	//     -f bar
 	//     -f=bar
 	//     # Multiple short flags chained.  In these examples, the short flag '-c'
-	//     # takes an optional string argument, which will be "def" in the
-	//     # examples.
+	//     # takes an optional string argument, which will be "def" in the last
+	//     # two examples.
 	//     -abc
 	//     -abc def
 	//     -abc=def
 	WithShortForm(char byte) FlagBuilder
 
-	HasShortForm() bool
-
-	GetShortForm() byte
+	hasShortForm() bool
+	getShortForm() byte
 
 	// WithLongForm sets the long-form flag name that the flag may be referenced
 	// by on the CLI.
@@ -43,9 +44,8 @@ type FlagBuilder interface {
 	//     --foo=bar
 	WithLongForm(form string) FlagBuilder
 
-	HasLongForm() bool
-
-	GetLongForm() string
+	hasLongForm() bool
+	getLongForm() string
 
 	// WithDescription sets an optional description value for the Flag being
 	// built.
@@ -53,17 +53,17 @@ type FlagBuilder interface {
 	// The description value is used for rendering help text.
 	WithDescription(desc string) FlagBuilder
 
-	HasDescription() bool
-
-	// WithOnHitCallback provides a function that will be called when a Flag is
-	// hit while parsing the CLI inputs.
+	// WithCallback provides a function that will be called when a Flag is hit
+	// while parsing the CLI inputs.
 	//
 	// The given function will be called after parsing has completed, regardless
 	// of whether there were parsing errors.
 	//
-	// Flag on-hit callbacks will be executed in the order that the flags appeared
-	// in the CLI call.
-	WithOnHitCallback(fn func(Flag)) FlagBuilder
+	// Flag on-hit callbacks will be executed in priority order with the higher
+	// priority values executing before lower priority values.  For flags that
+	// have the same priority, the callbacks will be called in the order the flags
+	// appeared in the CLI call.
+	WithCallback(fn FlagCallback) FlagBuilder
 
 	// WithArgument attaches the given argument to the Flag being built.
 	//
@@ -88,6 +88,8 @@ type FlagBuilder interface {
 	//     WithArgument(Argument().WithBinding(ptr).WithDefault(something).Require())
 	WithBindingAndDefault(pointer, def any, required bool) FlagBuilder
 
+	isHelpFlag() FlagBuilder
+
 	// Require marks this Flag as being required.
 	//
 	// If this flag is not present in the CLI call, an error will be returned when
@@ -96,5 +98,152 @@ type FlagBuilder interface {
 
 	// Build builds a new Flag instance constructed from the components set on
 	// this FlagBuilder.
-	Build() (Flag, error)
+	build() (Flag, error)
+}
+
+func NewFlagBuilder() FlagBuilder {
+	return &flagBuilder{}
+}
+
+type flagBuilder struct {
+	short  byte
+	req    bool
+	isHelp bool
+	long   string
+	desc   string
+	onHit  FlagCallback
+	arg    ArgumentBuilder
+}
+
+func (b *flagBuilder) WithShortForm(char byte) FlagBuilder {
+	b.short = char
+	return b
+}
+
+func (b flagBuilder) hasShortForm() bool {
+	return b.short != 0
+}
+
+func (b flagBuilder) getShortForm() byte {
+	return b.short
+}
+
+func (b *flagBuilder) WithLongForm(form string) FlagBuilder {
+	b.long = form
+	return b
+}
+
+func (b flagBuilder) hasLongForm() bool {
+	return len(b.long) > 0
+}
+
+func (b flagBuilder) getLongForm() string {
+	return b.long
+}
+
+func (b *flagBuilder) WithDescription(desc string) FlagBuilder {
+	b.desc = desc
+	return b
+}
+
+func (b *flagBuilder) WithCallback(fn func(Flag)) FlagBuilder {
+	b.onHit = fn
+	return b
+}
+
+func (b *flagBuilder) WithArgument(arg ArgumentBuilder) FlagBuilder {
+	b.arg = arg
+	return b
+}
+
+func (b *flagBuilder) Require() FlagBuilder {
+	b.req = true
+	return b
+}
+
+func (b *flagBuilder) WithBinding(pointer any, required bool) FlagBuilder {
+	b.arg = NewArgumentBuilder().WithBinding(pointer)
+
+	if required {
+		b.arg.Require()
+	}
+
+	return b
+}
+
+func (b *flagBuilder) WithBindingAndDefault(pointer, def any, required bool) FlagBuilder {
+	b.arg = NewArgumentBuilder().WithBinding(pointer).WithDefault(def)
+
+	if required {
+		b.arg.Require()
+	}
+
+	return b
+}
+
+func (b *flagBuilder) isHelpFlag() FlagBuilder {
+	b.isHelp = true
+	return b
+}
+
+func (b *flagBuilder) build() (Flag, error) {
+	errs := newMultiError()
+
+	if b.short > 0 {
+		if err := validateShortForm(b.short); err != nil {
+			errs.AppendError(err)
+		}
+	}
+
+	if len(b.long) > 0 {
+		if err := validateLongForm(b.long); err != nil {
+			errs.AppendError(err)
+		}
+	}
+
+	var arg Argument
+
+	if b.arg != nil {
+		var err error
+		arg, err = b.arg.build()
+		if err != nil {
+			errs.AppendError(err)
+		}
+	}
+
+	if len(errs.Errors()) > 0 {
+		return nil, errs
+	}
+
+	return &flag{
+		short:    b.short,
+		required: b.req,
+		arg:      arg,
+		long:     b.long,
+		desc:     b.desc,
+		isHelp:   b.isHelp,
+		callback: b.onHit,
+	}, nil
+}
+
+func validateShortForm(c byte) error {
+	if !isAlphanumeric(c) {
+		return errors.New("short-form flags must be alphanumeric")
+	}
+
+	return nil
+}
+
+func validateLongForm(f string) error {
+	if !isAlphanumeric(f[0]) {
+		return errors.New("long-form flags must begin with an alphanumeric character")
+	}
+
+	for i := 1; i < len(f); i++ {
+		if !isFlagStringSafe(f[i]) {
+			return errors.New("long-form flags must only contain alphanumeric characters, dashes, and/or underscores")
+		}
+	}
+
+	return nil
 }

@@ -3,63 +3,59 @@ package cli
 import (
 	"errors"
 
-	"github.com/Foxcapades/Argonaut/internal/impl/argument"
-	"github.com/Foxcapades/Argonaut/internal/impl/command"
-	"github.com/Foxcapades/Argonaut/internal/impl/flag"
-	"github.com/Foxcapades/Argonaut/internal/interpret"
 	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 func Command() argo.CommandBuilder {
-	return command.Builder()
+	return argo.NewCommandBuilder()
 }
 
-// CommandTree returns a new argo.CommandTreeBuilder instance which can be used
+// Tree returns a new argo.CommandTreeBuilder instance which can be used
 // to construct an argo.CommandTree instance.
 //
 // A command tree is a tree of nested subcommands of arbitrary depth.  The tree
 // consists of branch and leaf nodes, with the leaf nodes being the selectable
 // final commands.
-func CommandTree() argo.CommandTreeBuilder {
-	return command.TreeBuilder()
+func Tree() argo.CommandTreeBuilder {
+	return argo.NewCommandTreeBuilder()
 }
 
 func Parse(args []string, command any) error {
 	if com, ok := command.(argo.CommandTree); ok {
-		return interpret.CommandTreeInterpreter(args, com).Run()
+		return argo.CommandTreeInterpreter(args, com).Run()
 	} else if com, ok := command.(argo.Command); ok {
-		return interpret.CommandInterpreter(args, com).Run()
+		return argo.CommandInterpreter(args, com).Run()
 	} else {
 		return errors.New("invalid command type passed to cli.Parse")
 	}
 }
 
-// CommandBranch returns a new argo.CommandBranchBuilder instance which can be
+// Branch returns a new argo.CommandBranchBuilder instance which can be
 // used to construct an argo.CommandBranch instance.
-func CommandBranch(name string) argo.CommandBranchBuilder {
-	return command.NewBranchBuilder(name)
+func Branch(name string) argo.CommandBranchBuilder {
+	return argo.NewCommandBranchBuilder(name)
 }
 
-// CommandLeaf returns a new argo.CommandLeafBuilder instance which can be used
+// Leaf returns a new argo.CommandLeafBuilder instance which can be used
 // to construct an argo.CommandLeaf instance.
-func CommandLeaf(name string) argo.CommandLeafBuilder {
-	return command.NewLeafBuilder(name)
+func Leaf(name string) argo.CommandLeafBuilder {
+	return argo.NewCommandLeafBuilder(name)
 }
 
 // FlagGroup returns a new argo.FlagGroupBuilder instance which can be used to
 // construct an argo.FlagGroup instance.
 func FlagGroup(name string) argo.FlagGroupBuilder {
-	return flag.GroupBuilder(name)
+	return argo.NewFlagGroupBuilder(name)
 }
 
 // Flag returns a new argo.FlagBuilder instance which can be used to construct
 // an argo.Flag instance.
 func Flag() argo.FlagBuilder {
-	return flag.NewBuilder()
+	return argo.NewFlagBuilder()
 }
 
 // Argument returns a new argo.ArgumentBuilder instance which can be used to
 // construct an argo.Argument instance.
 func Argument() argo.ArgumentBuilder {
-	return argument.NewBuilder()
+	return argo.NewArgumentBuilder()
 }

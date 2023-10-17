@@ -1,5 +1,11 @@
 package argo
 
+import (
+	"errors"
+	"fmt"
+	"os"
+)
+
 // A CommandBranchBuilder instance may be used to configure a new CommandBranch
 // instance to be built.
 //
@@ -81,11 +87,241 @@ type CommandBranchBuilder interface {
 
 	GetCallback() CommandBranchCallback
 
-	// Build attempts to construct a CommandBranch configuration set on this
-	// CommandBranchBuilder instance.
-	//
-	// At minimum, for the building of a CommandBranch to be successful, the
-	// branch must have a non-blank name value and at least one child node which
-	// may be one or more leaf nodes or branch nodes.
-	Build() (CommandBranch, error)
+	build() (CommandBranch, error)
+}
+
+func NewCommandBranchBuilder(name string) CommandBranchBuilder {
+	return &commandBranchBuilder{
+		name:       name,
+		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(defaultGroupName)},
+		comGroups:  []CommandGroupBuilder{NewCommandGroupBuilder(defaultGroupName)},
+	}
+}
+
+type commandBranchBuilder struct {
+	name         string
+	desc         string
+	helpDisabled bool
+	comGroups    []CommandGroupBuilder
+	flagGroups   []FlagGroupBuilder
+	aliases      []string
+	parent       CommandNode
+	callback     CommandBranchCallback
+}
+
+func (c commandBranchBuilder) GetName() string {
+	return c.name
+}
+
+func (c *commandBranchBuilder) Parent(node CommandNode) {
+	c.parent = node
+}
+
+// Aliases /////////////////////////////////////////////////////////////////////
+
+func (c *commandBranchBuilder) WithAliases(aliases ...string) CommandBranchBuilder {
+	c.aliases = aliases
+	return c
+}
+
+func (c commandBranchBuilder) GetAliases() []string {
+	return c.aliases
+}
+
+func (c commandBranchBuilder) HasAliases() bool {
+	return len(c.aliases) > 0
+}
+
+// Description /////////////////////////////////////////////////////////////////
+
+func (c *commandBranchBuilder) WithDescription(desc string) CommandBranchBuilder {
+	c.desc = desc
+	return c
+}
+
+func (c commandBranchBuilder) HasDescription() bool {
+	return len(c.desc) > 0
+}
+
+func (c commandBranchBuilder) GetDescription() string {
+	return c.desc
+}
+
+// Callback ////////////////////////////////////////////////////////////////////
+
+func (c *commandBranchBuilder) WithCallback(cb CommandBranchCallback) CommandBranchBuilder {
+	c.callback = cb
+	return c
+}
+
+func (c commandBranchBuilder) HasCallback() bool {
+	return c.callback != nil
+}
+
+func (c commandBranchBuilder) GetCallback() CommandBranchCallback {
+	return c.callback
+}
+
+func (c *commandBranchBuilder) WithHelpDisabled() CommandBranchBuilder {
+	c.helpDisabled = true
+	return c
+}
+
+func (c *commandBranchBuilder) WithCommandGroup(group CommandGroupBuilder) CommandBranchBuilder {
+	c.comGroups = append(c.comGroups, group)
+	return c
+}
+
+func (c *commandBranchBuilder) WithBranch(branch CommandBranchBuilder) CommandBranchBuilder {
+	c.comGroups[0].WithBranch(branch)
+	return c
+}
+
+func (c *commandBranchBuilder) WithLeaf(leaf CommandLeafBuilder) CommandBranchBuilder {
+	c.comGroups[0].WithLeaf(leaf)
+	return c
+}
+
+func (c *commandBranchBuilder) WithFlag(flag FlagBuilder) CommandBranchBuilder {
+	c.flagGroups[0].WithFlag(flag)
+	return c
+}
+
+func (c *commandBranchBuilder) WithFlagGroup(flagGroup FlagGroupBuilder) CommandBranchBuilder {
+	c.flagGroups = append(c.flagGroups, flagGroup)
+	return c
+}
+
+func (c *commandBranchBuilder) build() (CommandBranch, error) {
+	errs := newMultiError()
+
+	// Ensure name is not blank
+	if isBlank(c.name) {
+		errs.AppendError(errors.New("command branch names must not be blank"))
+	}
+
+	// Ensure aliases are not blank
+	for _, alias := range c.aliases {
+		if isBlank(alias) {
+			errs.AppendError(errors.New("command branch aliases must not be blank"))
+		}
+	}
+
+	// Ensure a parent is set
+	if c.parent == nil {
+		panic("illegal state: attempted to build a command branch with no parent set")
+	}
+
+	// Create the out instance ahead of time so that we can set it as the parent
+	// on the command groups we build.
+	out := &commandBranch{
+		name: c.name,
+		desc: c.desc,
+	}
+
+	// If auto-help is not disabled, then...
+	if !c.helpDisabled {
+		metaGroup := false
+		hasShortH := false
+		hasLongH := false
+
+		// If the default group name has been changed to a custom name then enable
+		// the meta group.
+		if c.flagGroups[0].GetName() != defaultGroupName {
+			metaGroup = true
+		}
+
+		if !metaGroup && len(c.flagGroups[0].getFlags()) > 5 {
+			metaGroup = true
+		}
+
+		if !metaGroup && len(c.flagGroups) > 1 {
+			for i := 1; i < len(c.flagGroups); i++ {
+				if c.flagGroups[i].hasFlags() {
+					metaGroup = true
+				}
+			}
+		}
+
+	OUTER:
+		for _, group := range c.flagGroups {
+			for _, flag := range group.getFlags() {
+				if flag.hasShortForm() && flag.getShortForm() == 'h' {
+					hasShortH = true
+				}
+				if flag.hasLongForm() && flag.getLongForm() == "help" {
+					hasLongH = true
+				}
+				if hasShortH && hasLongH {
+					break OUTER
+				}
+			}
+		}
+
+		if !(hasLongH || hasShortH) {
+			var group FlagGroupBuilder
+
+			if metaGroup {
+				group = NewFlagGroupBuilder("Meta Flags")
+				c.flagGroups = append(c.flagGroups, group)
+			} else {
+				group = c.flagGroups[0]
+			}
+
+			flag := NewFlagBuilder().
+				WithDescription("Prints this help text.").
+				WithCallback(func(f Flag) {
+					fmt.Println(renderCommandBranch(out))
+					os.Exit(0)
+				})
+
+			if !hasLongH {
+				flag.WithLongForm("help")
+			}
+
+			if !hasShortH {
+				flag.WithShortForm('h')
+			}
+
+			group.WithFlag(flag)
+		}
+	}
+
+	// Process Flag Groups
+	flagGroups := make([]FlagGroup, 0, len(c.flagGroups))
+	uniqueFlagNames(c.flagGroups, errs)
+	for _, builder := range c.flagGroups {
+		if builder.hasFlags() {
+			if group, err := builder.build(); err != nil {
+				errs.AppendError(err)
+			} else {
+				flagGroups = append(flagGroups, group)
+			}
+		}
+	}
+
+	// Process Command Groups
+	commandGroups := make([]CommandGroup, 0, len(c.comGroups))
+	massUniqueCommandNames(c.comGroups, errs)
+	for _, build := range c.comGroups {
+		build.Parent(out)
+
+		if group, err := build.build(); err != nil {
+			errs.AppendError(err)
+		} else {
+			commandGroups = append(commandGroups, group)
+		}
+	}
+
+	if len(errs.Errors()) > 0 {
+		return nil, errs
+	}
+
+	out.flagGroups = flagGroups
+	out.commandGroups = commandGroups
+	out.parent = c.parent
+	out.aliases = c.aliases
+	out.callback = c.callback
+
+	return out, nil
 }
