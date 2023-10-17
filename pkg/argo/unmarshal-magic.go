@@ -9,11 +9,16 @@ import (
 var unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
 
 // NewDefaultMagicUnmarshaler creates a new "magic" ValueUnmarshaler instance
-// using default UnmarshalProps
+// using default UnmarshalProps.
+//
+// This is the default ValueUnmarshaler used by all arguments if not otherwise
+// specified.
 func NewDefaultMagicUnmarshaler() ValueUnmarshaler {
 	return NewMagicUnmarshaler(DefaultUnmarshalProps())
 }
 
+// NewMagicUnmarshaler creates a new "magic" ValueUnmarshaler instance using the
+// given UnmarshalProps.
 func NewMagicUnmarshaler(props UnmarshalProps) ValueUnmarshaler {
 	return valueUnmarshaler{props: props}
 }
