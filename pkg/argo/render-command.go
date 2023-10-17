@@ -57,11 +57,12 @@ func renderCommandBackHalf(com Command, out *strings.Builder) {
 
 	if com.HasFlagGroups() {
 		out.WriteString(paragraphBreak)
-		renderFlagGroups(com.FlagGroups(), 1, out, com.HasDescription() || writeArgs)
+		renderFlagGroups(com.FlagGroups(), 0, out)
 	}
 
 	if writeArgs {
 		out.WriteString(paragraphBreak)
+		out.WriteString(headerPadding[0])
 		out.WriteString(comArgs)
 
 		for _, arg := range com.Arguments() {
@@ -69,6 +70,8 @@ func renderCommandBackHalf(com Command, out *strings.Builder) {
 			renderArgument(arg, 1, out)
 		}
 	}
+
+	out.WriteByte(charLF)
 }
 
 func renderCommandLeafUsage(leaf CommandLeaf, out *strings.Builder) {
@@ -148,7 +151,7 @@ func renderCommandBranch(branch CommandBranch) string {
 	// render flags
 	if hf {
 		out.WriteString(paragraphBreak)
-		renderFlagGroups(branch.FlagGroups(), 0, &out, hf || hd)
+		renderFlagGroups(branch.FlagGroups(), 0, &out)
 	}
 
 	out.WriteString(paragraphBreak)
@@ -226,13 +229,11 @@ func renderCommandGroup(
 	sb *strings.Builder,
 	forceHeader bool,
 ) {
+	sb.WriteString(headerPadding[padding])
+
 	if group.Name() == defaultGroupName {
-		if forceHeader || group.HasDescription() {
-			sb.WriteString(headerPadding[padding])
-			sb.WriteString(defaultComGroupName)
-		}
+		sb.WriteString(defaultComGroupName)
 	} else {
-		sb.WriteString(headerPadding[padding])
 		sb.WriteString(group.Name())
 	}
 
@@ -321,11 +322,13 @@ func renderCommandTree(tree CommandTree) string {
 
 	if hf {
 		out.WriteString(paragraphBreak)
-		renderFlagGroups(tree.FlagGroups(), 0, &out, hd)
+		renderFlagGroups(tree.FlagGroups(), 0, &out)
 	}
 
 	out.WriteString(paragraphBreak)
 	renderCommandGroups(tree.CommandGroups(), 0, &out, hd || hf)
+
+	out.WriteByte(charLF)
 
 	return out.String()
 }

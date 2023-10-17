@@ -88,7 +88,9 @@ type FlagBuilder interface {
 	//     WithArgument(Argument().WithBinding(ptr).WithDefault(something).Require())
 	WithBindingAndDefault(pointer, def any, required bool) FlagBuilder
 
-	isHelpFlag() FlagBuilder
+	setIsHelpFlag() FlagBuilder
+
+	isHelpFlag() bool
 
 	// Require marks this Flag as being required.
 	//
@@ -181,9 +183,13 @@ func (b *flagBuilder) WithBindingAndDefault(pointer, def any, required bool) Fla
 	return b
 }
 
-func (b *flagBuilder) isHelpFlag() FlagBuilder {
+func (b *flagBuilder) setIsHelpFlag() FlagBuilder {
 	b.isHelp = true
 	return b
+}
+
+func (b flagBuilder) isHelpFlag() bool {
+	return b.isHelp
 }
 
 func (b *flagBuilder) build() (Flag, error) {

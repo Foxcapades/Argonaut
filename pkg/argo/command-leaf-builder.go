@@ -250,7 +250,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 
 func makeLeafHelp(short, long bool, leaf CommandLeaf) FlagBuilder {
 	builder := NewFlagBuilder().
-		isHelpFlag().
+		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
 			fmt.Println(renderCommandLeaf(leaf))
 			os.Exit(0)

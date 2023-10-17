@@ -1,5 +1,10 @@
 package argo
 
+import (
+	"fmt"
+	"os"
+)
+
 type CommandTreeBuilder interface {
 	WithDescription(desc string) CommandTreeBuilder
 
@@ -31,7 +36,7 @@ func NewCommandTreeBuilder() CommandTreeBuilder {
 
 type commandTreeBuilder struct {
 	desc          string
-	help          bool
+	helpDisabled  bool
 	commandGroups []CommandGroupBuilder
 	flagGroups    []FlagGroupBuilder
 	callback      CommandTreeCallback
@@ -48,7 +53,7 @@ func (t *commandTreeBuilder) WithCallback(cb CommandTreeCallback) CommandTreeBui
 }
 
 func (t *commandTreeBuilder) WithHelpDisabled() CommandTreeBuilder {
-	t.help = true
+	t.helpDisabled = true
 	return t
 }
 
@@ -97,8 +102,40 @@ func (t commandTreeBuilder) MustParse(args []string) CommandTree {
 	return ct
 }
 
-func (t commandTreeBuilder) build() (CommandTree, error) {
+func (t *commandTreeBuilder) build() (CommandTree, error) {
 	errs := newMultiError()
+
+	tree := new(commandTree)
+
+	if !t.helpDisabled {
+		group := t.flagGroups[0]
+
+		if len(t.flagGroups) > 1 || t.flagGroups[0].size() > 5 {
+			group = NewFlagGroupBuilder("Meta Flags")
+			t.flagGroups = append(t.flagGroups, group)
+		}
+
+		useLongH := true
+		useShortH := true
+
+		for _, group := range t.flagGroups {
+			for _, flag := range group.getFlags() {
+				if flag.getShortForm() == 'h' {
+					useShortH = false
+				}
+				if flag.getLongForm() == "help" {
+					useLongH = false
+				}
+				if !(useShortH || useLongH) {
+					break
+				}
+			}
+		}
+
+		if useShortH || useLongH {
+			group.WithFlag(makeCommandTreeHelpFlag(useLongH, useLongH, tree))
+		}
+	}
 
 	flagGroups := make([]FlagGroup, 0, len(t.flagGroups))
 	uniqueFlagNames(t.flagGroups, errs)
@@ -111,8 +148,6 @@ func (t commandTreeBuilder) build() (CommandTree, error) {
 			}
 		}
 	}
-
-	tree := new(commandTree)
 
 	commandGroups := make([]CommandGroup, 0, len(t.commandGroups))
 	massUniqueCommandNames(t.commandGroups, errs)
@@ -137,4 +172,24 @@ func (t commandTreeBuilder) build() (CommandTree, error) {
 	tree.callback = t.callback
 
 	return tree, nil
+}
+
+func makeCommandTreeHelpFlag(short, long bool, tree CommandTree) FlagBuilder {
+	out := NewFlagBuilder().
+		setIsHelpFlag().
+		WithCallback(func(flag Flag) {
+			fmt.Println(renderCommandTree(tree))
+			os.Exit(0)
+		}).
+		WithDescription("Prints this help text.")
+
+	if short {
+		out.WithShortForm('h')
+	}
+
+	if long {
+		out.WithLongForm("help")
+	}
+
+	return out
 }

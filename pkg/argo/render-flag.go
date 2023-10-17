@@ -69,15 +69,16 @@ func renderShortestFlagLine(flag Flag, sb *strings.Builder) {
 
 const (
 	fgDefaultName = "General Flags"
+	fgSingleName  = "Flags"
 )
 
-func renderFlagGroups(groups []FlagGroup, padding uint8, out *strings.Builder, forceHeaders bool) {
+func renderFlagGroups(groups []FlagGroup, padding uint8, out *strings.Builder) {
 	for i, group := range groups {
 		if i > 0 {
 			out.WriteByte(charLF)
 		}
 
-		renderFlagGroup(group, padding, out, forceHeaders || len(groups) > 1)
+		renderFlagGroup(group, padding, out, len(groups) > 1)
 	}
 }
 
@@ -88,9 +89,12 @@ func renderFlagGroup(
 	multiple bool,
 ) {
 	out.WriteString(headerPadding[padding])
+
 	if group.Name() == defaultGroupName {
-		if multiple || group.HasDescription() {
+		if multiple {
 			out.WriteString(fgDefaultName)
+		} else {
+			out.WriteString(fgSingleName)
 		}
 	} else {
 		out.WriteString(group.Name())
