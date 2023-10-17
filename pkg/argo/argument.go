@@ -38,8 +38,6 @@ type Argument interface {
 	// had a default value provided, it will have been set in that case.
 	WasHit() bool
 
-	HasValue() bool
-
 	// RawValue returns the raw text value that was assigned to this Argument in
 	// the CLI call.
 	//
@@ -68,7 +66,6 @@ type argument struct {
 	desc string
 	raw  string
 
-	hasValue  bool
 	required  bool
 	isBindSet bool
 	isDefSet  bool
@@ -125,10 +122,6 @@ func (a argument) DefaultType() reflect.Type {
 
 func (a argument) WasHit() bool {
 	return a.isUsed
-}
-
-func (a argument) HasValue() bool {
-	return a.hasValue
 }
 
 func (a argument) RawValue() string {
@@ -214,7 +207,7 @@ func (a *argument) setValue(rawString string) error {
 		return nil
 	}
 
-	// TODO: why is this here?
+	// TODO: why the heck is this here? what did past me know that present me doesn't?
 	if a.isBoolArg() {
 		if _, err := parseBool(rawString); err != nil {
 			return err

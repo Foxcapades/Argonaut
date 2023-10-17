@@ -15,38 +15,44 @@ type ArgumentBuilder interface {
 	// The name value is used when rendering help information about this argument.
 	WithName(name string) ArgumentBuilder
 
-	HasName() bool
-
-	GetName() string
-
 	// WithDescription sets the description of this argument to be shown in rendered
 	// help text.
 	WithDescription(desc string) ArgumentBuilder
 
-	HasDescription() bool
-
-	GetDescription() string
-
 	// Require marks the output Argument as being required.
 	Require() ArgumentBuilder
 
-	IsRequired() bool
-
-	// WithBinding sets the pointer into which the value will be parsed into on
-	// parse.
+	// WithBinding sets the bind value for the Argument.
 	//
-	// The type of this pointer must match the type of the value provided with
-	// `Default()` if default values are used.
-	//     foo := myStruct{}
+	// The bind value may either be a pointer or an instance of Consumer.
 	//
-	//     cli.Argument().
-	//         WithBinding(&foo.bar)
+	// If the bind value is a pointer, the Argument's value unmarshaler will be
+	// called to unmarshal the raw string value into a value of the type passed
+	// to this method.
+	//
+	// If the bind value is a Consumer instance, that instance's Accept method
+	// will be called with the raw input from the CLI.
+	//
+	// Setting this value to anything other than a pointer or a Consumer instance
+	// will result in an error being returned when building the argument is
+	// attempted.
+	//
+	// Example 1:
+	//     var myValue time.Duration
+	//     cli.Argument.WithBinding(&myValue)
+	//
+	// Example 2:
+	//     cli.Argument.WithBinding(ConsumerFunc(func(raw string) error {
+	//         fmt.Println(raw)
+	//         return nil
+	//     }))
+	//
+	// Example 3 (lets get silly with it):
+	//     var myValue map[bool]**string
+	//     cli.Argument.WithBinding(&myValue)
 	WithBinding(pointer any) ArgumentBuilder
 
-	HasBinding() bool
-
-	// GetBinding returns the binding value that was set on this ArgumentBuilder.
-	GetBinding() any
+	getBinding() any
 
 	// WithDefault sets the default value for the argument to be used if the
 	// argument is not provided on the command line.
@@ -80,11 +86,7 @@ type ArgumentBuilder interface {
 	// value it will be dereferenced to set the bind value.
 	WithDefault(def any) ArgumentBuilder
 
-	HasDefault() bool
-
-	// GetDefault returns the default value, if any, that was set on this
-	// ArgumentBuilder instance.
-	GetDefault() any
+	getDefault() any
 
 	// WithUnmarshaler allows providing a custom ValueUnmarshaler instance that
 	// will be used to unmarshal string values into the binding type.
@@ -128,34 +130,14 @@ func (a *argumentBuilder) WithName(name string) ArgumentBuilder {
 	return a
 }
 
-func (a argumentBuilder) GetName() string {
-	return a.name
-}
-
-func (a argumentBuilder) HasName() bool {
-	return len(a.name) > 0
-}
-
 func (a *argumentBuilder) WithDescription(desc string) ArgumentBuilder {
 	a.desc = desc
 	return a
 }
 
-func (a argumentBuilder) GetDescription() string {
-	return a.desc
-}
-
-func (a argumentBuilder) HasDescription() bool {
-	return len(a.desc) > 0
-}
-
 func (a *argumentBuilder) Require() ArgumentBuilder {
 	a.required = true
 	return a
-}
-
-func (a argumentBuilder) IsRequired() bool {
-	return a.required
 }
 
 func (a *argumentBuilder) WithBinding(binding any) ArgumentBuilder {
@@ -164,11 +146,7 @@ func (a *argumentBuilder) WithBinding(binding any) ArgumentBuilder {
 	return a
 }
 
-func (a argumentBuilder) HasBinding() bool {
-	return a.hasBind
-}
-
-func (a *argumentBuilder) GetBinding() any {
+func (a *argumentBuilder) getBinding() any {
 	return a.bind
 }
 
@@ -178,11 +156,7 @@ func (a *argumentBuilder) WithDefault(def any) ArgumentBuilder {
 	return a
 }
 
-func (a argumentBuilder) HasDefault() bool {
-	return a.hasDef
-}
-
-func (a argumentBuilder) GetDefault() any {
+func (a argumentBuilder) getDefault() any {
 	return a.def
 }
 

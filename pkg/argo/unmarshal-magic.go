@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
+var unmarshalerType = reflect.TypeOf((*Consumer)(nil)).Elem()
 
 // NewDefaultMagicUnmarshaler creates a new "magic" ValueUnmarshaler instance
 // using default UnmarshalProps.
@@ -42,7 +42,7 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	ptrDef := ptrVal.Type()
 
 	if ptrDef.AssignableTo(unmarshalerType) {
-		return ptrVal.Interface().(Unmarshaler).Unmarshal(raw)
+		return ptrVal.Interface().(Consumer).Accept(raw)
 	}
 
 	switch ptrVal.Kind() {

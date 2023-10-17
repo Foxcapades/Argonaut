@@ -117,12 +117,12 @@ func (i *InvalidArgError) Builder() ArgumentBuilder {
 func (i *InvalidArgError) Error() string {
 	switch i.eType {
 	case ArgErrInvalidBindingBadType /*, ArgErrInvalidBindingNil*/ :
-		return fmt.Sprintf(errArgBinding, reflect.TypeOf(i.build.GetBinding()))
+		return fmt.Sprintf(errArgBinding, reflect.TypeOf(i.build.getBinding()))
 	case ArgErrInvalidDefaultVal:
-		return fmt.Sprintf(errArgDefault, reflect.TypeOf(i.build.GetDefault()),
-			reflect.TypeOf(i.build.GetBinding()))
+		return fmt.Sprintf(errArgDefault, reflect.TypeOf(i.build.getDefault()),
+			reflect.TypeOf(i.build.getBinding()))
 	case ArgErrInvalidDefaultFn:
-		return fmt.Sprintf(errArgDefFn, reflect.TypeOf(i.build.GetDefault()), i.reason)
+		return fmt.Sprintf(errArgDefFn, reflect.TypeOf(i.build.getDefault()), i.reason)
 	}
 	panic(fmt.Errorf("invalid argument error type %d", i.eType))
 }
