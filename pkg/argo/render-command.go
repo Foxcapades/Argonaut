@@ -21,6 +21,7 @@ func renderCommand(com Command) string {
 
 func renderCommandUsageBlock(com Command, out *strings.Builder) {
 	out.WriteString(comPrefix)
+	out.WriteString(subLinePadding[0])
 	out.WriteString(com.Name())
 	renderCommandUsageBackHalf(com, out)
 }

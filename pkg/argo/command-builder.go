@@ -1,5 +1,10 @@
 package argo
 
+import (
+	"fmt"
+	"os"
+)
+
 // A CommandBuilder provides an API to configure the construction of a new
 // Command instance.
 //
@@ -23,6 +28,8 @@ type CommandBuilder interface {
 	//
 	// Command descriptions are used when rendering help text.
 	WithDescription(desc string) CommandBuilder
+
+	WithHelpDisabled() CommandBuilder
 
 	// WithFlagGroup appends the given FlagGroupBuilder to this CommandBuilder
 	// instance.
@@ -66,10 +73,16 @@ type commandBuilder struct {
 	unmapLabel  string
 	flagGroups  []FlagGroupBuilder
 	arguments   []ArgumentBuilder
+	disableHelp bool
 }
 
 func (b *commandBuilder) WithDescription(desc string) CommandBuilder {
 	b.description = desc
+	return b
+}
+
+func (b *commandBuilder) WithHelpDisabled() CommandBuilder {
+	b.disableHelp = true
 	return b
 }
 
@@ -111,31 +124,81 @@ func (b commandBuilder) MustParse(args []string) Command {
 
 func (b commandBuilder) build() (Command, error) {
 	errs := newMultiError()
+	com := new(command)
 
-	flagGroups := make([]FlagGroup, 0, len(b.flagGroups))
+	if !b.disableHelp {
+		group := b.flagGroups[0]
+
+		if len(b.flagGroups) > 1 || b.flagGroups[0].size() > 5 {
+			group = NewFlagGroupBuilder("Meta Flags")
+			b.flagGroups = append(b.flagGroups, group)
+		}
+
+		useLongH := true
+		useShortH := true
+
+		for _, group := range b.flagGroups {
+			for _, flag := range group.getFlags() {
+				if flag.getShortForm() == 'h' {
+					useShortH = false
+				}
+				if flag.getLongForm() == "help" {
+					useLongH = false
+				}
+				if !(useShortH || useLongH) {
+					break
+				}
+			}
+		}
+
+		if useShortH || useLongH {
+			group.WithFlag(makeCommandHelpFlag(useShortH, useLongH, com))
+		}
+
+	}
+
+	com.flagGroups = make([]FlagGroup, 0, len(b.flagGroups))
 	for _, builder := range b.flagGroups {
 		if builder.hasFlags() {
 			if group, err := builder.build(); err != nil {
 				errs.AppendError(err)
 			} else {
-				flagGroups = append(flagGroups, group)
+				com.flagGroups = append(com.flagGroups, group)
 			}
 		}
 	}
 
-	arguments := make([]Argument, 0, len(b.arguments))
+	com.arguments = make([]Argument, 0, len(b.arguments))
 	for _, builder := range b.arguments {
 		if arg, err := builder.build(); err != nil {
 			errs.AppendError(err)
 		} else {
-			arguments = append(arguments, arg)
+			com.arguments = append(com.arguments, arg)
 		}
 	}
 
-	return &command{
-		description:   b.description,
-		flagGroups:    flagGroups,
-		arguments:     arguments,
-		unmappedLabel: b.unmapLabel,
-	}, nil
+	com.description = b.description
+	com.unmappedLabel = b.unmapLabel
+
+	return com, nil
+}
+
+func makeCommandHelpFlag(short, long bool, com Command) FlagBuilder {
+	out := NewFlagBuilder().
+		setIsHelpFlag().
+		WithCallback(func(flag Flag) {
+			fmt.Println(renderCommand(com))
+			os.Exit(0)
+		}).
+		WithDescription("Prints this help text.")
+
+	if short {
+		out.WithShortForm('h')
+	}
+
+	if long {
+		out.WithLongForm("help")
+	}
+
+	return out
 }

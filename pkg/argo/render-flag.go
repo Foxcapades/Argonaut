@@ -42,9 +42,9 @@ func renderFlag(flag Flag, padding uint8, sb *strings.Builder) {
 		breakFmt(flag.Description(), descriptionPadding[padding], helpTextMaxWidth, sb)
 	}
 
-	if flag.HasArgument() {
+	if flag.HasArgument() && flag.Argument().HasDescription() {
 		sb.WriteByte(charLF)
-		renderArgument(flag.Argument(), padding+1, sb)
+		renderFlagArgument(flag.Argument(), padding+1, sb)
 	}
 }
 

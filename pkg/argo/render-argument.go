@@ -64,6 +64,16 @@ func renderArgumentName(a Argument, out *strings.Builder) {
 	}
 }
 
+func renderFlagArgument(arg Argument, padding uint8, out *strings.Builder) {
+	out.WriteString(subLinePadding[padding])
+	renderArgumentName(arg, out)
+
+	if arg.HasDescription() {
+		out.WriteByte(charLF)
+		breakFmt(arg.Description(), descriptionPadding[padding], helpTextMaxWidth, out)
+	}
+}
+
 func renderArgument(arg Argument, padding uint8, out *strings.Builder) {
 	out.WriteString(headerPadding[padding])
 	renderArgumentName(arg, out)
