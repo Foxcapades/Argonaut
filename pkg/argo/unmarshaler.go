@@ -1,10 +1,5 @@
 package argo
 
-import (
-	"strconv"
-	"unsafe"
-)
-
 // Consumer defines a type that may be used as an Argument binding value to
 // unmarshal and consume the given raw string.
 //
@@ -77,13 +72,3 @@ type ValueUnmarshalerFunc func(raw string, val any) error
 func (v ValueUnmarshalerFunc) Unmarshal(raw string, val any) error {
 	return v(raw, val)
 }
-
-var foo = ValueUnmarshalerFunc(func(raw string, val any) error {
-	ptr := *(**int)(unsafe.Pointer(&val))
-	if parsed, err := strconv.Atoi(raw); err != nil {
-		return err
-	} else {
-		*ptr = parsed
-		return nil
-	}
-})
