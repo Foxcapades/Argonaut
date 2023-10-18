@@ -90,6 +90,12 @@ FOR:
 			if f.WasHit() && f.RequiresArgument() && !f.Argument().WasHit() {
 				errs.AppendError(newMissingRequiredFlagArgumentError(f.Argument(), f, c.command))
 			}
+
+			if !f.WasHit() && f.HasArgument() && f.Argument().HasDefault() {
+				if err := f.Argument().setToDefault(); err != nil {
+					errs.AppendError(err)
+				}
+			}
 		}
 	}
 
@@ -99,6 +105,11 @@ FOR:
 
 		if arg.IsRequired() && !arg.WasHit() {
 			errs.AppendError(newMissingRequiredPositionalArgumentError(arg, c.command))
+		}
+		if !arg.WasHit() && arg.HasDefault() {
+			if err := arg.setToDefault(); err != nil {
+				errs.AppendError(err)
+			}
 		}
 	}
 

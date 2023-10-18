@@ -3,14 +3,19 @@ package argo
 import "errors"
 
 type CommandGroupBuilder interface {
-	Parent(node CommandNode)
+	parent(node CommandNode)
 
+	// WithDescription sets a description value for this CommandGroupBuilder.
+	//
+	// Descriptions are used when rendering help text.
 	WithDescription(desc string) CommandGroupBuilder
 
+	// WithBranch appends the given branch builder to this command group builder.
 	WithBranch(branch CommandBranchBuilder) CommandGroupBuilder
 
 	getBranches() []CommandBranchBuilder
 
+	// WithLeaf appends the given leaf builder to this command group builder.
 	WithLeaf(leaf CommandLeafBuilder) CommandGroupBuilder
 
 	getLeaves() []CommandLeafBuilder
@@ -27,13 +32,13 @@ func NewCommandGroupBuilder(name string) CommandGroupBuilder {
 type commandGroupBuilder struct {
 	name        string
 	description string
-	parent      CommandNode
+	parentNode  CommandNode
 	branches    []CommandBranchBuilder
 	leaves      []CommandLeafBuilder
 }
 
-func (g *commandGroupBuilder) Parent(node CommandNode) {
-	g.parent = node
+func (g *commandGroupBuilder) parent(node CommandNode) {
+	g.parentNode = node
 }
 
 func (g *commandGroupBuilder) WithDescription(description string) CommandGroupBuilder {
@@ -73,7 +78,7 @@ func (g *commandGroupBuilder) build() (CommandGroup, error) {
 
 	// Require a parent value to be set.  If it is not set, it is a developer
 	// error.
-	if g.parent == nil {
+	if g.parentNode == nil {
 		panic("illegal state: attempted to build a command group with no parent set")
 	}
 
@@ -82,7 +87,7 @@ func (g *commandGroupBuilder) build() (CommandGroup, error) {
 
 	branches := make([]CommandBranch, 0, len(g.branches))
 	for _, builder := range g.branches {
-		builder.parent(g.parent)
+		builder.parent(g.parentNode)
 		if branch, err := builder.build(); err != nil {
 			errs.AppendError(err)
 		} else {
@@ -92,7 +97,7 @@ func (g *commandGroupBuilder) build() (CommandGroup, error) {
 
 	leaves := make([]CommandLeaf, 0, len(g.leaves))
 	for _, builder := range g.leaves {
-		builder.parent(g.parent)
+		builder.parent(g.parentNode)
 		if leaf, err := builder.build(); err != nil {
 			errs.AppendError(err)
 		} else {

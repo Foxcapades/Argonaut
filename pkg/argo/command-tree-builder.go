@@ -221,7 +221,7 @@ func (t *commandTreeBuilder) build() (CommandTree, error) {
 	commandGroups := make([]CommandGroup, 0, len(t.commandGroups))
 	massUniqueCommandNames(t.commandGroups, errs)
 	for _, builder := range t.commandGroups {
-		builder.Parent(tree)
+		builder.parent(tree)
 		if builder.hasSubcommands() {
 			if group, err := builder.build(); err != nil {
 				errs.AppendError(err)

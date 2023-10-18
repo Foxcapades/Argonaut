@@ -276,7 +276,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 	commandGroups := make([]CommandGroup, 0, len(c.comGroups))
 	massUniqueCommandNames(c.comGroups, errs)
 	for _, build := range c.comGroups {
-		build.Parent(out)
+		build.parent(out)
 
 		if group, err := build.build(); err != nil {
 			errs.AppendError(err)

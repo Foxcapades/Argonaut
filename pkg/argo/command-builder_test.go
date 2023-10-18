@@ -1,7 +1,6 @@
 package argo_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Foxcapades/Argonaut/pkg/argo"
@@ -74,7 +73,7 @@ func TestCommandBuilder_WithUnmappedLabel(t *testing.T) {
 
 }
 
-func TestCommandBuilder_ConflictingFlags(t *testing.T) {
+func TestCommandBuilder_ConflictingLongFlags(t *testing.T) {
 	com, err := argo.NewCommandBuilder().
 		WithFlag(argo.NewFlagBuilder().WithLongForm("hello")).
 		WithFlagGroup(argo.NewFlagGroupBuilder("nope").
@@ -88,6 +87,34 @@ func TestCommandBuilder_ConflictingFlags(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	}
+}
 
-	fmt.Println(err)
+func TestCommandBuilder_ConflictingShortFlags(t *testing.T) {
+	com, err := argo.NewCommandBuilder().
+		WithFlag(argo.NewFlagBuilder().WithShortForm('a')).
+		WithFlag(argo.NewFlagBuilder().WithShortForm('a')).
+		Parse([]string{"something"})
+
+	if com != nil {
+		t.Fail()
+	}
+
+	if err == nil {
+		t.Fail()
+	}
+}
+
+func TestCommandBuilder_ParseUnhitRequiredFlag(t *testing.T) {
+	com, err := argo.NewCommandBuilder().
+		WithFlag(argo.NewFlagBuilder().WithLongForm("apple").Require()).
+		WithFlag(argo.NewFlagBuilder().WithShortForm('x')).
+		Parse([]string{"hello", "-x=banana", "--banana=orange"})
+
+	if com != nil {
+		t.Fail()
+	}
+
+	if err == nil {
+		t.Fail()
+	}
 }
