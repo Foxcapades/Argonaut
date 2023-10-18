@@ -166,6 +166,10 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 		errs.AppendError(errors.New("command branch names must not be blank"))
 	}
 
+	if nextWhitespace(c.name) > -1 {
+		errs.AppendError(errors.New("command branch names must not contain spaces"))
+	}
+
 	// Ensure aliases are not blank
 	for _, alias := range c.aliases {
 		if isBlank(alias) {

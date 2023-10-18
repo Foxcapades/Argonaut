@@ -163,6 +163,7 @@ func (b commandBuilder) build() (Command, error) {
 	}
 
 	com.flagGroups = make([]FlagGroup, 0, len(b.flagGroups))
+	uniqueFlagNames(b.flagGroups, errs)
 	for _, builder := range b.flagGroups {
 		if builder.hasFlags() {
 			if group, err := builder.build(); err != nil {
@@ -180,6 +181,10 @@ func (b commandBuilder) build() (Command, error) {
 		} else {
 			com.arguments = append(com.arguments, arg)
 		}
+	}
+
+	if len(errs.Errors()) > 0 {
+		return nil, errs
 	}
 
 	com.description = b.description

@@ -162,6 +162,10 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 		errs.AppendError(errors.New("command leaf names must not be blank"))
 	}
 
+	if nextWhitespace(l.name) > -1 {
+		errs.AppendError(errors.New("command branch names must not contain spaces"))
+	}
+
 	// Ensure the aliases are all not blank
 	for _, alias := range l.aliases {
 		if isBlank(alias) {

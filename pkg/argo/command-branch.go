@@ -148,10 +148,6 @@ func (c commandBranch) CommandGroups() []CommandGroup {
 	return c.commandGroups
 }
 
-func (c commandBranch) HasCustomCommandGroups() bool {
-	return len(c.commandGroups) > 1 || c.commandGroups[0].Name() != defaultGroupName
-}
-
 // Find Short Flag /////////////////////////////////////////////////////////////
 
 func (c commandBranch) FindShortFlag(b byte) Flag {
