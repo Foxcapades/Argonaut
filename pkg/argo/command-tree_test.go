@@ -69,3 +69,20 @@ func TestCommandTreeBuilder_WithBranch(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
+	value := 0
+	argo.NewCommandTreeBuilder().
+		WithLeaf(argo.NewCommandLeafBuilder("no-thanks")).
+		WithFlagGroup(argo.NewFlagGroupBuilder("derpy").
+			WithFlag(argo.NewFlagBuilder().
+				WithShortForm('b').
+				WithArgument(argo.NewArgumentBuilder().
+					WithDefault(3).
+					WithBinding(&value)))).
+		MustParse([]string{"hoopla", "no-thanks"})
+
+	if value != 3 {
+		t.Fail()
+	}
+}

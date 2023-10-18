@@ -122,11 +122,17 @@ FOR:
 		}
 
 		for i, arg := range node.Arguments() {
-			if arg.IsRequired() && !arg.WasHit() {
-				if arg.HasName() {
-					errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i, arg.Name()))
-				} else {
-					errs.AppendError(fmt.Errorf("argument %d is required", i))
+			if arg.IsRequired() {
+				if !arg.WasHit() {
+					if arg.HasName() {
+						errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i, arg.Name()))
+					} else {
+						errs.AppendError(fmt.Errorf("argument %d is required", i))
+					}
+				}
+			} else if !arg.WasHit() && arg.HasDefault() {
+				if err := arg.setToDefault(); err != nil {
+					errs.AppendError(err)
 				}
 			}
 		}
@@ -136,10 +142,16 @@ FOR:
 	for current != nil {
 		for _, group := range current.FlagGroups() {
 			for _, f := range group.Flags() {
-				if f.IsRequired() && !f.WasHit() {
-					errs.AppendError(fmt.Errorf("required flag %s was not used", printFlagNames(f)))
-				} else if f.RequiresArgument() && !f.Argument().WasHit() {
-					errs.AppendError(fmt.Errorf("flag %s requires an argument", printFlagNames(f)))
+				if f.IsRequired() {
+					if !f.WasHit() {
+						errs.AppendError(fmt.Errorf("required flag %s was not used", printFlagNames(f)))
+					} else if f.RequiresArgument() && !f.Argument().WasHit() {
+						errs.AppendError(fmt.Errorf("flag %s requires an argument", printFlagNames(f)))
+					}
+				} else if !f.WasHit() && f.HasArgument() && f.Argument().HasDefault() {
+					if err := f.Argument().setToDefault(); err != nil {
+						errs.AppendError(err)
+					}
 				}
 			}
 		}

@@ -35,3 +35,7 @@ there are no custom flag groups) or its own meta flag group.
 ** [ ] Command Tree
 ** [ ] Command Branch
 ** [ ] Command Leaf
+
+* [ ] Ensure there are no spaces in the subcommand names
+
+* [ ] Should a required argument with a default value be a warning?
