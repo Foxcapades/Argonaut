@@ -36,6 +36,7 @@ FOR:
 		// If we've hit the boundary marker, then everything else becomes a
 		// passthrough element.
 		if c.boundary {
+
 			if element.Type == elementTypeEnd {
 				break
 			}

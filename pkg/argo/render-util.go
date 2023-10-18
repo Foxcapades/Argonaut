@@ -48,10 +48,10 @@ var subLinePadding = [...]string{
 }
 
 var descriptionPadding = [...]string{
+	"    ",
 	"      ",
 	"        ",
 	"          ",
-	"            ",
 }
 
 func isBreakChar(b byte) bool {

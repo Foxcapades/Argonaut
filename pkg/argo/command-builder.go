@@ -1,7 +1,6 @@
 package argo
 
 import (
-	"bufio"
 	"os"
 )
 
@@ -197,9 +196,7 @@ func makeCommandHelpFlag(short, long bool, com Command) FlagBuilder {
 	out := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			buf := bufio.NewWriter(os.Stdout)
-			must(renderCommand(com, buf))
-			must(buf.Flush())
+			must(comRenderer{}.RenderHelp(com, os.Stdout))
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

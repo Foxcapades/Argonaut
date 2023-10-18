@@ -54,7 +54,7 @@ type parser struct {
 func (p *parser) Next() element {
 	next := p.emitter.Next()
 
-	if p.state == statePass {
+	if p.state == statePass && next.Kind != eventKindEnd {
 		return p.consumeString(next.Data)
 	}
 
@@ -249,6 +249,8 @@ func (p *parser) consumeShortFlag(flags string) element {
 func (p *parser) handleText(data string) element {
 	p.sb.WriteString(data)
 
+	// Loop here because we may be followed by a break, or an equals event which
+	// itself may be followed by more text.
 	for {
 		next := p.emitter.Next()
 

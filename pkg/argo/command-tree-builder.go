@@ -1,7 +1,6 @@
 package argo
 
 import (
-	"bufio"
 	"errors"
 	"os"
 )
@@ -247,9 +246,7 @@ func makeCommandTreeHelpFlag(short, long bool, tree CommandTree) FlagBuilder {
 	out := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			buf := bufio.NewWriter(os.Stdout)
-			must(renderCommandTree(tree, buf))
-			must(buf.Flush())
+			must(comTreeRenderer{}.RenderHelp(tree, os.Stdout))
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

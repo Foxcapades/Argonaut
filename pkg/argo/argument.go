@@ -29,12 +29,12 @@ type Argument interface {
 	// Argument.
 	HasDefault() bool
 
-	// defaultType returns the reflect.Type value for the configured default
+	// DefaultType returns the reflect.Type value for the configured default
 	// value.
 	//
 	// If no default value has been set on this Argument, this method will return
 	// nil.
-	defaultType() reflect.Type
+	DefaultType() reflect.Type
 
 	// Description returns the description attached to this Argument.
 	//
@@ -69,8 +69,14 @@ type Argument interface {
 	IsRequired() bool
 
 	binding() any
-	hasBinding() bool
-	bindingType() reflect.Type
+
+	// HasBinding indicates whether this Argument has a value binding.
+	HasBinding() bool
+
+	// BindingType returns the reflect.Type value for the configured binding.
+	//
+	// If this argument has no binding, this method will return nil.
+	BindingType() reflect.Type
 	setValue(rawValue string) error
 	setToDefault() error
 }
@@ -114,12 +120,16 @@ func (a argument) binding() any {
 	return a.bindVal
 }
 
-func (a argument) hasBinding() bool {
+func (a argument) HasBinding() bool {
 	return a.isBindSet
 }
 
-func (a argument) bindingType() reflect.Type {
-	return a.rootBind.Type()
+func (a argument) BindingType() reflect.Type {
+	if !a.isBindSet {
+		return nil
+	} else {
+		return a.rootBind.Type()
+	}
 }
 
 func (a argument) Default() any {
@@ -130,8 +140,12 @@ func (a argument) HasDefault() bool {
 	return a.isDefSet
 }
 
-func (a argument) defaultType() reflect.Type {
-	return a.rootDef.Type()
+func (a argument) DefaultType() reflect.Type {
+	if a.isDefSet {
+		return a.rootDef.Type()
+	} else {
+		return nil
+	}
 }
 
 func (a argument) WasHit() bool {

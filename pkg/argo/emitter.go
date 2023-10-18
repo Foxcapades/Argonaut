@@ -89,9 +89,15 @@ func (e *emitter) scan(arg string) {
 
 	// Consume any leading dash characters and pass them up.
 	i := 0
-	for arg[i] == charDash {
+	for i < len(arg) && arg[i] == charDash {
 		e.next.Offer(dashEvent())
 		i++
+	}
+
+	// If the whole thing was just dashes, then break here.
+	if i >= len(arg) {
+		e.next.Offer(breakEvent())
+		return
 	}
 
 	// Substring our argument

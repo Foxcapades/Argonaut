@@ -1,7 +1,6 @@
 package argo
 
 import (
-	"bufio"
 	"os"
 )
 
@@ -173,8 +172,6 @@ func (c commandBranch) FindLongFlag(name string) Flag {
 }
 
 func (c commandBranch) onIncomplete() {
-	buf := bufio.NewWriter(os.Stdout)
-	must(renderCommandBranch(c, buf))
-	must(buf.Flush())
+	must(comBranchRenderer{}.RenderHelp(c, os.Stdout))
 	os.Exit(1)
 }

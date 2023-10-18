@@ -28,6 +28,7 @@ type UnmarshalIntegerProps struct {
 	//     o0666   O0666
 	//     0o666   0O666
 	//     0o0666  0O0666
+	//     0666
 	OctalLeaders []string `json:"octalLeaderChars"`
 
 	// HexLeaders defines the prefixes used to signify that
@@ -94,7 +95,7 @@ func DefaultUnmarshalProps() UnmarshalProps {
 
 var defaultUnmarshalProps = UnmarshalProps{
 	Integers: UnmarshalIntegerProps{
-		OctalLeaders: []string{"0o", "0O", "o", "O"},
+		OctalLeaders: []string{"0o", "0O", "o", "O", "0"},
 		HexLeaders:   []string{"0x", "0X", "x", "X"},
 		DefaultBase:  10,
 	},

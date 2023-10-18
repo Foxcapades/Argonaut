@@ -173,8 +173,10 @@ func (d *dequeImpl[T]) Poll() T {
 	if d.size == 0 {
 		panic("no such element")
 	}
+	var t T
 
 	out := d.container[d.realHead]
+	d.container[d.realHead] = t
 
 	d.realHead = d.incremented(d.realHead)
 	d.size--
