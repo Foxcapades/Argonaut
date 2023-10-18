@@ -1,7 +1,8 @@
 package argo
 
 import (
-	"fmt"
+	"bufio"
+	"errors"
 	"os"
 )
 
@@ -77,6 +78,8 @@ type CommandTreeBuilder interface {
 
 	// MustParse calls Parse and panics if an error is returned.
 	MustParse(args []string) CommandTree
+
+	hasSubCommands() bool
 }
 
 func NewCommandTreeBuilder() CommandTreeBuilder {
@@ -154,10 +157,24 @@ func (t commandTreeBuilder) MustParse(args []string) CommandTree {
 	return ct
 }
 
+func (t *commandTreeBuilder) hasSubCommands() bool {
+	for _, group := range t.commandGroups {
+		if group.hasSubcommands() {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (t *commandTreeBuilder) build() (CommandTree, error) {
 	errs := newMultiError()
 
 	tree := new(commandTree)
+
+	if !t.hasSubCommands() {
+		errs.AppendError(errors.New("command tree has no subcommands"))
+	}
 
 	if !t.helpDisabled {
 		group := t.flagGroups[0]
@@ -230,7 +247,9 @@ func makeCommandTreeHelpFlag(short, long bool, tree CommandTree) FlagBuilder {
 	out := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			fmt.Println(renderCommandTree(tree))
+			buf := bufio.NewWriter(os.Stdout)
+			must(renderCommandTree(tree, buf))
+			must(buf.Flush())
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

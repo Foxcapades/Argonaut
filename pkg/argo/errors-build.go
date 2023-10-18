@@ -21,7 +21,7 @@ type MultiError interface {
 }
 
 func newMultiError() MultiError {
-	return multiError{
+	return &multiError{
 		errs:    make([]error, 0, 10),
 		strings: make(map[string]bool, 10),
 	}
@@ -32,7 +32,7 @@ type multiError struct {
 	strings map[string]bool
 }
 
-func (m multiError) Error() string {
+func (m *multiError) Error() string {
 	sb := strings.Builder{}
 
 	sb.WriteString(fmt.Sprintf("encountered %d unique errors:", len(m.strings)))
@@ -45,11 +45,11 @@ func (m multiError) Error() string {
 	return sb.String()
 }
 
-func (m multiError) Errors() []error {
+func (m *multiError) Errors() []error {
 	return m.errs
 }
 
-func (m multiError) AppendError(err error) {
+func (m *multiError) AppendError(err error) {
 	var e MultiError
 	if errors.As(err, &e) {
 		for _, err := range e.Errors() {

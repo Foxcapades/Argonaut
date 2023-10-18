@@ -1,7 +1,7 @@
 package argo
 
 import (
-	"fmt"
+	"bufio"
 	"os"
 	"path/filepath"
 )
@@ -133,6 +133,8 @@ func (t commandTree) FindLongFlag(name string) Flag {
 }
 
 func (t commandTree) onIncomplete() {
-	fmt.Println(renderCommandTree(&t))
+	buf := bufio.NewWriter(os.Stdout)
+	must(renderCommandTree(&t, buf))
+	must(buf.Flush())
 	os.Exit(1)
 }

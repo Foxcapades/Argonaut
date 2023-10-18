@@ -1,8 +1,8 @@
 package argo
 
 import (
+	"bufio"
 	"slices"
-	"strings"
 )
 
 const (
@@ -11,53 +11,79 @@ const (
 	comArgs   = "Positional Arguments"
 )
 
-func renderCommand(com Command) string {
-	out := strings.Builder{}
-	renderCommandUsageBlock(com, &out)
-	out.WriteByte(charLF)
-	renderCommandBackHalf(com, &out)
-	return out.String()
+func renderCommand(com Command, out *bufio.Writer) error {
+	if err := renderCommandUsageBlock(com, out); err != nil {
+		return err
+	}
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
+	return renderCommandBackHalf(com, out)
 }
 
-func renderCommandUsageBlock(com Command, out *strings.Builder) {
-	out.WriteString(comPrefix)
-	out.WriteString(subLinePadding[0])
-	out.WriteString(com.Name())
-	renderCommandUsageBackHalf(com, out)
+func renderCommandUsageBlock(com Command, out *bufio.Writer) error {
+	if _, err := out.WriteString(comPrefix); err != nil {
+		return err
+	}
+	if _, err := out.WriteString(subLinePadding[0]); err != nil {
+		return err
+	}
+	if _, err := out.WriteString(com.Name()); err != nil {
+		return err
+	}
+	return renderCommandUsageBackHalf(com, out)
 }
 
-func renderCommandLeaf(leaf CommandLeaf) string {
-	out := strings.Builder{}
-	renderCommandLeafUsage(leaf, &out)
-	out.WriteByte(charLF)
+func renderCommandLeaf(leaf CommandLeaf, out *bufio.Writer) error {
+	if err := renderCommandLeafUsage(leaf, out); err != nil {
+		return err
+	}
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
 	if leaf.HasAliases() {
-		out.WriteByte(charLF)
-		out.WriteString(subLinePadding[0])
-		out.WriteString("Aliases: ")
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(subLinePadding[0]); err != nil {
+			return err
+		}
+		if _, err := out.WriteString("Aliases: "); err != nil {
+			return err
+		}
 
 		aliases := leaf.Aliases()
 		slices.Sort(aliases)
 
 		for i, alias := range aliases {
 			if i > 0 {
-				out.WriteString(", ")
+				if _, err := out.WriteString(", "); err != nil {
+					return err
+				}
 			}
-			out.WriteString(alias)
+			if _, err := out.WriteString(alias); err != nil {
+				return err
+			}
 		}
-		out.WriteByte(charLF)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
-	renderCommandBackHalf(leaf, &out)
-	return out.String()
+	return renderCommandBackHalf(leaf, out)
 }
 
-func renderCommandBackHalf(com Command, out *strings.Builder) {
+func renderCommandBackHalf(com Command, out *bufio.Writer) error {
 
 	// If the command has a description, append it.
 	if com.HasDescription() {
-		out.WriteByte(charLF)
-		breakFmt(com.Description(), descriptionPadding[0], helpTextMaxWidth, out)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := breakFmt(com.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
+			return err
+		}
 	}
 
 	// Figure out if we have any printable arguments.
@@ -79,34 +105,54 @@ func renderCommandBackHalf(com Command, out *strings.Builder) {
 
 	if com.HasFlagGroups() {
 		if com.HasDescription() {
-			out.WriteByte(charLF)
+			if err := out.WriteByte(charLF); err != nil {
+				return err
+			}
 		}
 
-		out.WriteByte(charLF)
-		renderFlagGroups(com.FlagGroups(), 0, out)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := renderFlagGroups(com.FlagGroups(), 0, out); err != nil {
+			return err
+		}
 	}
 
 	if writeArgs {
-		out.WriteByte(charLF)
-		out.WriteString(headerPadding[0])
-		out.WriteString(comArgs)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(headerPadding[0]); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(comArgs); err != nil {
+			return err
+		}
 
 		for _, arg := range com.Arguments() {
-			out.WriteString(paragraphBreak)
-			renderArgument(arg, 1, out)
+			if _, err := out.WriteString(paragraphBreak); err != nil {
+				return err
+			}
+			if err := renderArgument(arg, 1, out); err != nil {
+				return err
+			}
 		}
 	}
 
-	out.WriteByte(charLF)
+	return out.WriteByte(charLF)
 }
 
-func renderCommandLeafUsage(leaf CommandLeaf, out *strings.Builder) {
-	out.WriteString(comPrefix)
-	renderSubCommandPath(leaf, out)
-	renderCommandUsageBackHalf(leaf, out)
+func renderCommandLeafUsage(leaf CommandLeaf, out *bufio.Writer) error {
+	if _, err := out.WriteString(comPrefix); err != nil {
+		return err
+	}
+	if err := renderSubCommandPath(leaf, out); err != nil {
+		return err
+	}
+	return renderCommandUsageBackHalf(leaf, out)
 }
 
-func renderCommandUsageBackHalf(com Command, out *strings.Builder) {
+func renderCommandUsageBackHalf(com Command, out *bufio.Writer) error {
 	// If the command has flag groups
 	if com.HasFlagGroups() {
 		hasOptionalFlags := false
@@ -116,8 +162,12 @@ func renderCommandUsageBackHalf(com Command, out *strings.Builder) {
 		for _, group := range com.FlagGroups() {
 			for _, flag := range group.Flags() {
 				if flag.IsRequired() {
-					out.WriteByte(charSpace)
-					renderShortestFlagLine(flag, out)
+					if err := out.WriteByte(charSpace); err != nil {
+						return err
+					}
+					if err := renderShortestFlagLine(flag, out); err != nil {
+						return err
+					}
 				} else {
 					hasOptionalFlags = true
 				}
@@ -126,76 +176,123 @@ func renderCommandUsageBackHalf(com Command, out *strings.Builder) {
 
 		// If there are any optional flags append the general "[OPTIONS]" text.
 		if hasOptionalFlags {
-			out.WriteString(comOpts)
+			if _, err := out.WriteString(comOpts); err != nil {
+				return err
+			}
 		}
 	}
 
 	// After all the flag groups have been rendered, append the argument names.
 	if com.HasArguments() {
 		for _, arg := range com.Arguments() {
-			out.WriteByte(charSpace)
-			renderArgumentName(arg, out)
+			if err := out.WriteByte(charSpace); err != nil {
+				return err
+			}
+			if err := renderArgumentName(arg, out); err != nil {
+				return err
+			}
 		}
 	}
 
 	if com.HasUnmappedLabel() {
-		out.WriteByte(charSpace)
-		out.WriteString(com.GetUnmappedLabel())
+		if err := out.WriteByte(charSpace); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(com.GetUnmappedLabel()); err != nil {
+			return err
+		}
 	}
 
+	return nil
 }
 
-func renderCommandBranch(branch CommandBranch) string {
-	out := strings.Builder{}
-
-	renderCommandBranchUsage(branch, &out)
-	out.WriteByte(charLF)
+func renderCommandBranch(branch CommandBranch, out *bufio.Writer) error {
+	if err := renderCommandBranchUsage(branch, out); err != nil {
+		return err
+	}
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
 	hd := branch.HasDescription()
 	hf := branch.HasFlagGroups()
 
 	if branch.HasAliases() {
-		out.WriteByte(charLF)
-		out.WriteString(subLinePadding[0])
-		out.WriteString("Aliases: ")
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(subLinePadding[0]); err != nil {
+			return err
+		}
+		if _, err := out.WriteString("Aliases: "); err != nil {
+			return err
+		}
 
 		aliases := branch.Aliases()
 		slices.Sort(aliases)
 
 		for i, alias := range aliases {
 			if i > 0 {
-				out.WriteString(", ")
+				if _, err := out.WriteString(", "); err != nil {
+					return err
+				}
 			}
-			out.WriteString(alias)
+			if _, err := out.WriteString(alias); err != nil {
+				return err
+			}
 		}
-		out.WriteByte(charLF)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
 	if hd {
-		out.WriteByte(charLF)
-		breakFmt(branch.Description(), descriptionPadding[0], helpTextMaxWidth, &out)
-		out.WriteByte(charLF)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := breakFmt(branch.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
+			return err
+		}
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
 	// render flags
 	if hf {
-		out.WriteByte(charLF)
-		renderFlagGroups(branch.FlagGroups(), 0, &out)
-		out.WriteByte(charLF)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := renderFlagGroups(branch.FlagGroups(), 0, out); err != nil {
+			return err
+		}
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
-	out.WriteByte(charLF)
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
-	renderCommandGroups(branch.CommandGroups(), 0, &out)
+	if err := renderCommandGroups(branch.CommandGroups(), 0, out); err != nil {
+		return err
+	}
 
-	out.WriteByte(charLF)
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
-	return out.String()
+	return nil
 }
 
-func renderCommandBranchUsage(node CommandBranch, out *strings.Builder) {
-	out.WriteString(comPrefix)
-	renderSubCommandPath(node, out)
+func renderCommandBranchUsage(node CommandBranch, out *bufio.Writer) error {
+	if _, err := out.WriteString(comPrefix); err != nil {
+		return err
+	}
+	if err := renderSubCommandPath(node, out); err != nil {
+		return err
+	}
 
 	if node.HasFlagGroups() {
 		hasOptionalFlags := false
@@ -205,8 +302,12 @@ func renderCommandBranchUsage(node CommandBranch, out *strings.Builder) {
 		for _, group := range node.FlagGroups() {
 			for _, flag := range group.Flags() {
 				if flag.IsRequired() {
-					out.WriteByte(charSpace)
-					renderShortestFlagLine(flag, out)
+					if err := out.WriteByte(charSpace); err != nil {
+						return err
+					}
+					if err := renderShortestFlagLine(flag, out); err != nil {
+						return err
+					}
 				} else {
 					hasOptionalFlags = true
 				}
@@ -215,12 +316,16 @@ func renderCommandBranchUsage(node CommandBranch, out *strings.Builder) {
 
 		// If there are any optional flags append the general "[OPTIONS]" text.
 		if hasOptionalFlags {
-			out.WriteString(comOpts)
+			if _, err := out.WriteString(comOpts); err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }
 
-func renderSubCommandPath(node CommandNode, out *strings.Builder) {
+func renderSubCommandPath(node CommandNode, out *bufio.Writer) error {
 	path := make([]string, 0, 4)
 
 	current := node
@@ -231,47 +336,70 @@ func renderSubCommandPath(node CommandNode, out *strings.Builder) {
 
 	slices.Reverse(path)
 
-	out.WriteString(subLinePadding[0])
+	if _, err := out.WriteString(subLinePadding[0]); err != nil {
+		return err
+	}
+
 	for i, segment := range path {
 		if i > 0 {
-			out.WriteByte(charSpace)
+			if err := out.WriteByte(charSpace); err != nil {
+				return err
+			}
 		}
-		out.WriteString(segment)
+		if _, err := out.WriteString(segment); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 const (
 	defaultComGroupName = "Commands"
 )
 
-func renderCommandGroups(groups []CommandGroup, padding uint8, sb *strings.Builder) {
+func renderCommandGroups(groups []CommandGroup, padding uint8, sb *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
-			sb.WriteString(paragraphBreak)
+			if _, err := sb.WriteString(paragraphBreak); err != nil {
+				return err
+			}
 		}
 
-		renderCommandGroup(group, padding, sb)
+		if err := renderCommandGroup(group, padding, sb); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func renderCommandGroup(
-	group CommandGroup,
-	padding uint8,
-	sb *strings.Builder,
-) {
-	sb.WriteString(headerPadding[padding])
-
-	if group.Name() == defaultGroupName {
-		sb.WriteString(defaultComGroupName)
-	} else {
-		sb.WriteString(group.Name())
+func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) error {
+	if _, err := sb.WriteString(headerPadding[padding]); err != nil {
+		return err
 	}
 
-	sb.WriteByte(charLF)
+	if group.Name() == defaultGroupName {
+		if _, err := sb.WriteString(defaultComGroupName); err != nil {
+			return err
+		}
+	} else {
+		if _, err := sb.WriteString(group.Name()); err != nil {
+			return err
+		}
+	}
+
+	if err := sb.WriteByte(charLF); err != nil {
+		return err
+	}
 
 	if group.HasDescription() {
-		breakFmt(group.Description(), descriptionPadding[padding], helpTextMaxWidth, sb)
-		sb.WriteByte(charLF)
+		if err := breakFmt(group.Description(), descriptionPadding[padding], helpTextMaxWidth, sb); err != nil {
+			return err
+		}
+		if err := sb.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
 	ordered := make([]string, 0, len(group.Leaves())+len(group.Branches()))
@@ -290,19 +418,31 @@ func renderCommandGroup(
 
 	for i, name := range ordered {
 		if i > 0 {
-			sb.WriteString(paragraphBreak)
+			if _, err := sb.WriteString(paragraphBreak); err != nil {
+				return err
+			}
 		}
 
-		sb.WriteString(headerPadding[padding+1])
-		sb.WriteString(name)
+		if _, err := sb.WriteString(headerPadding[padding+1]); err != nil {
+			return err
+		}
+		if _, err := sb.WriteString(name); err != nil {
+			return err
+		}
 
 		node := lookup[name]
 
 		if node.HasDescription() {
-			sb.WriteByte(charLF)
-			breakFmt(node.Description(), descriptionPadding[padding+1], helpTextMaxWidth, sb)
+			if err := sb.WriteByte(charLF); err != nil {
+				return err
+			}
+			if err := breakFmt(node.Description(), descriptionPadding[padding+1], helpTextMaxWidth, sb); err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }
 
 const (
@@ -337,38 +477,62 @@ const (
 //         Aliases: store
 //
 //         Storage management operations.
-func renderCommandTree(tree CommandTree) string {
-	out := strings.Builder{}
-
-	renderCommandTreeUsageBlock(tree, &out)
-	out.WriteByte(charLF)
+func renderCommandTree(tree CommandTree, out *bufio.Writer) error {
+	if err := renderCommandTreeUsageBlock(tree, out); err != nil {
+		return err
+	}
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
 	hd := tree.HasDescription()
 	hf := tree.HasFlagGroups()
 
 	if hd {
-		breakFmt(tree.Description(), descriptionPadding[0], helpTextMaxWidth, &out)
-		out.WriteByte(charLF)
+		if err := breakFmt(tree.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
+			return err
+		}
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
 	if hf {
-		out.WriteByte(charLF)
-		renderFlagGroups(tree.FlagGroups(), 0, &out)
-		out.WriteByte(charLF)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := renderFlagGroups(tree.FlagGroups(), 0, out); err != nil {
+			return err
+		}
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
-	out.WriteByte(charLF)
-	renderCommandGroups(tree.CommandGroups(), 0, &out)
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
+	if err := renderCommandGroups(tree.CommandGroups(), 0, out); err != nil {
+		return err
+	}
 
-	out.WriteByte(charLF)
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
-	return out.String()
+	return nil
 }
 
-func renderCommandTreeUsageBlock(tree CommandTree, out *strings.Builder) {
-	out.WriteString(comPrefix)
-	out.WriteString(subLinePadding[0])
-	out.WriteString(tree.Name())
+func renderCommandTreeUsageBlock(tree CommandTree, out *bufio.Writer) error {
+	if _, err := out.WriteString(comPrefix); err != nil {
+		return err
+	}
+	if _, err := out.WriteString(subLinePadding[0]); err != nil {
+		return err
+	}
+	if _, err := out.WriteString(tree.Name()); err != nil {
+		return err
+	}
 
 	if tree.HasFlagGroups() {
 		hasOptionalFlags := false
@@ -376,8 +540,12 @@ func renderCommandTreeUsageBlock(tree CommandTree, out *strings.Builder) {
 		for _, group := range tree.FlagGroups() {
 			for _, flag := range group.Flags() {
 				if flag.IsRequired() {
-					out.WriteByte(charSpace)
-					renderShortestFlagLine(flag, out)
+					if err := out.WriteByte(charSpace); err != nil {
+						return err
+					}
+					if err := renderShortestFlagLine(flag, out); err != nil {
+						return err
+					}
 				} else {
 					hasOptionalFlags = true
 				}
@@ -385,9 +553,15 @@ func renderCommandTreeUsageBlock(tree CommandTree, out *strings.Builder) {
 		}
 
 		if hasOptionalFlags {
-			out.WriteString(comOpts)
+			if _, err := out.WriteString(comOpts); err != nil {
+				return err
+			}
 		}
 	}
 
-	out.WriteString(subcommandPlaceholder)
+	if _, err := out.WriteString(subcommandPlaceholder); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -1,7 +1,7 @@
 package argo
 
 import (
-	"fmt"
+	"bufio"
 	"os"
 )
 
@@ -155,40 +155,30 @@ func (c commandBranch) HasCustomCommandGroups() bool {
 // Find Short Flag /////////////////////////////////////////////////////////////
 
 func (c commandBranch) FindShortFlag(b byte) Flag {
-	var current CommandNode = c
-
-	for current != nil {
-		for _, group := range current.FlagGroups() {
-			if flag := group.FindShortFlag(b); flag != nil {
-				return flag
-			}
+	for _, group := range c.FlagGroups() {
+		if flag := group.FindShortFlag(b); flag != nil {
+			return flag
 		}
-
-		current = current.Parent()
 	}
 
-	return nil
+	return c.parent.FindShortFlag(b)
 }
 
 // Find Long Flag //////////////////////////////////////////////////////////////
 
 func (c commandBranch) FindLongFlag(name string) Flag {
-	var current CommandNode = c
-
-	for current != nil {
-		for _, group := range current.FlagGroups() {
-			if flag := group.FindLongFlag(name); flag != nil {
-				return flag
-			}
+	for _, group := range c.FlagGroups() {
+		if flag := group.FindLongFlag(name); flag != nil {
+			return flag
 		}
-
-		current = current.Parent()
 	}
 
-	return nil
+	return c.parent.FindLongFlag(name)
 }
 
 func (c commandBranch) onIncomplete() {
-	fmt.Println(renderCommandBranch(c))
+	buf := bufio.NewWriter(os.Stdout)
+	must(renderCommandBranch(c, buf))
+	must(buf.Flush())
 	os.Exit(1)
 }

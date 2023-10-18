@@ -1,8 +1,8 @@
 package argo
 
 import (
+	"bufio"
 	"errors"
-	"fmt"
 	"os"
 )
 
@@ -252,7 +252,9 @@ func makeLeafHelp(short, long bool, leaf CommandLeaf) FlagBuilder {
 	builder := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			fmt.Println(renderCommandLeaf(leaf))
+			buf := bufio.NewWriter(os.Stdout)
+			must(renderCommandLeaf(leaf, buf))
+			must(buf.Flush())
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -60,7 +61,7 @@ func isBreakChar(b byte) bool {
 	return b == charSpace || b == charTab
 }
 
-func breakFmt(str, prefix string, width int, out *strings.Builder) {
+func breakFmt(str, prefix string, width int, out *bufio.Writer) error {
 	str = strings.ReplaceAll(strings.ReplaceAll(str, "\r\n", "\n"), "\r", "\n")
 
 	size := width - len(prefix)
@@ -70,11 +71,15 @@ func breakFmt(str, prefix string, width int, out *strings.Builder) {
 		panic(fmt.Errorf("cannot break string into lengths of %d", size))
 	}
 
-	out.WriteString(prefix)
+	if _, err := out.WriteString(prefix); err != nil {
+		return err
+	}
 
 	if stln <= size {
-		out.WriteString(str)
-		return
+		if _, err := out.WriteString(str); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	lastSplit := 0
@@ -84,12 +89,18 @@ func breakFmt(str, prefix string, width int, out *strings.Builder) {
 
 		if i-lastSplit >= size {
 			if lastSplit > 0 {
-				out.WriteByte(charLF)
-				out.WriteString(prefix)
+				if err := out.WriteByte(charLF); err != nil {
+					return err
+				}
+				if _, err := out.WriteString(prefix); err != nil {
+					return err
+				}
 			}
 
 			if isBreakChar(b) || b == charLF {
-				out.WriteString(str[lastSplit:i])
+				if _, err := out.WriteString(str[lastSplit:i]); err != nil {
+					return err
+				}
 				lastBreak = i
 				lastSplit = i + 1
 				continue
@@ -98,15 +109,23 @@ func breakFmt(str, prefix string, width int, out *strings.Builder) {
 			// Really long single word
 			if lastSplit >= lastBreak {
 				if size == 1 {
-					out.WriteString(str[lastSplit:i])
+					if _, err := out.WriteString(str[lastSplit:i]); err != nil {
+						return err
+					}
 					lastSplit = i
 				} else {
-					out.WriteString(str[lastSplit : i-1])
-					out.WriteByte(charDash)
+					if _, err := out.WriteString(str[lastSplit : i-1]); err != nil {
+						return err
+					}
+					if err := out.WriteByte(charDash); err != nil {
+						return err
+					}
 					lastSplit = i - 1
 				}
 			} else {
-				out.WriteString(str[lastSplit:lastBreak])
+				if _, err := out.WriteString(str[lastSplit:lastBreak]); err != nil {
+					return err
+				}
 				lastSplit = lastBreak + 1
 			}
 		}
@@ -117,10 +136,16 @@ func breakFmt(str, prefix string, width int, out *strings.Builder) {
 			// Don't spit out a new line if we hit \n within the
 			// first line we are reading.
 			if lastSplit > 0 {
-				out.WriteByte(charLF)
-				out.WriteString(prefix)
+				if err := out.WriteByte(charLF); err != nil {
+					return err
+				}
+				if _, err := out.WriteString(prefix); err != nil {
+					return err
+				}
 			}
-			out.WriteString(str[lastSplit:i])
+			if _, err := out.WriteString(str[lastSplit:i]); err != nil {
+				return err
+			}
 			lastBreak = i
 			lastSplit = i + 1
 
@@ -128,8 +153,16 @@ func breakFmt(str, prefix string, width int, out *strings.Builder) {
 	}
 
 	if lastSplit < len(str) {
-		out.WriteByte(charLF)
-		out.WriteString(prefix)
-		out.WriteString(str[lastSplit:])
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(prefix); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(str[lastSplit:]); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

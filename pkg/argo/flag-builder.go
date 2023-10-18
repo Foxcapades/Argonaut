@@ -207,6 +207,10 @@ func (b *flagBuilder) build() (Flag, error) {
 		}
 	}
 
+	if !b.hasShortForm() && !b.hasLongForm() {
+		errs.AppendError(errors.New("flag declared with neither a long or short form"))
+	}
+
 	var arg Argument
 
 	if b.arg != nil {

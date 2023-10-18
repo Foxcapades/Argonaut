@@ -66,7 +66,7 @@ func (p *parser) Next() element {
 	case eventKindEnd:
 		return p.handleEnd()
 	default:
-		panic("illegal state")
+		panic("illegal state: got event kind " + next.Kind.String())
 	}
 }
 
@@ -236,7 +236,14 @@ func (p *parser) consumeShortFlag(flags string) element {
 		panic("illegal state")
 	}
 
-	return shortPairElement(flags, next.Data)
+	data := next.Data
+
+	next = p.emitter.Next()
+	if next.Kind != eventKindBreak {
+		panic("illegal state: expected break, got " + next.Kind.String())
+	}
+
+	return shortPairElement(flags, data)
 }
 
 func (p *parser) handleText(data string) element {

@@ -1,8 +1,8 @@
 package argo
 
 import (
+	"bufio"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -48,38 +48,71 @@ const (
 	argOptSuffix = ']'
 )
 
-func renderArgumentName(a Argument, out *strings.Builder) {
+func renderArgumentName(a Argument, out *bufio.Writer) error {
 	if a.hasBinding() && a.bindingType().Kind() == reflect.Bool {
-		return
+		return nil
 	}
 
 	if a.IsRequired() {
-		out.WriteByte(argReqPrefix)
-		out.WriteString(renderArgName(a))
-		out.WriteByte(argReqSuffix)
+		if err := out.WriteByte(argReqPrefix); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(renderArgName(a)); err != nil {
+			return err
+		}
+		if err := out.WriteByte(argReqSuffix); err != nil {
+			return err
+		}
 	} else {
-		out.WriteByte(argOptPrefix)
-		out.WriteString(renderArgName(a))
-		out.WriteByte(argOptSuffix)
+		if err := out.WriteByte(argOptPrefix); err != nil {
+			return err
+		}
+		if _, err := out.WriteString(renderArgName(a)); err != nil {
+			return err
+		}
+		if err := out.WriteByte(argOptSuffix); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func renderFlagArgument(arg Argument, padding uint8, out *strings.Builder) {
-	out.WriteString(subLinePadding[padding])
-	renderArgumentName(arg, out)
+func renderFlagArgument(arg Argument, padding uint8, out *bufio.Writer) error {
+	if _, err := out.WriteString(subLinePadding[padding]); err != nil {
+		return err
+	}
+	if err := renderArgumentName(arg, out); err != nil {
+		return err
+	}
 
 	if arg.HasDescription() {
-		out.WriteByte(charLF)
-		breakFmt(arg.Description(), descriptionPadding[padding], helpTextMaxWidth, out)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := breakFmt(arg.Description(), descriptionPadding[padding], helpTextMaxWidth, out); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func renderArgument(arg Argument, padding uint8, out *strings.Builder) {
-	out.WriteString(headerPadding[padding])
-	renderArgumentName(arg, out)
+func renderArgument(arg Argument, padding uint8, out *bufio.Writer) error {
+	if _, err := out.WriteString(headerPadding[padding]); err != nil {
+		return err
+	}
+	if err := renderArgumentName(arg, out); err != nil {
+		return err
+	}
 
 	if arg.HasDescription() {
-		out.WriteByte(charLF)
-		breakFmt(arg.Description(), descriptionPadding[padding], helpTextMaxWidth, out)
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := breakFmt(arg.Description(), descriptionPadding[padding], helpTextMaxWidth, out); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

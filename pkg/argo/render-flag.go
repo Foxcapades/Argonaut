@@ -1,71 +1,126 @@
 package argo
 
 import (
-	"strings"
+	"bufio"
 )
 
-func renderFlag(flag Flag, padding uint8, sb *strings.Builder) {
-	sb.WriteString(headerPadding[padding])
+func renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error {
+	if _, err := sb.WriteString(headerPadding[padding]); err != nil {
+		return err
+	}
 
 	if flag.HasLongForm() {
 		if flag.HasShortForm() {
-			sb.WriteByte(charDash)
-			sb.WriteByte(flag.ShortForm())
-
-			if flag.HasArgument() {
-				sb.WriteByte(charSpace)
-				renderArgumentName(flag.Argument(), sb)
+			if err := sb.WriteByte(charDash); err != nil {
+				return err
+			}
+			if err := sb.WriteByte(flag.ShortForm()); err != nil {
+				return err
 			}
 
-			sb.WriteString(flagDivider)
+			if flag.HasArgument() {
+				if err := sb.WriteByte(charSpace); err != nil {
+					return err
+				}
+				if err := renderArgumentName(flag.Argument(), sb); err != nil {
+					return err
+				}
+			}
+
+			if _, err := sb.WriteString(flagDivider); err != nil {
+				return err
+			}
 		}
 
-		sb.WriteString(strDoubleDash)
-		sb.WriteString(flag.LongForm())
+		if _, err := sb.WriteString(strDoubleDash); err != nil {
+			return err
+		}
+		if _, err := sb.WriteString(flag.LongForm()); err != nil {
+			return err
+		}
 
 		if flag.HasArgument() {
-			sb.WriteByte(charEquals)
-			renderArgumentName(flag.Argument(), sb)
+			if err := sb.WriteByte(charEquals); err != nil {
+				return err
+			}
+			if err := renderArgumentName(flag.Argument(), sb); err != nil {
+				return err
+			}
 		}
 	} else {
-		sb.WriteByte(charDash)
-		sb.WriteByte(flag.ShortForm())
+		if err := sb.WriteByte(charDash); err != nil {
+			return err
+		}
+		if err := sb.WriteByte(flag.ShortForm()); err != nil {
+			return err
+		}
 
 		if flag.HasArgument() {
-			sb.WriteByte(charSpace)
-			renderArgumentName(flag.Argument(), sb)
+			if err := sb.WriteByte(charSpace); err != nil {
+				return err
+			}
+			if err := renderArgumentName(flag.Argument(), sb); err != nil {
+				return err
+			}
 		}
 	}
 
 	if flag.HasDescription() {
-		sb.WriteByte(charLF)
-		breakFmt(flag.Description(), descriptionPadding[padding], helpTextMaxWidth, sb)
+		if err := sb.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := breakFmt(flag.Description(), descriptionPadding[padding], helpTextMaxWidth, sb); err != nil {
+			return err
+		}
 	}
 
 	if flag.HasArgument() && flag.Argument().HasDescription() {
-		sb.WriteByte(charLF)
-		renderFlagArgument(flag.Argument(), padding+1, sb)
+		if err := sb.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := renderFlagArgument(flag.Argument(), padding+1, sb); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func renderShortestFlagLine(flag Flag, sb *strings.Builder) {
+func renderShortestFlagLine(flag Flag, sb *bufio.Writer) error {
 	if flag.HasShortForm() {
-		sb.WriteByte(charDash)
-		sb.WriteByte(flag.ShortForm())
+		if err := sb.WriteByte(charDash); err != nil {
+			return err
+		}
+		if err := sb.WriteByte(flag.ShortForm()); err != nil {
+			return err
+		}
 
 		if flag.HasArgument() {
-			sb.WriteByte(charSpace)
-			renderArgumentName(flag.Argument(), sb)
+			if err := sb.WriteByte(charSpace); err != nil {
+				return err
+			}
+			if err := renderArgumentName(flag.Argument(), sb); err != nil {
+				return err
+			}
 		}
 	} else {
-		sb.WriteString(strDoubleDash)
-		sb.WriteString(flag.LongForm())
+		if _, err := sb.WriteString(strDoubleDash); err != nil {
+			return err
+		}
+		if _, err := sb.WriteString(flag.LongForm()); err != nil {
+			return err
+		}
 
 		if flag.HasArgument() {
-			sb.WriteByte(charEquals)
-			renderArgumentName(flag.Argument(), sb)
+			if err := sb.WriteByte(charEquals); err != nil {
+				return err
+			}
+			if err := renderArgumentName(flag.Argument(), sb); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 const (
@@ -73,48 +128,74 @@ const (
 	fgSingleName  = "Flags"
 )
 
-func renderFlagGroups(groups []FlagGroup, padding uint8, out *strings.Builder) {
+func renderFlagGroups(groups []FlagGroup, padding uint8, out *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
-			out.WriteByte(charLF)
+			if err := out.WriteByte(charLF); err != nil {
+				return err
+			}
 		}
 
-		renderFlagGroup(group, padding, out, len(groups) > 1)
+		if err := renderFlagGroup(group, padding, out, len(groups) > 1); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
 func renderFlagGroup(
 	group FlagGroup,
 	padding uint8,
-	out *strings.Builder,
+	out *bufio.Writer,
 	multiple bool,
-) {
-	out.WriteString(headerPadding[padding])
+) error {
+	if _, err := out.WriteString(headerPadding[padding]); err != nil {
+		return err
+	}
 
 	if group.Name() == defaultGroupName {
 		if multiple {
-			out.WriteString(fgDefaultName)
+			if _, err := out.WriteString(fgDefaultName); err != nil {
+				return err
+			}
 		} else {
-			out.WriteString(fgSingleName)
+			if _, err := out.WriteString(fgSingleName); err != nil {
+				return err
+			}
 		}
 	} else {
-		out.WriteString(group.Name())
+		if _, err := out.WriteString(group.Name()); err != nil {
+			return err
+		}
 	}
 
-	out.WriteByte(charLF)
+	if err := out.WriteByte(charLF); err != nil {
+		return err
+	}
 
 	// If the group has a description, print it out.
 	if group.HasDescription() {
-		breakFmt(group.Description(), subLinePadding[padding], helpTextMaxWidth, out)
-		out.WriteByte(charLF)
+		if err := breakFmt(group.Description(), subLinePadding[padding], helpTextMaxWidth, out); err != nil {
+			return err
+		}
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
 	}
 
 	// Render every flag in the group.
 	for i, flag := range group.Flags() {
 		if i > 0 {
-			out.WriteString(paragraphBreak)
+			if _, err := out.WriteString(paragraphBreak); err != nil {
+				return err
+			}
 		}
 
-		renderFlag(flag, padding+1, out)
+		if err := renderFlag(flag, padding+1, out); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }

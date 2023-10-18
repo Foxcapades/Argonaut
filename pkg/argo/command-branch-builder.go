@@ -1,8 +1,8 @@
 package argo
 
 import (
+	"bufio"
 	"errors"
-	"fmt"
 	"os"
 )
 
@@ -237,7 +237,9 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 			flag := NewFlagBuilder().
 				WithDescription("Prints this help text.").
 				WithCallback(func(f Flag) {
-					fmt.Println(renderCommandBranch(out))
+					buf := bufio.NewWriter(os.Stdout)
+					must(renderCommandBranch(out, buf))
+					must(buf.Flush())
 					os.Exit(0)
 				})
 
