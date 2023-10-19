@@ -71,3 +71,12 @@ Arguments
 ----
 
 * [ ] "Argument 0 is required" should be one based.
+
+* [ ] If another flag group declares the name "Flags" what should we do about
+      the default flag group?
+
+* [ ] If another flag group declares the name "Meta Flags", what should we do
+      about the auto help flags?
+
+* [ ] If another command group declares the name "Commands", what should we do
+      about the default command group?

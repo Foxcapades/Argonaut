@@ -8,7 +8,7 @@ import (
 )
 
 const leafInput01 = `Usage:
-  %s branch leaf [options] <arg> [files...]
+  %s branch leaf -a [options] <arg> [files...]
   Aliases: l, le
 
     A description of this command leaf.
@@ -44,6 +44,7 @@ func TestRenderCommandLeaf01(t *testing.T) {
 				WithFlagGroup(cli.FlagGroup("My Flags").
 					WithDescription("Flags that belong to me.").
 					WithFlag(cli.ShortFlag('a').
+						Require().
 						WithLongForm("amber").
 						WithDescription("Description of the amber flag.")).
 					WithFlag(cli.ShortFlag('b').WithLongForm("barn"))).
@@ -55,7 +56,7 @@ func TestRenderCommandLeaf01(t *testing.T) {
 						WithLongForm("doorknob").
 						WithArgument(cli.Argument().WithName("name").Require()))).
 				WithUnmappedLabel("files..."))).
-		MustParse([]string{"command", "branch", "leaf", "argument"})
+		MustParse([]string{"command", "branch", "leaf", "argument", "-a"})
 
 	renderOutputCheck(t, leafInput01, com.SelectedCommand(), argo.CommandLeafHelpRenderer())
 }
