@@ -157,12 +157,8 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 	errs := newMultiError()
 
 	// Ensure the group name is not blank
-	if isBlank(l.name) {
-		errs.AppendError(errors.New("command leaf names must not be blank"))
-	}
-
-	if nextWhitespace(l.name) > -1 {
-		errs.AppendError(errors.New("command branch names must not contain spaces"))
+	if err := validateCommandNodeName(l.name); err != nil {
+		errs.AppendError(err)
 	}
 
 	// Ensure the aliases are all not blank

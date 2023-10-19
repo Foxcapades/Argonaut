@@ -161,12 +161,8 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 	errs := newMultiError()
 
 	// Ensure name is not blank
-	if isBlank(c.name) {
-		errs.AppendError(errors.New("command branch names must not be blank"))
-	}
-
-	if nextWhitespace(c.name) > -1 {
-		errs.AppendError(errors.New("command branch names must not contain spaces"))
+	if err := validateCommandNodeName(c.name); err != nil {
+		errs.AppendError(err)
 	}
 
 	// Ensure aliases are not blank

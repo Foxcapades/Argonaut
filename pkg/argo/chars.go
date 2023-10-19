@@ -1,5 +1,7 @@
 package argo
 
+import "errors"
+
 const (
 	charTab    = '\t'
 	charLF     = '\n'
@@ -27,6 +29,24 @@ func isNumeric(c byte) bool {
 
 func isFlagStringSafe(c byte) bool {
 	return isAlphanumeric(c) || c == '-' || c == '_'
+}
+
+func validateCommandNodeName(name string) error {
+	if len(name) == 0 {
+		return errors.New("command names must not be blank")
+	}
+
+	if !(isAlphanumeric(name[0]) || name[0] == '_') {
+		return errors.New("command names must begin with an alphanumeric character or an underscore")
+	}
+
+	for i := 1; i < len(name); i++ {
+		if !isFlagStringSafe(name[i]) {
+			return errors.New("command names may only contain alphanumeric characters, dashes, and/or underscores")
+		}
+	}
+
+	return nil
 }
 
 const (
