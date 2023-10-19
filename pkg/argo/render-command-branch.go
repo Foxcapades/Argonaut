@@ -33,13 +33,11 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 		return err
 	}
 
+	ha := branch.HasAliases()
 	hd := branch.HasDescription()
 	hf := branch.HasFlagGroups()
 
-	if branch.HasAliases() {
-		if err := out.WriteByte(charLF); err != nil {
-			return err
-		}
+	if ha {
 		if _, err := out.WriteString(subLinePadding[0]); err != nil {
 			return err
 		}
@@ -66,6 +64,11 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 	}
 
 	if hd {
+		if ha {
+			if err := out.WriteByte(charLF); err != nil {
+				return err
+			}
+		}
 		if err := breakFmt(branch.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
 			return err
 		}

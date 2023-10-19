@@ -3,6 +3,8 @@ package argo
 // A CommandParent is a CommandNode instance that may contain child CommandNode
 // instances.
 type CommandParent interface {
+	CommandNode
+
 	// CommandGroups returns the CommandGroup instances attached to this
 	// CommandParent node.
 	CommandGroups() []CommandGroup

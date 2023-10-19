@@ -247,6 +247,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 	leaf.aliases = l.aliases
 	leaf.parent = l.parentNode
 	leaf.callback = l.callback
+	leaf.uLabel = l.umapLabel
 
 	return leaf, nil
 }

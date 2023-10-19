@@ -34,9 +34,6 @@ func (r comLeafRenderer) renderCommandLeaf(leaf CommandLeaf, out *bufio.Writer) 
 	}
 
 	if leaf.HasAliases() {
-		if err := out.WriteByte(charLF); err != nil {
-			return err
-		}
 		if _, err := out.WriteString(subLinePadding[0]); err != nil {
 			return err
 		}

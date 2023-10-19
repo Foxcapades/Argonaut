@@ -12,7 +12,7 @@ const (
 const (
 	comPrefix = "Usage:\n"
 	comOpts   = " [options]"
-	comArgs   = "Positional Arguments"
+	comArgs   = "Arguments"
 )
 
 func renderSubCommandPath(node CommandNode, out *bufio.Writer) error {
@@ -91,7 +91,7 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 	}
 
 	if writeArgs {
-		if err := out.WriteByte(charLF); err != nil {
+		if _, err := out.WriteString(paragraphBreak); err != nil {
 			return err
 		}
 		if _, err := out.WriteString(headerPadding[0]); err != nil {
@@ -101,8 +101,13 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 			return err
 		}
 
-		for _, arg := range com.Arguments() {
-			if _, err := out.WriteString(paragraphBreak); err != nil {
+		for i, arg := range com.Arguments() {
+			if i > 0 {
+				if err := out.WriteByte(charLF); err != nil {
+					return err
+				}
+			}
+			if err := out.WriteByte(charLF); err != nil {
 				return err
 			}
 			if err := r.renderArgument(arg, 1, out); err != nil {
@@ -160,7 +165,13 @@ func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Wr
 		if err := out.WriteByte(charSpace); err != nil {
 			return err
 		}
+		if err := out.WriteByte(argOptPrefix); err != nil {
+			return err
+		}
 		if _, err := out.WriteString(com.GetUnmappedLabel()); err != nil {
+			return err
+		}
+		if err := out.WriteByte(argOptSuffix); err != nil {
 			return err
 		}
 	}

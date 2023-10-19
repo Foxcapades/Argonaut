@@ -28,6 +28,15 @@ func init() {
 	helpTextMaxWidth = min(width-20, 100)
 }
 
+func pad(size int, out *bufio.Writer) error {
+	for i := 0; i < size; i++ {
+		if err := out.WriteByte(charSpace); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 const (
 	flagDivider    = " | "
 	paragraphBreak = "\n\n"

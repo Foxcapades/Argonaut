@@ -54,3 +54,20 @@ there are no custom flag groups) or its own meta flag group.
 
 * [ ] If an entire short flag block is unmatched, should it still be split into
       separate short flags?
+
+* [ ] Unnamed arguments should include a number in their name when being
+      rendered in help text.  Something like:
++
+[source]
+----
+Usage:
+  command <arg1> <arg2>
+
+Arguments
+  <arg1>
+      Argument description 1
+  <arg2>
+      Argument Description 2
+----
+
+* [ ] "Argument 0 is required" should be one based.
