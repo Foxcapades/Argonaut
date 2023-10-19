@@ -150,6 +150,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 		// on to the next character.
 		if f == nil {
 			c.command.appendUnmapped(strDash + remainder[0:1])
+			remainder = remainder[1:]
 			continue
 		}
 
@@ -198,6 +199,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				// test if the next character is a flag itself.  If it is, then we
 				// prioritize the flag over an optional argument.
 				if t := c.command.FindShortFlag(n); t != nil {
+					remainder = remainder[1:]
 					continue
 				} else
 
