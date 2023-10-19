@@ -44,7 +44,7 @@ type commandBranch struct {
 
 // Find Child //////////////////////////////////////////////////////////////////
 
-func (c commandBranch) FindChild(name string) CommandNode {
+func (c commandBranch) FindChild(name string) CommandChild {
 	for _, group := range c.commandGroups {
 		if com := group.FindChild(name); com != nil {
 			return com

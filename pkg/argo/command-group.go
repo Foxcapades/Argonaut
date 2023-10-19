@@ -32,7 +32,7 @@ type CommandGroup interface {
 	// CommandLeaf node that matches the given string.
 	//
 	// Commands may match on either their name or one of their aliases.
-	FindChild(name string) CommandNode
+	FindChild(name string) CommandChild
 }
 
 type commandGroup struct {
@@ -70,7 +70,7 @@ func (g commandGroup) HasLeaves() bool {
 	return len(g.branches) > 0
 }
 
-func (g commandGroup) FindChild(name string) CommandNode {
+func (g commandGroup) FindChild(name string) CommandChild {
 	for _, leaf := range g.leaves {
 		if leaf.Matches(name) {
 			return leaf

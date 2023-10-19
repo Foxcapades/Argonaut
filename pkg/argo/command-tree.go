@@ -101,7 +101,7 @@ func (t *commandTree) selectCommand(leaf CommandLeaf) {
 	t.selected = leaf
 }
 
-func (t commandTree) FindChild(name string) CommandNode {
+func (t commandTree) FindChild(name string) CommandChild {
 	for _, group := range t.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			return child

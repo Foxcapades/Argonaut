@@ -13,7 +13,7 @@ type CommandParent interface {
 	// subcommand that matches the given string.
 	//
 	// A subcommand may match on either its name or one of its aliases.
-	FindChild(name string) CommandNode
+	FindChild(name string) CommandChild
 
 	onIncomplete()
 }
