@@ -48,7 +48,7 @@ func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) err
 		if err := breakFmt(group.Description(), descriptionPadding[padding], helpTextMaxWidth, sb); err != nil {
 			return err
 		}
-		if err := sb.WriteByte(charLF); err != nil {
+		if _, err := sb.WriteString(paragraphBreak); err != nil {
 			return err
 		}
 	}

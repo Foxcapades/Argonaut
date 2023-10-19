@@ -440,7 +440,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 
 		if nextElement.Type == elementTypeBoundary {
 			c.boundary = true
-			return nil
+			return f.hit()
 		}
 
 		return f.hitWithArg(nextElement.String())
@@ -464,7 +464,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 		case elementTypeLongFlagSolo:
 			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 				c.queue.Offer(nextElement)
-				return nil
+				return f.hit()
 			} else {
 				return f.hitWithArg(nextElement.String())
 			}
@@ -472,7 +472,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 		case elementTypeLongFlagPair:
 			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 				c.queue.Offer(nextElement)
-				return nil
+				return f.hit()
 			} else {
 				return f.hitWithArg(nextElement.String())
 			}
@@ -480,7 +480,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 		case elementTypeShortBlockSolo:
 			if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.queue.Offer(nextElement)
-				return nil
+				return f.hit()
 			} else {
 				return f.hitWithArg(nextElement.String())
 			}
@@ -488,7 +488,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 		case elementTypeShortBlockPair:
 			if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.queue.Offer(nextElement)
-				return nil
+				return f.hit()
 			} else {
 				return f.hitWithArg(nextElement.String())
 			}
@@ -513,6 +513,7 @@ func (c *commandTreeInterpreter) interpretLongPair(element *element, unmapped *[
 			return flag.hitWithArg(element.Data[1])
 		} else {
 			// TODO: this should be a warning for a flag getting an argument it didn't expect, this also applies to shortpair
+			return flag.hit()
 		}
 	}
 

@@ -119,6 +119,82 @@ func TestCommandTreeHelpRenderer005(t *testing.T) {
 	renderOutputCheck(t, output005, com, argo.CommandTreeHelpRenderer())
 }
 
+const treeHelp006 = `Usage:
+  %s -c <arg> [options] <command>
+
+Flags
+  -c <arg>
+
+  -h | --help
+      Prints this help text.
+
+Commands
+  leaf
+`
+
+func TestCommandTreeHelpRenderer006(t *testing.T) {
+	com := argo.NewCommandTreeBuilder().
+		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
+		WithFlag(argo.NewFlagBuilder().
+			WithShortForm('c').
+			Require().
+			WithArgument(argo.NewArgumentBuilder().Require())).
+		MustParse([]string{"command", "leaf", "-c", "foo"})
+
+	renderOutputCheck(t, treeHelp006, com, argo.CommandTreeHelpRenderer())
+}
+
+const treeHelp007 = `Usage:
+  %s [options] <command>
+
+Something
+  -c
+
+Meta Flags
+  -h | --help
+      Prints this help text.
+
+Commands
+  leaf
+`
+
+func TestCommandTreeHelpRenderer007(t *testing.T) {
+	com := argo.NewCommandTreeBuilder().
+		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
+		WithFlagGroup(argo.NewFlagGroupBuilder("Something").
+			WithFlag(argo.NewFlagBuilder().WithShortForm('c'))).
+		MustParse([]string{"command", "leaf", "-c", "foo"})
+
+	renderOutputCheck(t, treeHelp007, com, argo.CommandTreeHelpRenderer())
+}
+
+const treeHelp008 = `Usage:
+  %s [options] <command>
+
+Something
+    A description of something.
+
+  -c
+
+Meta Flags
+  -h | --help
+      Prints this help text.
+
+Commands
+  leaf
+`
+
+func TestCommandTreeHelpRenderer008(t *testing.T) {
+	com := argo.NewCommandTreeBuilder().
+		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
+		WithFlagGroup(argo.NewFlagGroupBuilder("Something").
+			WithDescription("A description of something.").
+			WithFlag(argo.NewFlagBuilder().WithShortForm('c'))).
+		MustParse([]string{"command", "leaf", "-c", "foo"})
+
+	renderOutputCheck(t, treeHelp008, com, argo.CommandTreeHelpRenderer())
+}
+
 func renderOutputCheck[T any](
 	t *testing.T,
 	pattern string,

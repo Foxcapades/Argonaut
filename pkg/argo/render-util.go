@@ -65,22 +65,22 @@ func breakFmt(str, prefix string, width int, out *bufio.Writer) error {
 	str = strings.ReplaceAll(strings.ReplaceAll(str, "\r\n", "\n"), "\r", "\n")
 
 	size := width - len(prefix)
-	stln := len(str)
+	// stln := len(str)
 
 	if size < 1 {
 		panic(fmt.Errorf("cannot break string into lengths of %d", size))
 	}
 
-	if _, err := out.WriteString(prefix); err != nil {
-		return err
-	}
+	// if _, err := out.WriteString(prefix); err != nil {
+	// 	return err
+	// }
 
-	if stln <= size {
-		if _, err := out.WriteString(str); err != nil {
-			return err
-		}
-		return nil
-	}
+	// if stln <= size {
+	// 	if _, err := out.WriteString(str); err != nil {
+	// 		return err
+	// 	}
+	// 	return nil
+	// }
 
 	lastSplit := 0
 	lastBreak := 0
@@ -139,22 +139,23 @@ func breakFmt(str, prefix string, width int, out *bufio.Writer) error {
 				if err := out.WriteByte(charLF); err != nil {
 					return err
 				}
-				if _, err := out.WriteString(prefix); err != nil {
-					return err
-				}
+			}
+			if _, err := out.WriteString(prefix); err != nil {
+				return err
 			}
 			if _, err := out.WriteString(str[lastSplit:i]); err != nil {
 				return err
 			}
 			lastBreak = i
 			lastSplit = i + 1
-
 		}
 	}
 
 	if lastSplit < len(str) {
-		if err := out.WriteByte(charLF); err != nil {
-			return err
+		if lastSplit > 0 {
+			if err := out.WriteByte(charLF); err != nil {
+				return err
+			}
 		}
 		if _, err := out.WriteString(prefix); err != nil {
 			return err

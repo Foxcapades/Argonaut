@@ -66,9 +66,6 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 	}
 
 	if hd {
-		if err := out.WriteByte(charLF); err != nil {
-			return err
-		}
 		if err := breakFmt(branch.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
 			return err
 		}
@@ -139,6 +136,10 @@ func (r comBranchRenderer) renderCommandBranchUsage(node CommandBranch, out *buf
 				return err
 			}
 		}
+	}
+
+	if _, err := out.WriteString(subcommandPlaceholder); err != nil {
+		return err
 	}
 
 	return nil

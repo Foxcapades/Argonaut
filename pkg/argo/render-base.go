@@ -246,7 +246,7 @@ const (
 func (r renderBase) renderFlagGroups(groups []FlagGroup, padding uint8, out *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
-			if err := out.WriteByte(charLF); err != nil {
+			if _, err := out.WriteString(paragraphBreak); err != nil {
 				return err
 			}
 		}
@@ -285,13 +285,12 @@ func (r renderBase) renderFlagGroup(
 		}
 	}
 
-	if err := out.WriteByte(charLF); err != nil {
-		return err
-	}
-
 	// If the group has a description, print it out.
 	if group.HasDescription() {
-		if err := breakFmt(group.Description(), subLinePadding[padding], helpTextMaxWidth, out); err != nil {
+		if err := out.WriteByte(charLF); err != nil {
+			return err
+		}
+		if err := breakFmt(group.Description(), descriptionPadding[padding], helpTextMaxWidth, out); err != nil {
 			return err
 		}
 		if err := out.WriteByte(charLF); err != nil {
@@ -302,14 +301,14 @@ func (r renderBase) renderFlagGroup(
 	// Render every flag in the group.
 	for i, flag := range group.Flags() {
 		if i > 0 {
-			if err := out.WriteByte(charLF); err != nil {
-				return err
-			}
 			if !group.Flags()[i-1].HasDescription() {
 				if err := out.WriteByte(charLF); err != nil {
 					return err
 				}
 			}
+		}
+		if err := out.WriteByte(charLF); err != nil {
+			return err
 		}
 
 		if err := r.renderFlag(flag, padding+1, out); err != nil {
