@@ -51,3 +51,6 @@ there are no custom flag groups) or its own meta flag group.
 
 * [ ] Indicate the difference between a leaf and a branch in the help docs
       somehow, maybe trail branches with an ellipsis or something?
+
+* [ ] If an entire short flag block is unmatched, should it still be split into
+      separate short flags?

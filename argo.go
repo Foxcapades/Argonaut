@@ -38,6 +38,24 @@ func FlagGroup(name string) argo.FlagGroupBuilder {
 	return argo.NewFlagGroupBuilder(name)
 }
 
+// ShortFlag returns a new FlagBuilder instance with the short form already set
+// to the given value.
+//
+// This function is a shortcut for:
+//     cli.Flag().WithShortForm(...)
+func ShortFlag(f byte) argo.FlagBuilder {
+	return argo.NewFlagBuilder().WithShortForm(f)
+}
+
+// LongFlag returns a new FlagBuilder instance with the long form already set
+// to the given value.
+//
+// This function is a shortcut for:
+//     cli.Flag().WithLongForm(...)
+func LongFlag(name string) argo.FlagBuilder {
+	return argo.NewFlagBuilder().WithLongForm(name)
+}
+
 // Flag returns a new FlagBuilder instance which can be used to construct
 // an Flag instance.
 func Flag() argo.FlagBuilder {

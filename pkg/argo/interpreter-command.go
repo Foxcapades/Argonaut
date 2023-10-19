@@ -382,7 +382,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 		case elementTypeLongFlagSolo:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 				c.elements.Offer(nextElement)
-				return false, nil
+				return false, f.hit()
 			} else {
 				return false, f.hitWithArg(nextElement.String())
 			}
@@ -390,7 +390,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 		case elementTypeLongFlagPair:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 				c.elements.Offer(nextElement)
-				return false, nil
+				return false, f.hit()
 			} else {
 				return false, f.hitWithArg(nextElement.String())
 			}
@@ -398,7 +398,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 		case elementTypeShortBlockSolo:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.elements.Offer(nextElement)
-				return false, nil
+				return false, f.hit()
 			} else {
 				return false, f.hitWithArg(nextElement.String())
 			}
@@ -406,7 +406,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 		case elementTypeShortBlockPair:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.elements.Offer(nextElement)
-				return false, nil
+				return false, f.hit()
 			} else {
 				return false, f.hitWithArg(nextElement.String())
 			}

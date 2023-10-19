@@ -299,7 +299,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 				case elementTypeShortBlockSolo:
 					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.queue.Offer(nextElement)
-						return nil
+						return f.hit()
 					} else {
 						return f.hitWithArg(nextElement.String())
 					}
@@ -307,7 +307,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 				case elementTypeShortBlockPair:
 					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.queue.Offer(nextElement)
-						return nil
+						return f.hit()
 					} else {
 						return f.hitWithArg(nextElement.String())
 					}
@@ -315,7 +315,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 				case elementTypeLongFlagPair:
 					if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 						c.queue.Offer(nextElement)
-						return nil
+						return f.hit()
 					} else {
 						return f.hitWithArg(nextElement.String())
 					}
@@ -323,7 +323,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 				case elementTypeLongFlagSolo:
 					if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 						c.queue.Offer(nextElement)
-						return nil
+						return f.hit()
 					} else {
 						return f.hitWithArg(nextElement.String())
 					}
@@ -377,6 +377,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 
 		if f == nil {
 			*unmapped = append(*unmapped, strDash+block[0:1])
+			block = block[1:]
 			continue
 		}
 
@@ -390,15 +391,27 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 			}
 		}
 
+		// If the current flag has, but does not require an argument...
 		if f.HasArgument() {
+			// and there is no next character in the flag name block...
 			if !h {
+				// Hit the current flag with the argument value and exit.
 				return f.hitWithArg(element.Data[1])
 			}
 
+			// If there _is_ a next character, and it happens to be a valid short
+			// flag itself, then hit the current flag and move on to the next
+			// character in the block.
 			if c.current.FindShortFlag(block[1]) != nil {
-				return f.hit()
+				if err := f.hit(); err != nil {
+					return err
+				}
+				block = block[1:]
+				continue
 			}
 
+			// If the next character in the block does not match any known short flag,
+			// assume that the whole remaining value is part of the value.
 			return f.hitWithArg(block[1:] + "=" + element.Data[1])
 		}
 
