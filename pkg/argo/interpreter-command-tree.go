@@ -287,9 +287,15 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 				switch nextElement.Type {
 
 				case elementTypeEnd:
+					if hasBooleanArgument(f) {
+						return f.hitWithArg("true")
+					}
 					return f.hit()
 
 				case elementTypeBoundary:
+					if hasBooleanArgument(f) {
+						return f.hitWithArg("true")
+					}
 					c.boundary = true
 					return f.hit()
 

@@ -1,5 +1,7 @@
 package argo
 
+import "reflect"
+
 func newCommandInterpreter(args []string, command Command) interpreter {
 	return &commandInterpreter{
 		parser:   newParser(newEmitter(args)),
@@ -19,4 +21,8 @@ func newCommandTreeInterpreter(args []string, command CommandTree) interpreter {
 
 type interpreter interface {
 	Run() error
+}
+
+func hasBooleanArgument(flag Flag) bool {
+	return flag.HasArgument() && flag.Argument().HasBinding() && flag.Argument().BindingType().Kind() == reflect.Bool
 }

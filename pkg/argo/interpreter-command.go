@@ -1,5 +1,7 @@
 package argo
 
+import "reflect"
+
 type commandInterpreter struct {
 	parser   parser
 	command  Command
@@ -215,9 +217,15 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				switch nextElement.Type {
 
 				case elementTypeEnd:
+					if f.HasArgument() && f.Argument().HasBinding() && f.Argument().BindingType().Kind() == reflect.Bool {
+						return false, f.hitWithArg("true")
+					}
 					return false, f.hit()
 
 				case elementTypeBoundary:
+					if f.HasArgument() && f.Argument().HasBinding() && f.Argument().BindingType().Kind() == reflect.Bool {
+						return false, f.hitWithArg("true")
+					}
 					return true, f.hit()
 
 				case elementTypePlainText:

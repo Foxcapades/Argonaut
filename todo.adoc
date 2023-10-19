@@ -80,3 +80,6 @@ Arguments
 
 * [ ] If another command group declares the name "Commands", what should we do
       about the default command group?
+
+* [ ] What happens if a boolean flag is given an empty argument?  And should it
+      count that as true?

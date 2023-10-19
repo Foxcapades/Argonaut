@@ -120,3 +120,25 @@ func TestCommandInterpreterShortSolo08(t *testing.T) {
 		t.Error("expected flag argument value to match input value but it didn't")
 	}
 }
+
+// https://github.com/Foxcapades/Argonaut/issues/18
+func TestRegression18Command(t *testing.T) {
+	bind := false
+	com := cli.Command().
+		WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
+		MustParse([]string{"command", "-a"})
+
+	flag := com.FindShortFlag('a')
+
+	if !bind {
+		t.Error("expected bind to be true, but it wasn't")
+	}
+
+	if !flag.WasHit() {
+		t.Error("expected flag to have been hit but it wasn't")
+	} else if !flag.Argument().WasHit() {
+		t.Error("expected flag argument to have been hit but it wasn't")
+	} else if flag.Argument().RawValue() != "true" {
+		t.Error("expected flag argument value to be \"true\" but it wasn't")
+	}
+}
