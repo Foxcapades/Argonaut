@@ -1,14 +1,9 @@
 package argo
 
-import (
-	"fmt"
-)
-
 type deque[T any] interface {
 	IsEmpty() bool
 	Poll() T
 	Offer(value T) bool
-	AddAll(values []T) int
 }
 
 func newDeque[T any](initialSize int) deque[T] {
@@ -128,26 +123,6 @@ func (d *dequeImpl[T]) canGrowTo(minimum int) bool {
 //
 // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-func (d *dequeImpl[T]) AddAll(values []T) int {
-	if d.canGrowTo(d.size + len(values)) {
-		d.ensureCapacity(d.size + len(values))
-	} else {
-		d.ensureCapacity(d.maxSize)
-	}
-
-	count := 0
-
-	for i := range values {
-		if d.Offer(values[i]) {
-			count++
-		} else {
-			break
-		}
-	}
-
-	return count
-}
-
 func (d *dequeImpl[T]) IsEmpty() bool {
 	return d.size == 0
 }
@@ -182,16 +157,4 @@ func (d *dequeImpl[T]) Poll() T {
 	d.size--
 
 	return out
-}
-
-func (d *dequeImpl[T]) Size() int {
-	return d.size
-}
-
-func (d *dequeImpl[T]) String() string {
-	if d.maxSize > -1 {
-		return fmt.Sprintf("deque{Size: %d, Capacity: %d, MaxSize: %d}", d.size, len(d.container), d.maxSize)
-	} else {
-		return fmt.Sprintf("deque{Size: %d, Capacity: %d}", d.size, len(d.container))
-	}
 }
