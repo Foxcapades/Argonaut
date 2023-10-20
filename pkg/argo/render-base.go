@@ -3,6 +3,7 @@ package argo
 import (
 	"bufio"
 	"reflect"
+	"strconv"
 )
 
 const (
@@ -14,11 +15,15 @@ const (
 
 type renderBase struct{}
 
-func (r renderBase) renderArgName(a Argument) string {
+func (r renderBase) renderArgName(a Argument, argIndex int) string {
 	if a.HasName() {
 		return a.Name()
 	} else {
-		return "arg"
+		if argIndex > 0 {
+			return "arg" + strconv.Itoa(argIndex)
+		} else {
+			return "arg"
+		}
 	}
 }
 
@@ -26,7 +31,7 @@ func (r renderBase) renderFlagArgument(arg Argument, padding uint8, out *bufio.W
 	if _, err := out.WriteString(subLinePadding[padding]); err != nil {
 		return err
 	}
-	if err := r.renderArgumentName(arg, out); err != nil {
+	if err := r.renderArgumentName(arg, out, 0); err != nil {
 		return err
 	}
 
@@ -41,11 +46,11 @@ func (r renderBase) renderFlagArgument(arg Argument, padding uint8, out *bufio.W
 	return nil
 }
 
-func (r renderBase) renderArgument(arg Argument, padding uint8, out *bufio.Writer) error {
+func (r renderBase) renderArgument(arg Argument, padding uint8, out *bufio.Writer, argIndex int) error {
 	if _, err := out.WriteString(headerPadding[padding]); err != nil {
 		return err
 	}
-	if err := r.renderArgumentName(arg, out); err != nil {
+	if err := r.renderArgumentName(arg, out, argIndex); err != nil {
 		return err
 	}
 
@@ -61,7 +66,7 @@ func (r renderBase) renderArgument(arg Argument, padding uint8, out *bufio.Write
 	return nil
 }
 
-func (r renderBase) renderArgumentName(a Argument, out *bufio.Writer) error {
+func (r renderBase) renderArgumentName(a Argument, out *bufio.Writer, argIndex int) error {
 	if a.HasBinding() && a.BindingType().Kind() == reflect.Bool {
 		return nil
 	}
@@ -70,19 +75,21 @@ func (r renderBase) renderArgumentName(a Argument, out *bufio.Writer) error {
 		if err := out.WriteByte(argReqPrefix); err != nil {
 			return err
 		}
-		if _, err := out.WriteString(r.renderArgName(a)); err != nil {
-			return err
-		}
-		if err := out.WriteByte(argReqSuffix); err != nil {
-			return err
-		}
 	} else {
 		if err := out.WriteByte(argOptPrefix); err != nil {
 			return err
 		}
-		if _, err := out.WriteString(r.renderArgName(a)); err != nil {
+	}
+
+	if _, err := out.WriteString(r.renderArgName(a, argIndex)); err != nil {
+		return err
+	}
+
+	if a.IsRequired() {
+		if err := out.WriteByte(argReqSuffix); err != nil {
 			return err
 		}
+	} else {
 		if err := out.WriteByte(argOptSuffix); err != nil {
 			return err
 		}
@@ -109,7 +116,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 				if err := sb.WriteByte(charSpace); err != nil {
 					return err
 				}
-				if err := r.renderArgumentName(flag.Argument(), sb); err != nil {
+				if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
 					return err
 				}
 			}
@@ -130,7 +137,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			if err := sb.WriteByte(charEquals); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb); err != nil {
+			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -146,7 +153,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			if err := sb.WriteByte(charSpace); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb); err != nil {
+			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -186,7 +193,7 @@ func (r renderBase) renderShortestFlagLine(flag Flag, sb *bufio.Writer) error {
 			if err := sb.WriteByte(charSpace); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb); err != nil {
+			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -202,7 +209,7 @@ func (r renderBase) renderShortestFlagLine(flag Flag, sb *bufio.Writer) error {
 			if err := sb.WriteByte(charEquals); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb); err != nil {
+			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}

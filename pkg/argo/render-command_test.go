@@ -9,7 +9,7 @@ import (
 )
 
 const commandHelp001 = `Usage:
-  %s -m [options] [argument] [asteroids...]
+  %s -m [options] [argument] [arg2] [asteroids...]
 
     A command description.
 
@@ -26,6 +26,8 @@ Help Flags
 Arguments
   [argument]
       poo
+
+  [arg2]
 `
 
 func TestCommandHelpRenderer001(t *testing.T) {
@@ -39,6 +41,7 @@ func TestCommandHelpRenderer001(t *testing.T) {
 		WithArgument(cli.Argument().
 			WithName("argument").
 			WithDescription("poo")).
+		WithArgument(cli.Argument()).
 		WithUnmappedLabel("asteroids...").
 		MustParse([]string{"command", "-m"})
 

@@ -101,6 +101,8 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 			return err
 		}
 
+		multiArgs := len(com.Arguments()) > 1
+
 		for i, arg := range com.Arguments() {
 			if i > 0 {
 				if err := out.WriteByte(charLF); err != nil {
@@ -110,8 +112,14 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 			if err := out.WriteByte(charLF); err != nil {
 				return err
 			}
-			if err := r.renderArgument(arg, 1, out); err != nil {
-				return err
+			if multiArgs {
+				if err := r.renderArgument(arg, 1, out, i+1); err != nil {
+					return err
+				}
+			} else {
+				if err := r.renderArgument(arg, 1, out, 0); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -151,12 +159,20 @@ func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Wr
 
 	// After all the flag groups have been rendered, append the argument names.
 	if com.HasArguments() {
-		for _, arg := range com.Arguments() {
+		multiArgs := len(com.Arguments()) > 1
+
+		for i, arg := range com.Arguments() {
 			if err := out.WriteByte(charSpace); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(arg, out); err != nil {
-				return err
+			if multiArgs {
+				if err := r.renderArgumentName(arg, out, i+1); err != nil {
+					return err
+				}
+			} else {
+				if err := r.renderArgumentName(arg, out, 0); err != nil {
+					return err
+				}
 			}
 		}
 	}
