@@ -380,7 +380,7 @@ func TestRegression18Command(t *testing.T) {
 		bind := false
 		com := cli.Command().
 			WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
-			MustParse([]string{"command", "-a", "--"})
+			MustParse([]string{"command", "-a", "--", "flumps"})
 
 		flag := com.FindShortFlag('a')
 
@@ -394,6 +394,14 @@ func TestRegression18Command(t *testing.T) {
 			t.Error("expected flag argument to have been hit but it wasn't")
 		} else if flag.Argument().RawValue() != "true" {
 			t.Error("expected flag argument value to be \"true\" but it wasn't")
+		}
+
+		if !com.HasPassthroughInputs() {
+			t.Error("expected flag to have passthrough arguments but it didn't")
+		} else if len(com.PassthroughInputs()) != 1 {
+			t.Error("expected flag to have exactly 1 passthrough argument but it didn't")
+		} else if com.PassthroughInputs()[0] != "flumps" {
+			t.Error("expected flag passthrough argument to match input value but it didn't")
 		}
 	}
 }

@@ -225,7 +225,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 
 				case elementTypeBoundary:
 					if hasBooleanArgument(f) {
-						return false, f.hitWithArg("true")
+						return true, f.hitWithArg("true")
 					}
 					return true, f.hit()
 
