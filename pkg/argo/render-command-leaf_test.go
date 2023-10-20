@@ -25,7 +25,7 @@ Your Flags
 
   -d <name> | --doorknob=<name>
 
-Meta Flags
+Help Flags
   -h | --help
       Prints this help text.
 

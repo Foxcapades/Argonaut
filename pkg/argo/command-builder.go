@@ -134,7 +134,7 @@ func (b commandBuilder) build() (Command, error) {
 		group := b.flagGroups[0]
 
 		if len(b.flagGroups) > 1 || b.flagGroups[0].size() > 5 {
-			group = NewFlagGroupBuilder("Meta Flags")
+			group = NewFlagGroupBuilder("Help Flags")
 			b.flagGroups = append(b.flagGroups, group)
 		}
 

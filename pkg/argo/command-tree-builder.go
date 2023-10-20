@@ -179,7 +179,7 @@ func (t *commandTreeBuilder) build() (CommandTree, error) {
 		group := t.flagGroups[0]
 
 		if len(t.flagGroups) > 1 || t.flagGroups[0].size() > 5 {
-			group = NewFlagGroupBuilder("Meta Flags")
+			group = NewFlagGroupBuilder("Help Flags")
 			t.flagGroups = append(t.flagGroups, group)
 		}
 

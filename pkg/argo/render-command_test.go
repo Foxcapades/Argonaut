@@ -19,7 +19,7 @@ Meta Flags
   -m
       Enables so much meat.
 
-Meta Flags
+Help Flags
   -h | --help
       Prints this help text.
 

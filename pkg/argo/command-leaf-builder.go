@@ -212,7 +212,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 
 		if useShortH || useLongH {
 			if len(leaf.flags) == 0 || leaf.flags[0].Name() != defaultGroupName || leaf.flags[0].size() > 5 {
-				group, err := NewFlagGroupBuilder("Meta Flags").
+				group, err := NewFlagGroupBuilder("Help Flags").
 					WithFlag(makeLeafHelp(useShortH, useLongH, leaf)).
 					build()
 

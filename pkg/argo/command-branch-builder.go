@@ -227,7 +227,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 			var group FlagGroupBuilder
 
 			if metaGroup {
-				group = NewFlagGroupBuilder("Meta Flags")
+				group = NewFlagGroupBuilder("Help Flags")
 				c.flagGroups = append(c.flagGroups, group)
 			} else {
 				group = c.flagGroups[0]

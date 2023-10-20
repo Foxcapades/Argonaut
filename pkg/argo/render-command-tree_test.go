@@ -150,7 +150,7 @@ const treeHelp007 = `Usage:
 Something
   -c
 
-Meta Flags
+Help Flags
   -h | --help
       Prints this help text.
 
@@ -176,7 +176,7 @@ Something
 
   -c
 
-Meta Flags
+Help Flags
   -h | --help
       Prints this help text.
 
