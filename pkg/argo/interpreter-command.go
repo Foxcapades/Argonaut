@@ -1,7 +1,5 @@
 package argo
 
-import "reflect"
-
 type commandInterpreter struct {
 	parser   parser
 	command  Command
@@ -201,6 +199,9 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				// test if the next character is a flag itself.  If it is, then we
 				// prioritize the flag over an optional argument.
 				if t := c.command.FindShortFlag(n); t != nil {
+					if err := f.hit(); err != nil {
+						return false, err
+					}
 					remainder = remainder[1:]
 					continue
 				} else
@@ -217,13 +218,13 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				switch nextElement.Type {
 
 				case elementTypeEnd:
-					if f.HasArgument() && f.Argument().HasBinding() && f.Argument().BindingType().Kind() == reflect.Bool {
+					if hasBooleanArgument(f) {
 						return false, f.hitWithArg("true")
 					}
 					return false, f.hit()
 
 				case elementTypeBoundary:
-					if f.HasArgument() && f.Argument().HasBinding() && f.Argument().BindingType().Kind() == reflect.Bool {
+					if hasBooleanArgument(f) {
 						return false, f.hitWithArg("true")
 					}
 					return true, f.hit()
@@ -234,7 +235,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				case elementTypeShortBlockSolo:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.elements.Offer(nextElement)
-						return false, nil
+						return false, f.hit()
 					} else {
 						return false, f.hitWithArg(nextElement.String())
 					}
@@ -242,7 +243,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				case elementTypeShortBlockPair:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.elements.Offer(nextElement)
-						return false, nil
+						return false, f.hit()
 					} else {
 						return false, f.hitWithArg(nextElement.String())
 					}
@@ -250,7 +251,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				case elementTypeLongFlagPair:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 						c.elements.Offer(nextElement)
-						return false, nil
+						return false, f.hit()
 					} else {
 						return false, f.hitWithArg(nextElement.String())
 					}
@@ -258,7 +259,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 				case elementTypeLongFlagSolo:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 						c.elements.Offer(nextElement)
-						return false, nil
+						return false, f.hit()
 					} else {
 						return false, f.hitWithArg(nextElement.String())
 					}
@@ -441,6 +442,8 @@ func (c *commandInterpreter) interpretLongPair(e *element) (bool, error) {
 			return false, flag.hitWithArg(e.Data[1])
 		}
 		// TODO: this should be a warning, the flag didn't expect an argument (same applies to shortpair)
+
+		return false, flag.hit()
 	}
 
 	return false, nil

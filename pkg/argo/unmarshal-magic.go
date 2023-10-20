@@ -225,7 +225,7 @@ func unmarshalBool(v reflect.Value, raw string) error {
 
 func toUnmarshalable(arg string, ov reflect.Value, skipPtr bool) (reflect.Value, error) {
 
-	if !skipPtr && (ov.Kind() != reflect.Ptr || isNil(&ov)) {
+	if !skipPtr && ((ov.Kind() != reflect.Ptr && ov.Kind() != reflect.Func) || isNil(&ov)) {
 		return reflect.Value{}, &InvalidUnmarshalError{Value: ov, Argument: arg}
 	}
 
@@ -300,7 +300,7 @@ func validateContainerValue(t reflect.Type, ov reflect.Value) error {
 		if reflectIsByteSlice(t.Elem()) {
 			return nil
 		}
-		if reflectIsUnmarshaler(t.Elem()) {
+		if reflectIsConsumer(t.Elem()) {
 			return nil
 		}
 		if reflectIsInterface(t.Elem()) {
@@ -313,7 +313,7 @@ func validateContainerValue(t reflect.Type, ov reflect.Value) error {
 	if reflectIsByteSlice(t) {
 		return nil
 	}
-	if reflectIsUnmarshaler(t) {
+	if reflectIsConsumer(t) {
 		return nil
 	}
 	if reflectIsInterface(t) {

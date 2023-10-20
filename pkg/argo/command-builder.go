@@ -175,7 +175,7 @@ func (b commandBuilder) build() (Command, error) {
 
 	com.arguments = make([]Argument, 0, len(b.arguments))
 	for _, builder := range b.arguments {
-		if arg, err := builder.build(); err != nil {
+		if arg, err := builder.Build(); err != nil {
 			errs.AppendError(err)
 		} else {
 			com.arguments = append(com.arguments, arg)

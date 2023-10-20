@@ -215,7 +215,7 @@ func (b *flagBuilder) build() (Flag, error) {
 
 	if b.arg != nil {
 		var err error
-		arg, err = b.arg.build()
+		arg, err = b.arg.Build()
 		if err != nil {
 			errs.AppendError(err)
 		}

@@ -176,7 +176,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 
 	leaf.args = make([]Argument, 0, len(l.arguments))
 	for _, builder := range l.arguments {
-		if arg, err := builder.build(); err != nil {
+		if arg, err := builder.Build(); err != nil {
 			errs.AppendError(err)
 		} else {
 			leaf.args = append(leaf.args, arg)

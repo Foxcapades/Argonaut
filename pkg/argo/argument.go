@@ -171,6 +171,8 @@ func (a *argument) setToDefault() error {
 		return nil
 	}
 
+	a.isUsed = true
+
 	defType := a.rootDef.Type()
 
 	if defType.Kind() == reflect.Func {
@@ -193,10 +195,10 @@ func (a *argument) setToDefault() error {
 
 			// If err != nil
 			if !ret[1].IsNil() {
-				panic(ret[1].Interface())
+				return ret[1].Interface().(error)
 			}
 
-			if reflectIsUnmarshaler(a.rootBind.Type()) {
+			if reflectIsConsumer(a.rootBind.Type()) {
 				a.rootBind.Elem().Set(ret[0])
 			} else {
 				a.rootBind.Set(ret[0])

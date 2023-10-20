@@ -98,7 +98,9 @@ type ArgumentBuilder interface {
 	// internal magic unmarshaler will be used to parse raw arguments.
 	WithUnmarshaler(fn ValueUnmarshaler) ArgumentBuilder
 
-	build() (Argument, error)
+	// Build attempts to build an Argument instance out of the configuration given
+	// to this ArgumentBuilder instance.
+	Build() (Argument, error)
 }
 
 func NewArgumentBuilder() ArgumentBuilder {
@@ -165,15 +167,19 @@ func (a *argumentBuilder) WithUnmarshaler(fn ValueUnmarshaler) ArgumentBuilder {
 	return a
 }
 
-func (a *argumentBuilder) build() (Argument, error) {
+func (a *argumentBuilder) Build() (Argument, error) {
 	errs := newMultiError()
+	valDefault := true
 
 	if err := a.validateBinding(); err != nil {
 		errs.AppendError(err)
+		valDefault = false
 	}
 
-	if err := a.validateDefault(); err != nil {
-		errs.AppendError(err)
+	if valDefault {
+		if err := a.validateDefault(); err != nil {
+			errs.AppendError(err)
+		}
 	}
 
 	if len(errs.Errors()) > 0 {
@@ -246,25 +252,24 @@ func (a *argumentBuilder) validateDefault() error {
 
 func (a *argumentBuilder) validateDefaultProvider() error {
 	root := &a.rootDef
-	rType := root.Type()
+	defType := root.Type()
 
-	oLen := rType.NumOut()
+	oLen := defType.NumOut()
 	if oLen == 0 || oLen > 2 {
 		return newInvalidArgError(ArgErrInvalidDefaultFn, a, errDefFnOutNum)
 	}
 
-	if !rType.Out(0).AssignableTo(a.rootBind.Type()) {
+	if !defType.Out(0).AssignableTo(a.rootBind.Type()) {
 		// Second chance for Unmarshalable short circuit logic
-		// GetRootValue
-		if reflectIsUnmarshaler(a.rootBind.Type()) && rType.Out(0).AssignableTo(a.rootBind.Type().Elem()) {
+		if reflectIsConsumer(a.rootBind.Type()) {
 			return nil
 		}
 
 		return newInvalidArgError(ArgErrInvalidDefaultVal, a,
-			fmt.Sprintf(errBadType, rType.Out(0), reflect.TypeOf(a.bind)))
+			fmt.Sprintf(errBadType, defType.Out(0), reflect.TypeOf(a.bind)))
 	}
 
-	if oLen == 2 && !rType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
+	if oLen == 2 && !defType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
 		return newInvalidArgError(ArgErrInvalidDefaultFn, a, err2ndOut)
 	}
 
