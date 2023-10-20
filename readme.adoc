@@ -16,49 +16,14 @@ image:https://img.shields.io/github/license/Foxcapades/Argonaut[GitHub]
 
 A builder style CLI creation kit.
 
-WARNING: This project is currently pre-v1 and the API may
-         not yet be stable.  Additionally, currently
-         existing features may not behave as expected.
-
-//[source,go,linenums,tabsize=2]
-//----
-//package main
-//
-//import "github.com/Foxcapades/Argonaut/v1"
-//
-//type Config struct {
-//	ForceEnabled bool
-//	WorkDir string
-//}
-//
-//func main() {
-//	var conf Config
-//
-//	argo.NewCommand().
-//		Description("Do the things to the files").
-//		Flag(argo.NewFlag().
-//			Short('f').
-//			Long("force").
-//			Bind(&conf.ForceEnabled, false)).
-//		Argument(argo.NewArg().
-//			Require().
-//			Description("path to the files").
-//			Bind(&conf.WorkDir)).
-//		MustParse()
-//
-//}
-//----
-
 
 == Supported Types
 
-By default Argonaut can parse the following built-in Go
-types.
+By default Argonaut can parse the following built-in Go types.
 
 === Basic Types
 
-In following tables, all entries in this table will be
-referenced by `<basic>`.
+In following tables, all entries in this table will be referenced by `<basic>`.
 
 .Basic Types
 [cols="m,m,m,m,m", width="100%"]
@@ -66,17 +31,17 @@ referenced by `<basic>`.
 | int    | int8   | int16  | int32  | int64
 | uint   | uint8  | uint16 | uint32 | uint64
 | string | bool   | (byte) | (rune) |
+| time.Duration | | | |
 |===
 
 Currently `complex64` and `complex128` are not supported.
 
-Additionally, pointers of arbitrary depth to these types are
-can also be parsed.
+Additionally, pointers of arbitrary depth to these types are can also be parsed.
 
 === Container Types
 
-Like with the basic types, references to `<basic>` here can
-be pointers of arbitrary depth to those basic types.
+Like with the basic types, references to `<basic>` here can be pointers of
+arbitrary depth to those basic types.
 
 Additionally, `[]byte` can also be referenced by pointers of
 arbitrary depth.
@@ -98,24 +63,22 @@ of the basic types.
 
 === Custom types
 
-Argonaut provides an `Unarshaler` interface which can be
-used to allow parsing custom types or controlling the
-specifics of how a type get unmarshaled.
+Argonaut provides an API which can be used to allow parsing custom types or
+controlling the specifics of how a type get unmarshalled.
 
 == Formats
 
 === Number
 
-By default, numeric argument types can be handled in base
-8, 10, and 16 using the formats or provided types below.
+By default, numeric argument types can be handled in base 8, 10, and 16 using
+the formats or provided types below.
 
 ==== Hexadecimal
 
-Argonaut will automatically parse values with the following
-formats as base16.
+Argonaut will automatically parse values with the following formats as base16.
 
-These prefixes can be overridden or disabled entirely using
-the `argo.UnmarshalProps` type.
+These prefixes can be overridden or disabled entirely using the
+`argo.UnmarshalProps` type.
 
 ----
 0xFF
@@ -124,8 +87,8 @@ xFF
 XFF
 ----
 
-Additionally, the `argo` package contains predefined types
-to force base16 parsing without requiring a prefix.
+Additionally, the `argo` package contains predefined types to force base16
+parsing without requiring a prefix.
 
 .Provided Hex Types
 [cols="m,m,m", width="100%"]
@@ -136,21 +99,13 @@ to force base16 parsing without requiring a prefix.
 | argo.UHex32 -> uint32 | argo.UHex64 -> uint64 |
 |===
 
-[WARNING]
---
-Due to the way Go parses numbers, negative values must be
-preceded by `-`.  Using `FF` with `int8` to get `-128` is
-not currently possible, however this is a planned future
-feature since this is a fairly normal expectation.
---
 
 ==== Octal
 
-Argonaut will automatically parse values with the following
-formats as base8.
+Argonaut will automatically parse values with the following formats as base8.
 
-These prefixes can be overridden or disabled entirely using
-the `argo.UnmarshalProps` type.
+These prefixes can be overridden or disabled entirely using the
+`argo.UnmarshalProps` type.
 
 ----
 0o77
@@ -177,10 +132,10 @@ to force base8 parsing without requiring a prefix.
 Arguments of type `bool` can be represented by the following
 formats.
 
-[cols="h,m,m,m,m,m", width="100%"]
+[cols="h,m,m,m,m,m,m", width="100%"]
 |===
-| true  | true  | t | yes | y | 1
-| false | false | f | no  | n | 0
+| true  | true  | t | yes | y | 1 | on
+| false | false | f | no  | n | 0 | off
 |===
 
 A boolean argument attached to a flag can also be set to
@@ -191,3 +146,4 @@ input.
 
 . https://github.com/Foxcapades/Argonaut/tree/master/examples/complex-type[Complex Types]
 . https://github.com/Foxcapades/Argonaut/tree/master/examples/number-extras[Number Format Extras]
+. https://github.com/Foxcapades/Argonaut/tree/master/examples/simple-tree[Simple Tree]
