@@ -126,9 +126,9 @@ FOR:
 			if arg.IsRequired() {
 				if !arg.WasHit() {
 					if arg.HasName() {
-						errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i, arg.Name()))
+						errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i+1, arg.Name()))
 					} else {
-						errs.AppendError(fmt.Errorf("argument %d is required", i))
+						errs.AppendError(fmt.Errorf("argument %d is required", i+1))
 					}
 				}
 			} else if !arg.WasHit() && arg.HasDefault() {

@@ -70,7 +70,7 @@ Arguments
       Argument Description 2
 ----
 
-* [ ] "Argument 0 is required" should be one based.
+* [x] "Argument 0 is required" should be one based.
 
 * [ ] If another flag group declares the name "Flags" what should we do about
       the default flag group?
