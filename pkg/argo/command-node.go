@@ -54,4 +54,8 @@ type CommandNode interface {
 	// If no such flag exists on this CommandNode or any of its parents, this
 	// method will return nil.
 	FindLongFlag(name string) Flag
+
+	Warnings() []string
+
+	AppendWarning(warning string)
 }

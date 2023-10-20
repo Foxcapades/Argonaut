@@ -40,6 +40,7 @@ type commandBranch struct {
 	flagGroups    []FlagGroup
 	commandGroups []CommandGroup
 	callback      CommandBranchCallback
+	warnings      *WarningContext
 }
 
 // Find Child //////////////////////////////////////////////////////////////////
@@ -146,8 +147,6 @@ func (c commandBranch) FindShortFlag(b byte) Flag {
 	return c.parent.FindShortFlag(b)
 }
 
-// Find Long Flag //////////////////////////////////////////////////////////////
-
 func (c commandBranch) FindLongFlag(name string) Flag {
 	for _, group := range c.FlagGroups() {
 		if flag := group.FindLongFlag(name); flag != nil {
@@ -156,6 +155,14 @@ func (c commandBranch) FindLongFlag(name string) Flag {
 	}
 
 	return c.parent.FindLongFlag(name)
+}
+
+func (c commandBranch) Warnings() []string {
+	return c.warnings.GetWarnings()
+}
+
+func (c commandBranch) AppendWarning(warning string) {
+	c.warnings.appendWarning(warning)
 }
 
 func (c commandBranch) onIncomplete() {

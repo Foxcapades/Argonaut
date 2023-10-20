@@ -94,9 +94,14 @@ type Command interface {
 	// HasUnmappedLabel indicates whether an unmapped label has been set on this
 	// command instance.
 	HasUnmappedLabel() bool
+
+	Warnings() []string
+
+	AppendWarning(warning string)
 }
 
 type command struct {
+	warnings      *WarningContext
 	description   string
 	unmappedLabel string
 	flagGroups    []FlagGroup
@@ -196,4 +201,12 @@ func (c command) HasPassthroughInputs() bool {
 
 func (c *command) appendPassthrough(val string) {
 	c.passthrough = append(c.passthrough, val)
+}
+
+func (c command) Warnings() []string {
+	return c.warnings.GetWarnings()
+}
+
+func (c command) AppendWarning(warning string) {
+	c.warnings.appendWarning(warning)
 }

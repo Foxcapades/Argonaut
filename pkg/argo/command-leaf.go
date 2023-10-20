@@ -22,6 +22,7 @@ type commandLeaf struct {
 	args        []Argument
 	unmapped    []string
 	passthrough []string
+	warnings    *WarningContext
 	callback    CommandLeafCallback
 }
 
@@ -147,4 +148,12 @@ func (c commandLeaf) FindLongFlag(name string) Flag {
 	}
 
 	return c.parent.FindLongFlag(name)
+}
+
+func (c commandLeaf) Warnings() []string {
+	return c.warnings.GetWarnings()
+}
+
+func (c commandLeaf) AppendWarning(warning string) {
+	c.warnings.appendWarning(warning)
 }

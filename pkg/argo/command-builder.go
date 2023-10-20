@@ -56,6 +56,8 @@ type CommandBuilder interface {
 	//       my-command [FILE...]
 	WithUnmappedLabel(label string) CommandBuilder
 
+	Build(ctx *WarningContext) (Command, error)
+
 	// Parse reads the given arguments and attempts to populate the built Command
 	// instance based on the values parsed from the given inputs.
 	Parse(args []string) (Command, error)
@@ -111,7 +113,8 @@ func (b *commandBuilder) WithArgument(arg ArgumentBuilder) CommandBuilder {
 }
 
 func (b commandBuilder) Parse(args []string) (Command, error) {
-	if cmd, err := b.build(); err != nil {
+	ctx := new(WarningContext)
+	if cmd, err := b.Build(ctx); err != nil {
 		return nil, err
 	} else {
 		if err = newCommandInterpreter(args, cmd).Run(); err != nil {
@@ -126,9 +129,11 @@ func (b commandBuilder) MustParse(args []string) Command {
 	return mustReturn(b.Parse(args))
 }
 
-func (b commandBuilder) build() (Command, error) {
+func (b commandBuilder) Build(ctx *WarningContext) (Command, error) {
 	errs := newMultiError()
 	com := new(command)
+
+	com.warnings = ctx
 
 	if !b.disableHelp {
 		group := b.flagGroups[0]
@@ -165,7 +170,7 @@ func (b commandBuilder) build() (Command, error) {
 	uniqueFlagNames(b.flagGroups, errs)
 	for _, builder := range b.flagGroups {
 		if builder.hasFlags() {
-			if group, err := builder.build(); err != nil {
+			if group, err := builder.Build(ctx); err != nil {
 				errs.AppendError(err)
 			} else {
 				com.flagGroups = append(com.flagGroups, group)
@@ -175,7 +180,7 @@ func (b commandBuilder) build() (Command, error) {
 
 	com.arguments = make([]Argument, 0, len(b.arguments))
 	for _, builder := range b.arguments {
-		if arg, err := builder.Build(); err != nil {
+		if arg, err := builder.Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {
 			com.arguments = append(com.arguments, arg)

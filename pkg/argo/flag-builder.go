@@ -100,7 +100,7 @@ type FlagBuilder interface {
 
 	// Build builds a new Flag instance constructed from the components set on
 	// this FlagBuilder.
-	build() (Flag, error)
+	Build(warnings *WarningContext) (Flag, error)
 }
 
 func NewFlagBuilder() FlagBuilder {
@@ -192,7 +192,7 @@ func (b flagBuilder) isHelpFlag() bool {
 	return b.isHelp
 }
 
-func (b *flagBuilder) build() (Flag, error) {
+func (b *flagBuilder) Build(ctx *WarningContext) (Flag, error) {
 	errs := newMultiError()
 
 	if b.short > 0 {
@@ -215,7 +215,7 @@ func (b *flagBuilder) build() (Flag, error) {
 
 	if b.arg != nil {
 		var err error
-		arg, err = b.arg.Build()
+		arg, err = b.arg.Build(ctx)
 		if err != nil {
 			errs.AppendError(err)
 		}
@@ -226,6 +226,7 @@ func (b *flagBuilder) build() (Flag, error) {
 	}
 
 	return &flag{
+		warnings: ctx,
 		short:    b.short,
 		required: b.req,
 		arg:      arg,

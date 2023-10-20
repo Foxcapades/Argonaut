@@ -78,7 +78,7 @@ type CommandBranchBuilder interface {
 
 	WithCallback(cb CommandBranchCallback) CommandBranchBuilder
 
-	build() (CommandBranch, error)
+	Build(warnings *WarningContext) (CommandBranch, error)
 }
 
 func NewCommandBranchBuilder(name string) CommandBranchBuilder {
@@ -157,7 +157,7 @@ func (c *commandBranchBuilder) WithFlagGroup(flagGroup FlagGroupBuilder) Command
 	return c
 }
 
-func (c *commandBranchBuilder) build() (CommandBranch, error) {
+func (c *commandBranchBuilder) Build(ctx *WarningContext) (CommandBranch, error) {
 	errs := newMultiError()
 
 	// Ensure name is not blank
@@ -257,7 +257,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 	uniqueFlagNames(c.flagGroups, errs)
 	for _, builder := range c.flagGroups {
 		if builder.hasFlags() {
-			if group, err := builder.build(); err != nil {
+			if group, err := builder.Build(ctx); err != nil {
 				errs.AppendError(err)
 			} else {
 				flagGroups = append(flagGroups, group)
@@ -272,7 +272,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 		if build.hasSubcommands() {
 			build.parent(out)
 
-			if group, err := build.build(); err != nil {
+			if group, err := build.Build(ctx); err != nil {
 				errs.AppendError(err)
 			} else {
 				commandGroups = append(commandGroups, group)
@@ -284,6 +284,7 @@ func (c *commandBranchBuilder) build() (CommandBranch, error) {
 		return nil, errs
 	}
 
+	out.warnings = ctx
 	out.flagGroups = flagGroups
 	out.commandGroups = commandGroups
 	out.parent = c.parentNode

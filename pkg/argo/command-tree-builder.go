@@ -71,6 +71,8 @@ type CommandTreeBuilder interface {
 	// are primarily used for rendering help text.
 	WithFlagGroup(flagGroup FlagGroupBuilder) CommandTreeBuilder
 
+	Build(warnings *WarningContext) (CommandTree, error)
+
 	// Parse builds the command tree and attempts to parse the given CLI arguments
 	// into that command tree's components.
 	Parse(args []string) (CommandTree, error)
@@ -137,7 +139,8 @@ func (t *commandTreeBuilder) WithFlagGroup(flagGroup FlagGroupBuilder) CommandTr
 }
 
 func (t commandTreeBuilder) Parse(args []string) (CommandTree, error) {
-	ct, err := t.build()
+	ctx := new(WarningContext)
+	ct, err := t.Build(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +154,8 @@ func (t commandTreeBuilder) Parse(args []string) (CommandTree, error) {
 }
 
 func (t commandTreeBuilder) MustParse(args []string) CommandTree {
-	ct := mustReturn(t.build())
+	ctx := new(WarningContext)
+	ct := mustReturn(t.Build(ctx))
 	must(newCommandTreeInterpreter(args, ct).Run())
 	return ct
 }
@@ -166,7 +170,7 @@ func (t *commandTreeBuilder) hasSubCommands() bool {
 	return false
 }
 
-func (t *commandTreeBuilder) build() (CommandTree, error) {
+func (t *commandTreeBuilder) Build(warnings *WarningContext) (CommandTree, error) {
 	errs := newMultiError()
 
 	tree := new(commandTree)
@@ -209,7 +213,7 @@ func (t *commandTreeBuilder) build() (CommandTree, error) {
 	uniqueFlagNames(t.flagGroups, errs)
 	for _, builder := range t.flagGroups {
 		if builder.hasFlags() {
-			if group, err := builder.build(); err != nil {
+			if group, err := builder.Build(warnings); err != nil {
 				errs.AppendError(err)
 			} else {
 				flagGroups = append(flagGroups, group)
@@ -222,7 +226,7 @@ func (t *commandTreeBuilder) build() (CommandTree, error) {
 	for _, builder := range t.commandGroups {
 		builder.parent(tree)
 		if builder.hasSubcommands() {
-			if group, err := builder.build(); err != nil {
+			if group, err := builder.Build(warnings); err != nil {
 				errs.AppendError(err)
 			} else {
 				commandGroups = append(commandGroups, group)
@@ -234,6 +238,7 @@ func (t *commandTreeBuilder) build() (CommandTree, error) {
 		return nil, errs
 	}
 
+	tree.warnings = warnings
 	tree.description = t.desc
 	tree.flagGroups = flagGroups
 	tree.commandGroups = commandGroups

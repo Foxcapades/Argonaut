@@ -49,6 +49,7 @@ type commandTree struct {
 	commandGroups []CommandGroup
 	selected      CommandLeaf
 	callback      CommandTreeCallback
+	warnings      *WarningContext
 }
 
 func (_ commandTree) Name() string {
@@ -134,4 +135,12 @@ func (t commandTree) FindLongFlag(name string) Flag {
 func (t commandTree) onIncomplete() {
 	must(comTreeRenderer{}.RenderHelp(&t, os.Stdout))
 	os.Exit(1)
+}
+
+func (t *commandTree) Warnings() []string {
+	return t.warnings.GetWarnings()
+}
+
+func (t *commandTree) AppendWarning(warning string) {
+	t.warnings.appendWarning(warning)
 }

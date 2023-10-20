@@ -1,5 +1,7 @@
 package argo
 
+import "fmt"
+
 type commandInterpreter struct {
 	parser   parser
 	command  Command
@@ -149,6 +151,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
+			c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
 			c.command.appendUnmapped(strDash + remainder[0:1])
 			remainder = remainder[1:]
 			continue
@@ -311,6 +314,7 @@ func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
 		f := c.command.FindShortFlag(b)
 
 		if f == nil {
+			c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
 			c.command.appendUnmapped(strDash + block[0:1])
 			continue
 		}
@@ -339,6 +343,7 @@ func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
 		// Well let's see what we have to say about that.  It may be, if this is the
 		// last character in the block, that it has to have one anyway.
 		if !h {
+			c.command.AppendWarning(fmt.Sprintf("flag -%c recieved an argument it didn't expect", b))
 			return false, f.hitWithArg(e.Data[1])
 		}
 
@@ -358,6 +363,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 	f := c.command.FindLongFlag(e.Data[0])
 
 	if f == nil {
+		c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
 		c.command.appendUnmapped(e.String())
 		return false, nil
 	}
@@ -434,6 +440,7 @@ func (c *commandInterpreter) interpretLongPair(e *element) (bool, error) {
 	flag := c.command.FindLongFlag(e.Data[0])
 
 	if flag == nil {
+		c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
 		c.command.appendUnmapped(e.String())
 	} else {
 		c.flagHits = append(c.flagHits, flag)
@@ -441,8 +448,7 @@ func (c *commandInterpreter) interpretLongPair(e *element) (bool, error) {
 		if flag.HasArgument() {
 			return false, flag.hitWithArg(e.Data[1])
 		}
-		// TODO: this should be a warning, the flag didn't expect an argument (same applies to shortpair)
-
+		c.command.AppendWarning(fmt.Sprintf("flag --%s recieved an argument it didn't expect", e.Data[0]))
 		return false, flag.hit()
 	}
 

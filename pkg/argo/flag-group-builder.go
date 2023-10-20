@@ -19,7 +19,7 @@ type FlagGroupBuilder interface {
 	hasFlags() bool
 	size() int
 	getFlags() []FlagBuilder
-	build() (FlagGroup, error)
+	Build(warnings *WarningContext) (FlagGroup, error)
 }
 
 func NewFlagGroupBuilder(name string) FlagGroupBuilder {
@@ -60,7 +60,7 @@ func (g flagGroupBuilder) size() int {
 	return len(g.flags)
 }
 
-func (g *flagGroupBuilder) build() (FlagGroup, error) {
+func (g *flagGroupBuilder) Build(ctx *WarningContext) (FlagGroup, error) {
 	errs := newMultiError()
 	flags := make([]Flag, 0, len(g.flags))
 
@@ -70,7 +70,7 @@ func (g *flagGroupBuilder) build() (FlagGroup, error) {
 	}
 
 	for i := range g.flags {
-		if flag, err := g.flags[i].build(); err != nil {
+		if flag, err := g.flags[i].Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {
 			flags = append(flags, flag)
@@ -82,8 +82,9 @@ func (g *flagGroupBuilder) build() (FlagGroup, error) {
 	}
 
 	return &flagGroup{
-		name:  g.name,
-		desc:  g.desc,
-		flags: flags,
+		warnings: ctx,
+		name:     g.name,
+		desc:     g.desc,
+		flags:    flags,
 	}, nil
 }

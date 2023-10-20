@@ -73,6 +73,8 @@ type Argument interface {
 	// HasBinding indicates whether this Argument has a value binding.
 	HasBinding() bool
 
+	AppendWarning(warning string)
+
 	// BindingType returns the reflect.Type value for the configured binding.
 	//
 	// If this argument has no binding, this method will return nil.
@@ -82,6 +84,8 @@ type Argument interface {
 }
 
 type argument struct {
+	warnings *WarningContext
+
 	name string
 	desc string
 	raw  string
@@ -158,6 +162,10 @@ func (a argument) RawValue() string {
 
 func (a argument) IsRequired() bool {
 	return a.required
+}
+
+func (a argument) AppendWarning(warning string) {
+	a.warnings.appendWarning(warning)
 }
 
 func (a *argument) setToDefault() error {

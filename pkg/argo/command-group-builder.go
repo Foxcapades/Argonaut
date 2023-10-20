@@ -22,7 +22,7 @@ type CommandGroupBuilder interface {
 
 	hasSubcommands() bool
 
-	build() (CommandGroup, error)
+	Build(warnings *WarningContext) (CommandGroup, error)
 }
 
 func NewCommandGroupBuilder(name string) CommandGroupBuilder {
@@ -68,7 +68,7 @@ func (g commandGroupBuilder) hasSubcommands() bool {
 	return len(g.leaves) > 0 || len(g.branches) > 0
 }
 
-func (g *commandGroupBuilder) build() (CommandGroup, error) {
+func (g *commandGroupBuilder) Build(ctx *WarningContext) (CommandGroup, error) {
 	errs := newMultiError()
 
 	// Ensure that the name is not blank
@@ -88,7 +88,7 @@ func (g *commandGroupBuilder) build() (CommandGroup, error) {
 	branches := make([]CommandBranch, 0, len(g.branches))
 	for _, builder := range g.branches {
 		builder.parent(g.parentNode)
-		if branch, err := builder.build(); err != nil {
+		if branch, err := builder.Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {
 			branches = append(branches, branch)
@@ -98,7 +98,7 @@ func (g *commandGroupBuilder) build() (CommandGroup, error) {
 	leaves := make([]CommandLeaf, 0, len(g.leaves))
 	for _, builder := range g.leaves {
 		builder.parent(g.parentNode)
-		if leaf, err := builder.build(); err != nil {
+		if leaf, err := builder.Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {
 			leaves = append(leaves, leaf)

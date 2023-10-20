@@ -215,6 +215,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
+			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
 			*unmapped = append(*unmapped, strDash+remainder[0:1])
 			continue
 		}
@@ -357,6 +358,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 	block := element.Data[0]
 
 	if len(block) == 0 {
+		c.tree.AppendWarning("blank short flag name")
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -382,6 +384,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 		f := c.current.FindShortFlag(b)
 
 		if f == nil {
+			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
 			*unmapped = append(*unmapped, strDash+block[0:1])
 			block = block[1:]
 			continue
@@ -425,6 +428,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 		// Well let's see what we have to say about that.  It may be, if this is the
 		// last character in the block, that it has to have one anyway.
 		if !h {
+			c.tree.AppendWarning(fmt.Sprintf("flag -%c recieved an argument it didn't expect", b))
 			return f.hitWithArg(element.Data[1])
 		}
 
@@ -444,6 +448,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 	f := c.current.FindLongFlag(element.Data[0])
 
 	if f == nil {
+		c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -524,6 +529,7 @@ func (c *commandTreeInterpreter) interpretLongPair(element *element, unmapped *[
 	flag := c.current.FindLongFlag(element.Data[0])
 
 	if flag == nil {
+		c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
 		*unmapped = append(*unmapped, element.String())
 	} else {
 		c.flagHits = append(c.flagHits, flag)
@@ -531,7 +537,7 @@ func (c *commandTreeInterpreter) interpretLongPair(element *element, unmapped *[
 		if flag.HasArgument() {
 			return flag.hitWithArg(element.Data[1])
 		} else {
-			// TODO: this should be a warning for a flag getting an argument it didn't expect, this also applies to shortpair
+			c.tree.AppendWarning(fmt.Sprintf("flag --%s recieved an argument it didn't expect", element.Data[0]))
 			return flag.hit()
 		}
 	}

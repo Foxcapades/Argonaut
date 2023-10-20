@@ -37,9 +37,10 @@ type FlagGroup interface {
 }
 
 type flagGroup struct {
-	name  string
-	desc  string
-	flags []Flag
+	warnings *WarningContext
+	name     string
+	desc     string
+	flags    []Flag
 }
 
 func (f flagGroup) Name() string {

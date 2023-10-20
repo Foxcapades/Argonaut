@@ -10,7 +10,7 @@ import (
 )
 
 func TestArgument_Name(t *testing.T) {
-	arg, err := cli.Argument().WithName("name").Build()
+	arg, err := cli.Argument().WithName("name").Build(new(argo.WarningContext))
 
 	if err != nil {
 		t.Error(err)
@@ -26,7 +26,7 @@ func TestArgument_Name(t *testing.T) {
 }
 
 func TestArgument_Description(t *testing.T) {
-	arg, err := cli.Argument().WithDescription("description").Build()
+	arg, err := cli.Argument().WithDescription("description").Build(new(argo.WarningContext))
 
 	if err != nil {
 		t.Error(err)
@@ -43,7 +43,7 @@ func TestArgument_Description(t *testing.T) {
 
 func TestArgument_Default(t *testing.T) {
 	def := map[string]int8{"hello": -128}
-	_, err := cli.Argument().WithDefault(def).Build()
+	_, err := cli.Argument().WithDefault(def).Build(new(argo.WarningContext))
 
 	if err == nil {
 		t.Error(err)

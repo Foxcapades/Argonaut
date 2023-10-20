@@ -3,6 +3,7 @@ package argo_test
 import (
 	"testing"
 
+	cli "github.com/Foxcapades/Argonaut"
 	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
@@ -194,5 +195,57 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 	if err == nil {
 		t.Fail()
 	}
+}
 
+// Unrecognized short solo flag becomes a warning.
+func TestCommandTreeBuilder_UnknownShortSoloWarning(t *testing.T) {
+	com := cli.Tree().
+		WithLeaf(cli.Leaf("leaf")).
+		MustParse([]string{"command", "leaf", "-a"})
+
+	if len(com.Warnings()) != 1 {
+		t.Error("expected command tree to have exactly 1 error but it didn't")
+	} else if com.Warnings()[0] != "unrecognized short flag -a" {
+		t.Error("expected command tree warning to match expected warning but it didn't")
+	}
+}
+
+// Unrecognized short pair flag becomes a warning.
+func TestCommandTreeBuilder_UnknownShortPairWarning(t *testing.T) {
+	com := cli.Tree().
+		WithLeaf(cli.Leaf("leaf")).
+		WithFlag(cli.ShortFlag('b').WithArgument(cli.Argument())).
+		MustParse([]string{"command", "leaf", "-ab=1"})
+
+	if len(com.Warnings()) != 1 {
+		t.Error("expected command tree to have exactly 1 error but it didn't")
+	} else if com.Warnings()[0] != "unrecognized short flag -a" {
+		t.Error("expected command tree warning to match expected warning but it didn't")
+	}
+}
+
+// Unrecognized long solo flag becomes a warning.
+func TestCommandTreeBuilder_UnknownLongSoloWarning(t *testing.T) {
+	com := cli.Tree().
+		WithLeaf(cli.Leaf("leaf")).
+		MustParse([]string{"command", "leaf", "--apple"})
+
+	if len(com.Warnings()) != 1 {
+		t.Error("expected command tree to have exactly 1 error but it didn't")
+	} else if com.Warnings()[0] != "unrecognized long flag --apple" {
+		t.Error("expected command tree warning to match expected warning but it didn't")
+	}
+}
+
+// Unrecognized long pair flag becomes a warning.
+func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
+	com := cli.Tree().
+		WithLeaf(cli.Leaf("leaf")).
+		MustParse([]string{"command", "leaf", "--apple=1"})
+
+	if len(com.Warnings()) != 1 {
+		t.Error("expected command tree to have exactly 1 error but it didn't")
+	} else if com.Warnings()[0] != "unrecognized long flag --apple" {
+		t.Error("expected command tree warning to match expected warning but it didn't")
+	}
 }

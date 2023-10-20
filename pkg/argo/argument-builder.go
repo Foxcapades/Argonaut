@@ -100,7 +100,7 @@ type ArgumentBuilder interface {
 
 	// Build attempts to build an Argument instance out of the configuration given
 	// to this ArgumentBuilder instance.
-	Build() (Argument, error)
+	Build(ctx *WarningContext) (Argument, error)
 }
 
 func NewArgumentBuilder() ArgumentBuilder {
@@ -167,7 +167,7 @@ func (a *argumentBuilder) WithUnmarshaler(fn ValueUnmarshaler) ArgumentBuilder {
 	return a
 }
 
-func (a *argumentBuilder) Build() (Argument, error) {
+func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 	errs := newMultiError()
 	valDefault := true
 
@@ -187,6 +187,7 @@ func (a *argumentBuilder) Build() (Argument, error) {
 	}
 
 	return &argument{
+		warnings:  warnings,
 		name:      a.name,
 		desc:      a.desc,
 		required:  a.required,

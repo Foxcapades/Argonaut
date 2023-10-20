@@ -61,7 +61,7 @@ type CommandLeafBuilder interface {
 	getAliases() []string
 	parent(node CommandNode)
 
-	build() (CommandLeaf, error)
+	Build(warnings *WarningContext) (CommandLeaf, error)
 }
 
 func NewCommandLeafBuilder(name string) CommandLeafBuilder {
@@ -153,7 +153,7 @@ func (l commandLeafBuilder) getAliases() []string {
 	return l.aliases
 }
 
-func (l *commandLeafBuilder) build() (CommandLeaf, error) {
+func (l *commandLeafBuilder) Build(ctx *WarningContext) (CommandLeaf, error) {
 	errs := newMultiError()
 
 	// Ensure the group name is not blank
@@ -173,10 +173,11 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 	}
 
 	leaf := new(commandLeaf)
+	leaf.warnings = ctx
 
 	leaf.args = make([]Argument, 0, len(l.arguments))
 	for _, builder := range l.arguments {
-		if arg, err := builder.Build(); err != nil {
+		if arg, err := builder.Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {
 			leaf.args = append(leaf.args, arg)
@@ -187,7 +188,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 	leaf.flags = make([]FlagGroup, 0, len(l.flagGroups))
 	for _, builder := range l.flagGroups {
 		if builder.hasFlags() {
-			if fg, err := builder.build(); err != nil {
+			if fg, err := builder.Build(ctx); err != nil {
 				errs.AppendError(err)
 			} else {
 				leaf.flags = append(leaf.flags, fg)
@@ -214,7 +215,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 			if len(leaf.flags) == 0 || leaf.flags[0].Name() != defaultGroupName || leaf.flags[0].size() > 5 {
 				group, err := NewFlagGroupBuilder("Help Flags").
 					WithFlag(makeLeafHelp(useShortH, useLongH, leaf)).
-					build()
+					Build(ctx)
 
 				if err != nil {
 					errs.AppendError(err)
@@ -222,7 +223,7 @@ func (l *commandLeafBuilder) build() (CommandLeaf, error) {
 					leaf.flags = append(leaf.flags, group)
 				}
 			} else {
-				flag, err := makeLeafHelp(useShortH, useLongH, leaf).build()
+				flag, err := makeLeafHelp(useShortH, useLongH, leaf).Build(ctx)
 
 				if err != nil {
 					errs.AppendError(err)

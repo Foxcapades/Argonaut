@@ -48,6 +48,8 @@ type Flag interface {
 	// call.
 	HitCount() int
 
+	AppendWarning(warning string)
+
 	isHelpFlag() bool
 	hit() error
 	hitWithArg(rawArg string) error
@@ -73,6 +75,7 @@ type flag struct {
 	desc string
 
 	callback FlagCallback
+	warnings *WarningContext
 }
 
 func (f flag) ShortForm() byte {
@@ -143,6 +146,10 @@ func (f flag) WasHit() bool {
 
 func (f flag) HitCount() int {
 	return int(f.hits)
+}
+
+func (f flag) AppendWarning(warning string) {
+	f.warnings.appendWarning(warning)
 }
 
 func (f flag) executeCallback() {
