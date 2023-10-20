@@ -239,33 +239,33 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
-					} else {
-						return false, f.hitWithArg(nextElement.String())
 					}
+
+					return false, f.hitWithArg(nextElement.String())
 
 				case elementTypeShortBlockPair:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
-					} else {
-						return false, f.hitWithArg(nextElement.String())
 					}
+
+					return false, f.hitWithArg(nextElement.String())
 
 				case elementTypeLongFlagPair:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
-					} else {
-						return false, f.hitWithArg(nextElement.String())
 					}
+
+					return false, f.hitWithArg(nextElement.String())
 
 				case elementTypeLongFlagSolo:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
-					} else {
-						return false, f.hitWithArg(nextElement.String())
 					}
+
+					return false, f.hitWithArg(nextElement.String())
 
 				default:
 					panic("illegal state")
@@ -299,10 +299,10 @@ func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
 	if len(block) == 1 {
 		if f := c.command.FindShortFlag(block[0]); f != nil {
 			return false, f.hitWithArg(e.Data[1])
-		} else {
-			c.command.appendUnmapped(e.String())
-			return false, nil
 		}
+
+		c.command.appendUnmapped(e.String())
+		return false, nil
 	}
 
 	for i := 0; i < len(e.Data[0]); i++ {
@@ -322,9 +322,9 @@ func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
 		if f.RequiresArgument() {
 			if h {
 				return false, f.hitWithArg(block[1:] + "=" + e.Data[1])
-			} else {
-				return false, f.hitWithArg(e.Data[1])
 			}
+
+			return false, f.hitWithArg(e.Data[1])
 		}
 
 		if f.HasArgument() {
@@ -400,33 +400,33 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
-			} else {
-				return false, f.hitWithArg(nextElement.String())
 			}
+
+			return false, f.hitWithArg(nextElement.String())
 
 		case elementTypeLongFlagPair:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
-			} else {
-				return false, f.hitWithArg(nextElement.String())
 			}
+
+			return false, f.hitWithArg(nextElement.String())
 
 		case elementTypeShortBlockSolo:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
-			} else {
-				return false, f.hitWithArg(nextElement.String())
 			}
+
+			return false, f.hitWithArg(nextElement.String())
 
 		case elementTypeShortBlockPair:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
-			} else {
-				return false, f.hitWithArg(nextElement.String())
 			}
+
+			return false, f.hitWithArg(nextElement.String())
 
 		default:
 			panic("illegal state")

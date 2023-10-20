@@ -7,6 +7,7 @@ import "strconv"
 // from string in base 8.
 type Octal int
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Octal type.
 func (o *Octal) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 8, strconv.IntSize)
 	*o = Octal(tmp)
@@ -18,6 +19,7 @@ func (o *Octal) Unmarshal(value string) (err error) {
 // string in base 8.
 type Octal8 int8
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Octal8 type.
 func (o *Octal8) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 8, 8)
 	*o = Octal8(tmp)
@@ -29,6 +31,7 @@ func (o *Octal8) Unmarshal(value string) (err error) {
 // parsed from string in base 8.
 type Octal16 int16
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Octal16 type.
 func (o *Octal16) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 8, 16)
 	*o = Octal16(tmp)
@@ -40,6 +43,7 @@ func (o *Octal16) Unmarshal(value string) (err error) {
 // from string in base 8.
 type Octal32 int32
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Octal32 type.
 func (o *Octal32) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 8, 32)
 	*o = Octal32(tmp)
@@ -51,6 +55,7 @@ func (o *Octal32) Unmarshal(value string) (err error) {
 // from string in base 8.
 type Octal64 int64
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Octal64 type.
 func (o *Octal64) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 8, 64)
 	*o = Octal64(tmp)

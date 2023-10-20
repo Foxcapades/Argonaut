@@ -7,6 +7,7 @@ import "strconv"
 // parsed from string in base 16.
 type Hex int
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Hex type.
 func (h *Hex) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 16, strconv.IntSize)
 	*h = Hex(tmp)
@@ -18,6 +19,7 @@ func (h *Hex) Unmarshal(value string) (err error) {
 // from string in base 16.
 type Hex8 int8
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Hex8 type.
 func (h *Hex8) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 16, 8)
 	*h = Hex8(tmp)
@@ -29,6 +31,7 @@ func (h *Hex8) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type Hex16 int16
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Hex16 type.
 func (h *Hex16) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 16, 16)
 	*h = Hex16(tmp)
@@ -40,6 +43,7 @@ func (h *Hex16) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type Hex32 int32
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Hex32 type.
 func (h *Hex32) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 16, 32)
 	*h = Hex32(tmp)
@@ -51,6 +55,7 @@ func (h *Hex32) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type Hex64 int64
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the Hex64 type.
 func (h *Hex64) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseInt(value, 16, 64)
 	*h = Hex64(tmp)

@@ -2,6 +2,7 @@ package argo
 
 import "errors"
 
+// A CommandGroupBuilder is used to construct a CommandGroup instance.
 type CommandGroupBuilder interface {
 	parent(node CommandNode)
 
@@ -22,6 +23,8 @@ type CommandGroupBuilder interface {
 
 	hasSubcommands() bool
 
+	// Build attempts to build a new CommandGroup instance from the set
+	// configuration.
 	Build(warnings *WarningContext) (CommandGroup, error)
 }
 

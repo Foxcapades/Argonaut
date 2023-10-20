@@ -2,6 +2,8 @@ package argo
 
 import "errors"
 
+// A FlagBuilder is used to construct a Flag instance which represents the input
+// from the CLI call.
 type FlagBuilder interface {
 
 	// WithShortForm sets the short-form flag character that the flag may be
@@ -103,6 +105,7 @@ type FlagBuilder interface {
 	Build(warnings *WarningContext) (Flag, error)
 }
 
+// NewFlagBuilder returns a new FlagBuilder instance.
 func NewFlagBuilder() FlagBuilder {
 	return &flagBuilder{}
 }

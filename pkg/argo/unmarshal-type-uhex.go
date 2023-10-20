@@ -7,6 +7,7 @@ import "strconv"
 // parsed from string in base 16.
 type UHex uint
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the UHex type.
 func (h *UHex) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseUint(value, 16, strconv.IntSize)
 	*h = UHex(tmp)
@@ -18,6 +19,7 @@ func (h *UHex) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type UHex8 uint8
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the UHex8 type.
 func (h *UHex8) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseUint(value, 16, 8)
 	*h = UHex8(tmp)
@@ -29,6 +31,7 @@ func (h *UHex8) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type UHex16 uint16
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the UHex16 type.
 func (h *UHex16) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseUint(value, 16, 16)
 	*h = UHex16(tmp)
@@ -40,6 +43,7 @@ func (h *UHex16) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type UHex32 uint32
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the UHex32 type.
 func (h *UHex32) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseUint(value, 16, 32)
 	*h = UHex32(tmp)
@@ -51,6 +55,7 @@ func (h *UHex32) Unmarshal(value string) (err error) {
 // parsed from string in base 16.
 type UHex64 uint64
 
+// Unmarshal implements the Unmarshaler.Unmarshal method for the UHex64 type.
 func (h *UHex64) Unmarshal(value string) (err error) {
 	tmp, err := strconv.ParseUint(value, 16, 64)
 	*h = UHex64(tmp)

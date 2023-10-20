@@ -60,25 +60,25 @@ func (d *dequeImpl[T]) ensureCapacity(minimum int) {
 func (d *dequeImpl[T]) vei(i int) int {
 	if i < 0 || i > d.size-1 {
 		panic("index out of bounds")
-	} else {
-		return d.internalIndex(i)
 	}
+
+	return d.internalIndex(i)
 }
 
 func (d *dequeImpl[T]) positiveMod(i int) int {
 	if i >= len(d.container) {
 		return i - len(d.container)
-	} else {
-		return i
 	}
+
+	return i
 }
 
 func (d *dequeImpl[T]) negativeMod(i int) int {
 	if i < 0 {
 		return i + len(d.container)
-	} else {
-		return i
 	}
+
+	return i
 }
 
 func (d *dequeImpl[T]) internalIndex(i int) int {
@@ -88,17 +88,17 @@ func (d *dequeImpl[T]) internalIndex(i int) int {
 func (d *dequeImpl[T]) incremented(i int) int {
 	if i == len(d.container)-1 {
 		return 0
-	} else {
-		return i + 1
 	}
+
+	return i + 1
 }
 
 func (d *dequeImpl[T]) decremented(i int) int {
 	if i < 1 {
 		return len(d.container) - 1
-	} else {
-		return i - 1
 	}
+
+	return i - 1
 }
 
 func (d *dequeImpl[T]) copyElements(capacity int) {

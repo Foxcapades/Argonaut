@@ -18,19 +18,20 @@ type renderBase struct{}
 func (r renderBase) renderArgName(a Argument, argIndex int) string {
 	if a.HasName() {
 		return a.Name()
-	} else {
-		if argIndex > 0 {
-			return "arg" + strconv.Itoa(argIndex)
-		} else {
-			return "arg"
-		}
 	}
+
+	if argIndex > 0 {
+		return "arg" + strconv.Itoa(argIndex)
+	}
+
+	return "arg"
 }
 
 func (r renderBase) renderFlagArgument(arg Argument, padding uint8, out *bufio.Writer) error {
 	if _, err := out.WriteString(subLinePadding[padding]); err != nil {
 		return err
 	}
+
 	if err := r.renderArgumentName(arg, out, 0); err != nil {
 		return err
 	}
@@ -43,6 +44,7 @@ func (r renderBase) renderFlagArgument(arg Argument, padding uint8, out *bufio.W
 			return err
 		}
 	}
+
 	return nil
 }
 

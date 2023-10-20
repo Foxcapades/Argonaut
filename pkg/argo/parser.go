@@ -91,21 +91,22 @@ func (p *parser) handleDash() element {
 			if dashes == 2 {
 				p.state = statePass
 				return boundaryElement()
-			} else {
-				for i := 0; i < dashes; i++ {
-					p.sb.WriteByte(charDash)
-				}
-				tmp := p.sb.String()
-				p.sb.Reset()
-				return textElement(tmp)
 			}
+
+			for i := 0; i < dashes; i++ {
+				p.sb.WriteByte(charDash)
+			}
+
+			tmp := p.sb.String()
+			p.sb.Reset()
+			return textElement(tmp)
 
 		case eventKindText:
 			if dashes > 1 {
 				return p.consumeLongFlag(dashes, next.Data)
-			} else {
-				return p.consumeShortFlag(next.Data)
 			}
+
+			return p.consumeShortFlag(next.Data)
 
 		case eventKindDash:
 			dashes++

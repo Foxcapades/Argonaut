@@ -1,5 +1,10 @@
 package argo
 
+// UnmarshalProps defines configuration options for the included "magic"
+// Unmarshaler implementation.
+//
+// This configuration may be used to customize how the unmarshaler behaves or
+// parses input values.
 type UnmarshalProps struct {
 
 	// Integers defines settings for parsing integral types
@@ -13,6 +18,8 @@ type UnmarshalProps struct {
 	Slices UnmarshalSliceProps `json:"slices"`
 }
 
+// UnmarshalIntegerProps defines int parsing specific options for the "magic"
+// unmarshaler.
 type UnmarshalIntegerProps struct {
 
 	// OctalLeaders defines the prefixes used to signify
@@ -52,6 +59,8 @@ type UnmarshalIntegerProps struct {
 	DefaultBase int `json:"defaultBase"`
 }
 
+// UnmarshalMapProps defines map specific unmarshalling options for the "magic"
+// unmarshaler.
 type UnmarshalMapProps struct {
 
 	// KeyValSeparatorChars defines characters used to
@@ -84,11 +93,15 @@ type UnmarshalMapProps struct {
 	EntrySeparatorChars string
 }
 
+// UnmarshalSliceProps defines options for slice unmarshalling in the "magic"
+// unmarshaler.
 type UnmarshalSliceProps struct {
 }
 
 // ////////////////////////////////////////////////////////////////////////// //
 
+// DefaultUnmarshalProps returns an UnmarshalProps instance with the default
+// values configured.
 func DefaultUnmarshalProps() UnmarshalProps {
 	return defaultUnmarshalProps
 }
