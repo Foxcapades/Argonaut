@@ -56,8 +56,8 @@ func LongFlag(name string) argo.FlagBuilder {
 	return argo.NewFlagBuilder().WithLongForm(name)
 }
 
-// Flag returns a new FlagBuilder instance which can be used to construct
-// an Flag instance.
+// Flag returns a new FlagBuilder instance which can be used to construct a Flag
+// instance.
 func Flag() argo.FlagBuilder {
 	return argo.NewFlagBuilder()
 }

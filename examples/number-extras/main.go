@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/Foxcapades/Argonaut/v0"
-	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
+	cli "github.com/Foxcapades/Argonaut"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 type Inputs struct {
@@ -17,23 +17,23 @@ type Inputs struct {
 func main() {
 	var conf Inputs
 
-	cli.NewCommand().
-		Flag(cli.NewFlag().
-			Long("hex").
-			Short('x').
-			Description("Hex value").
-			Bind(&conf.Hex, true)).
-		Flag(cli.NewFlag().
-			Long("uhex").
-			Short('u').
-			Description("Unsigned hex value").
-			Bind(&conf.UHex, true)).
-		Flag(cli.NewFlag().
-			Long("octal").
-			Short('o').
-			Description("Octal value").
-			Bind(&conf.Octal, true)).
-		MustParse()
+	cli.Command().
+		WithFlag(cli.Flag().
+			WithLongForm("hex").
+			WithShortForm('x').
+			WithDescription("Hex value").
+			WithBinding(&conf.Hex, true)).
+		WithFlag(cli.Flag().
+			WithLongForm("uhex").
+			WithShortForm('u').
+			WithDescription("Unsigned hex value").
+			WithBinding(&conf.UHex, true)).
+		WithFlag(cli.Flag().
+			WithLongForm("octal").
+			WithShortForm('o').
+			WithDescription("Octal value").
+			WithBinding(&conf.Octal, true)).
+		MustParse(os.Args)
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")

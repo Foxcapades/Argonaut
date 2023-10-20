@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	cli "github.com/Foxcapades/Argonaut/v0"
-	"github.com/Foxcapades/Argonaut/v0/pkg/argo"
 	"os"
+
+	cli "github.com/Foxcapades/Argonaut"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 type Demo struct {
@@ -17,28 +18,35 @@ type Demo struct {
 func main() {
 	var demo Demo
 
-	cli.NewCommand().
+	cli.Command().
 		// Normal default
-		Flag(cli.NewFlag().
-			Long("int").
-			Bind(&demo.IntVal, true).
-			Default(4)).
+		WithFlag(cli.Flag().
+			WithLongForm("int").
+			WithArgument(cli.Argument().
+				WithBinding(&demo.IntVal).
+				Require().
+				WithDefault(4))).
 		// Default from errorless provider
-		Flag(cli.NewFlag().
-			Long("float").
-			Bind(&demo.FloatVal, true).
-			Default(func() float32 { return 7.3 })).
+		WithFlag(cli.Flag().
+			WithLongForm("float").
+			WithArgument(cli.Argument().
+				WithBinding(&demo.FloatVal).
+				Require().
+				WithDefault(func() float32 { return 7.3 }))).
 		// Default from provider with error
-		Flag(cli.NewFlag().
-			Long("hex").
-			Bind(&demo.HexVal, true).
-			Default(func() (argo.Hex64, error) { return argo.Hex64(17), nil })).
+		WithFlag(cli.Flag().
+			WithLongForm("hex").
+			WithArgument(cli.Argument().
+				WithBinding(&demo.HexVal).
+				Require().
+				WithDefault(func() (argo.Hex64, error) { return argo.Hex64(17), nil }))).
 		// Default from string (behaves like CLI)
-		Flag(cli.NewFlag().
-			Long("slice").
-			Bind(&demo.SliceVal, true).
-			Default("hello")).
-		MustParse()
+		WithFlag(cli.Flag().
+			WithLongForm("slice").
+			WithArgument(cli.Argument().
+				WithBinding(&demo.SliceVal).
+				WithDefault("hello"))).
+		MustParse(os.Args)
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
