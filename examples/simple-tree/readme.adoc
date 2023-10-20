@@ -1,0 +1,21 @@
+= Simple Tree
+
+Demonstrates constructing a command tree to support multi-tiered command
+structures.
+
+The built tree has the following layout:
+
+[source]
+----
+root
+  |- foo
+  |    |- bar
+  |- fizz
+       |- buzz
+----
+
+There are 2 branches from the root command that may be selected, "foo" and
+"fizz".  Under the "foo" branch there is a singular leaf node, "bar".  Under the
+"fizz" branch, there is a singular leaf node "buzz".
+
+The command tree may have any number of branches and/or leaves.

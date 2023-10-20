@@ -132,10 +132,10 @@ to force base8 parsing without requiring a prefix.
 Arguments of type `bool` can be represented by the following
 formats.
 
-[cols="h,m,m,m,m,m", width="100%"]
+[cols="h,m,m,m,m,m,m", width="100%"]
 |===
-| true  | true  | t | yes | y | 1
-| false | false | f | no  | n | 0
+| true  | true  | t | yes | y | 1 | on
+| false | false | f | no  | n | 0 | off
 |===
 
 A boolean argument attached to a flag can also be set to
@@ -146,3 +146,4 @@ input.
 
 . https://github.com/Foxcapades/Argonaut/tree/master/examples/complex-type[Complex Types]
 . https://github.com/Foxcapades/Argonaut/tree/master/examples/number-extras[Number Format Extras]
+. https://github.com/Foxcapades/Argonaut/tree/master/examples/simple-tree[Simple Tree]
