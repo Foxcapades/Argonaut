@@ -22,6 +22,8 @@ type ArgumentBuilder interface {
 	// Require marks the output Argument as being required.
 	Require() ArgumentBuilder
 
+	isRequired() bool
+
 	// WithBinding sets the bind value for the Argument.
 	//
 	// The bind value may either be a pointer or an instance of Unmarshaler.
@@ -140,6 +142,10 @@ func (a *argumentBuilder) WithDescription(desc string) ArgumentBuilder {
 func (a *argumentBuilder) Require() ArgumentBuilder {
 	a.required = true
 	return a
+}
+
+func (a argumentBuilder) isRequired() bool {
+	return a.required
 }
 
 func (a *argumentBuilder) WithBinding(binding any) ArgumentBuilder {

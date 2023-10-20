@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -178,8 +179,21 @@ func (b commandBuilder) Build(ctx *WarningContext) (Command, error) {
 		}
 	}
 
+	forceRequiredUntil := 0
+	for i, builder := range b.arguments {
+		if builder.isRequired() {
+			forceRequiredUntil = i
+		}
+	}
+
 	com.arguments = make([]Argument, 0, len(b.arguments))
-	for _, builder := range b.arguments {
+	for i, builder := range b.arguments {
+
+		if i < forceRequiredUntil && !builder.isRequired() {
+			builder.Require()
+			ctx.appendWarning(fmt.Sprintf("argument %d was not marked as required, but preceded required argument %d", i+1, forceRequiredUntil+1))
+		}
+
 		if arg, err := builder.Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {

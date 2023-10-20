@@ -3,6 +3,7 @@ package argo_test
 import (
 	"testing"
 
+	cli "github.com/Foxcapades/Argonaut"
 	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
@@ -116,5 +117,24 @@ func TestCommandBuilder_ParseUnhitRequiredFlag(t *testing.T) {
 
 	if err == nil {
 		t.Fail()
+	}
+}
+
+func TestCommandBuilder_OptionalArgumentBeforeRequiredArgument(t *testing.T) {
+	com := cli.Command().
+		WithArgument(cli.Argument()).
+		WithArgument(cli.Argument().Require()).
+		MustParse([]string{"command", "value1", "value2"})
+
+	if len(com.Warnings()) != 1 {
+		t.Error("expected command to have exactly 1 warning, but it didn't")
+	} else if com.Warnings()[0] != "argument 1 was not marked as required, but preceded required argument 2" {
+		t.Error("expected command warning to match specific warning text but it didn't")
+	}
+
+	for i, arg := range com.Arguments() {
+		if !arg.IsRequired() {
+			t.Errorf("expected argument %d to be required but it wasn't", i+1)
+		}
 	}
 }

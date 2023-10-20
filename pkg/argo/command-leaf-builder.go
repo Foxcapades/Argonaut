@@ -2,6 +2,7 @@ package argo
 
 import (
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -175,8 +176,19 @@ func (l *commandLeafBuilder) Build(ctx *WarningContext) (CommandLeaf, error) {
 	leaf := new(commandLeaf)
 	leaf.warnings = ctx
 
+	forceRequiredUntil := 0
+	for i, builder := range l.arguments {
+		if builder.isRequired() {
+			forceRequiredUntil = i
+		}
+	}
+
 	leaf.args = make([]Argument, 0, len(l.arguments))
-	for _, builder := range l.arguments {
+	for i, builder := range l.arguments {
+		if i < forceRequiredUntil && !builder.isRequired() {
+			builder.Require()
+			ctx.appendWarning(fmt.Sprintf("argument %d was not marked as required, but preceded required argument %d", i+1, forceRequiredUntil+1))
+		}
 		if arg, err := builder.Build(ctx); err != nil {
 			errs.AppendError(err)
 		} else {
