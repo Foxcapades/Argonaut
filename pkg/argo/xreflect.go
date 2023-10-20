@@ -69,7 +69,7 @@ func reflectGetRootValue(v reflect.Value) reflect.Value {
 	return v
 }
 
-func reflectIsConsumer(t reflect.Type) bool {
+func reflectIsUnmarshaler(t reflect.Type) bool {
 	return t.AssignableTo(unmarshalerType)
 }
 

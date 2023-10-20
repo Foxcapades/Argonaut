@@ -198,7 +198,7 @@ func (a *argument) setToDefault() error {
 				return ret[1].Interface().(error)
 			}
 
-			if reflectIsConsumer(a.rootBind.Type()) {
+			if reflectIsUnmarshaler(a.rootBind.Type()) {
 				a.rootBind.Elem().Set(ret[0])
 			} else {
 				a.rootBind.Set(ret[0])

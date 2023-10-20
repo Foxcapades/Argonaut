@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var unmarshalerType = reflect.TypeOf((*Consumer)(nil)).Elem()
+var unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
 
 // NewDefaultMagicUnmarshaler creates a new "magic" ValueUnmarshaler instance
 // using default UnmarshalProps.
@@ -42,7 +42,7 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	ptrDef := ptrVal.Type()
 
 	if ptrDef.AssignableTo(unmarshalerType) {
-		return ptrVal.Interface().(Consumer).Accept(raw)
+		return ptrVal.Interface().(Unmarshaler).Unmarshal(raw)
 	}
 
 	switch ptrVal.Kind() {
@@ -300,7 +300,7 @@ func validateContainerValue(t reflect.Type, ov reflect.Value) error {
 		if reflectIsByteSlice(t.Elem()) {
 			return nil
 		}
-		if reflectIsConsumer(t.Elem()) {
+		if reflectIsUnmarshaler(t.Elem()) {
 			return nil
 		}
 		if reflectIsInterface(t.Elem()) {
@@ -313,7 +313,7 @@ func validateContainerValue(t reflect.Type, ov reflect.Value) error {
 	if reflectIsByteSlice(t) {
 		return nil
 	}
-	if reflectIsConsumer(t) {
+	if reflectIsUnmarshaler(t) {
 		return nil
 	}
 	if reflectIsInterface(t) {

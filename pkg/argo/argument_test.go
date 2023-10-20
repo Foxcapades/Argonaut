@@ -2,6 +2,7 @@ package argo_test
 
 import (
 	"errors"
+	"strconv"
 	"testing"
 
 	cli "github.com/Foxcapades/Argonaut"
@@ -94,18 +95,61 @@ func TestArgumentDefault03(t *testing.T) {
 }
 
 func TestArgumentDefault04(t *testing.T) {
-	str := ""
-	con := argo.ConsumerFunc(func(val string) error { str = val; return nil })
+	con := argo.UnmarshalerFunc(func(val string) error { return nil })
 	foo := func() (int, error) { return 3, nil }
-	com := cli.Command().
+	_, err := cli.Command().
 		WithArgument(cli.Argument().WithBinding(con).WithDefault(foo)).
-		MustParse([]string{"command", "poo"})
+		Parse([]string{"command", "poo"})
 
-	arg := com.Arguments()[0]
+	t.Log(err)
+	if err == nil {
+		t.Fail()
+	}
+}
 
-	if !arg.WasHit() {
-		t.Error("expected argument to have been hit but it wasn't")
-	} else if str != "poo" {
-		t.Error("expected bind value to equal the given function return value but it didn't")
+type argUnmarshaler struct{ val int }
+
+func (a *argUnmarshaler) Unmarshal(raw string) (err error) { a.val, err = strconv.Atoi(raw); return }
+
+// Expect a failure because the unmarshaler type is incompatible with the output
+// of the default value provider.
+func TestArgumentDefault05(t *testing.T) {
+	con := argUnmarshaler{}
+	foo := func() (int, error) { return 3, nil }
+	_, err := cli.Command().
+		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
+		Parse([]string{"command", "poo"})
+
+	t.Log(err)
+	if err == nil {
+		t.Fail()
+	}
+}
+
+// Expect an OK because the unmarshaler type is compatible with the output of
+// the default value provider.
+func TestArgumentDefault06(t *testing.T) {
+	con := argUnmarshaler{}
+	foo := func() (argUnmarshaler, error) { return argUnmarshaler{3}, nil }
+	_ = cli.Command().
+		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
+		MustParse([]string{"command", "3"})
+
+	if con.val != 3 {
+		t.Error("expected unmarshaler value to have been replaced but it wasn't")
+	}
+}
+
+// Expect an OK because the unmarshaler type is compatible with the output of
+// the default value provider.
+func TestArgumentDefault07(t *testing.T) {
+	con := argUnmarshaler{}
+	foo := func() (argUnmarshaler, error) { return argUnmarshaler{3}, nil }
+	_ = cli.Command().
+		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
+		MustParse([]string{"command"})
+
+	if con.val != 3 {
+		t.Error("expected unmarshaler value to have been replaced but it wasn't")
 	}
 }

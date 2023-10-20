@@ -1,25 +1,39 @@
 package argo
 
-// Consumer defines a type that may be used as an Argument binding value to
-// unmarshal and consume the given raw string.
+// Unmarshaler defines a type that may be used as an Argument binding value to
+// unmarshal the given raw string into a custom type.
 //
-// Example:
+// Example 1:
 //     cli.Argument()
-//         WithBinding(ConsumerFunc(func(raw string) error {
+//         WithBinding(UnmarshalerFunc(func(raw string) error {
 //             // Do something with the raw string
 //             return nil
 //         })
-type Consumer interface {
+//
+// Example 2:
+//     type MyCustomType struct {
+//         Value string
+//     }
+//     func (t *MyCustomType) Unmarshal(raw string) error {
+//         t.Value = raw
+//         return nil
+//     }
+//
+//     var value MyCustomType
+//
+//     cli.Argument().
+//         WithBinding(&value)
+type Unmarshaler interface {
 
-	// Accept is handed the raw string for its obviously nefarious purposes and
+	// Unmarshal is handed the raw string for its obviously nefarious purposes and
 	// may return an error.
-	Accept(raw string) error
+	Unmarshal(raw string) error
 }
 
-// ConsumerFunc defines a function that implements the Consumer interface.
-type ConsumerFunc func(raw string) error
+// UnmarshalerFunc defines a function that implements the Unmarshaler interface.
+type UnmarshalerFunc func(raw string) error
 
-func (u ConsumerFunc) Accept(raw string) error {
+func (u UnmarshalerFunc) Unmarshal(raw string) error {
 	return u(raw)
 }
 

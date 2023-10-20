@@ -1,10 +1,6 @@
 = TODO
 
-* [ ] Validate that optional positional arguments do not appear before required
-      positional arguments.  Maybe make the optional argument required if it
-      appears before a non-required argument and emit a warning?
-
-* [ ] Add the "help" flag callback to all commands and commandnodes that do not have
+* [x] Add the "help" flag callback to all commands and commandnodes that do not have
       the "disableHelp" flag set.
 
 * [x] Render command aliases in the help text.
@@ -25,18 +21,18 @@ Example: `ExpectUnmapped("SERVICES...")`
 
 * [ ] Document default groups.
 
-* [ ] Build default help printer and meta command group.
+* [x] Build default help printer and meta command group.
 +
 --
 This flag should be appended, at build time, to either the default group (if
 there are no custom flag groups) or its own meta flag group.
 --
-** [ ] Command
-** [ ] Command Tree
-** [ ] Command Branch
-** [ ] Command Leaf
+** [x] Command
+** [x] Command Tree
+** [x] Command Branch
+** [x] Command Leaf
 
-* [ ] Ensure there are no spaces in the subcommand names
+* [x] Ensure there are no spaces in the subcommand names
 
 * [ ] Should a required argument with a default value be a warning?
 
@@ -55,27 +51,12 @@ there are no custom flag groups) or its own meta flag group.
 * [ ] If an entire short flag block is unmatched, should it still be split into
       separate short flags?
 
-* [ ] Unnamed arguments should include a number in their name when being
-      rendered in help text.  Something like:
-+
-[source]
-----
-Usage:
-  command <arg1> <arg2>
-
-Arguments
-  <arg1>
-      Argument description 1
-  <arg2>
-      Argument Description 2
-----
-
 * [x] "Argument 0 is required" should be one based.
 
 * [ ] If another flag group declares the name "Flags" what should we do about
       the default flag group?
 
-* [ ] If another flag group declares the name "Meta Flags", what should we do
+* [ ] If another flag group declares the name "Help Flags", what should we do
       about the auto help flags?
 
 * [ ] If another command group declares the name "Commands", what should we do

@@ -24,16 +24,16 @@ type ArgumentBuilder interface {
 
 	// WithBinding sets the bind value for the Argument.
 	//
-	// The bind value may either be a pointer or an instance of Consumer.
+	// The bind value may either be a pointer or an instance of Unmarshaler.
 	//
 	// If the bind value is a pointer, the Argument's value unmarshaler will be
 	// called to unmarshal the raw string value into a value of the type passed
 	// to this method.
 	//
-	// If the bind value is a Consumer instance, that instance's Accept method
+	// If the bind value is a Unmarshaler instance, that instance's Unmarshal method
 	// will be called with the raw input from the CLI.
 	//
-	// Setting this value to anything other than a pointer or a Consumer instance
+	// Setting this value to anything other than a pointer or a Unmarshaler instance
 	// will result in an error being returned when building the argument is
 	// attempted.
 	//
@@ -42,7 +42,7 @@ type ArgumentBuilder interface {
 	//     cli.Argument.WithBinding(&myValue)
 	//
 	// Example 2:
-	//     cli.Argument.WithBinding(ConsumerFunc(func(raw string) error {
+	//     cli.Argument.WithBinding(UnmarshalerFunc(func(raw string) error {
 	//         fmt.Println(raw)
 	//         return nil
 	//     }))
@@ -259,10 +259,29 @@ func (a *argumentBuilder) validateDefaultProvider() error {
 		return newInvalidArgError(ArgErrInvalidDefaultFn, a, errDefFnOutNum)
 	}
 
+	outType := defType.Out(0)
+
 	if !defType.Out(0).AssignableTo(a.rootBind.Type()) {
-		// Second chance for Unmarshalable short circuit logic
-		if reflectIsConsumer(a.rootBind.Type()) {
-			return nil
+
+		// Second chance for Unmarshalable short-circuit logic.
+		//
+		// In this case we can attempt to unmarshal in 2 different scenarios:
+		//   1. The bind value is an unmarshaler func AND the default provider
+		//      returns a string.
+		//   2. The bind value is an unmarshaler instance AND the default provider
+		//      returns a value that is of that implementing type.
+		if reflectIsUnmarshaler(a.rootBind.Type()) {
+			// If the output type is a string, then it is compatible with both the
+			// unmarshaler and unmarshaler func.
+			if outType.Kind() == reflect.String {
+				return nil
+			}
+
+			if a.rootBind.Type().Kind() != reflect.Func {
+				if outType.AssignableTo(a.rootBind.Type().Elem()) {
+					return nil
+				}
+			}
 		}
 
 		return newInvalidArgError(ArgErrInvalidDefaultVal, a,
