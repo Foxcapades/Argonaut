@@ -1,6 +1,10 @@
 package argo
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+)
 
 // A CommandGroupBuilder is used to construct a CommandGroup instance.
 type CommandGroupBuilder interface {
@@ -75,7 +79,7 @@ func (g *commandGroupBuilder) Build(ctx *WarningContext) (CommandGroup, error) {
 	errs := newMultiError()
 
 	// Ensure that the name is not blank
-	if isBlank(g.name) {
+	if chars.IsBlank(g.name) {
 		errs.AppendError(errors.New("command group names must not be blank"))
 	}
 

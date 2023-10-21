@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"io"
 	"slices"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
 )
 
 // CommandBranchHelpRenderer returns a HelpRenderer instance that is suited to
@@ -29,7 +31,7 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 	if err := r.renderCommandBranchUsage(branch, out); err != nil {
 		return err
 	}
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
@@ -38,7 +40,7 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 	hf := branch.HasFlagGroups()
 
 	if ha {
-		if _, err := out.WriteString(subLinePadding[0]); err != nil {
+		if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
 			return err
 		}
 		if _, err := out.WriteString("Aliases: "); err != nil {
@@ -58,39 +60,40 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 				return err
 			}
 		}
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 	}
 
 	if hd {
 		if ha {
-			if err := out.WriteByte(charLF); err != nil {
+			if err := out.WriteByte(chars.CharLF); err != nil {
 				return err
 			}
 		}
-		if err := breakFmt(branch.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
+		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], chars.HelpTextMaxWidth, out)
+		if err := formatter.Format(branch.Description()); err != nil {
 			return err
 		}
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 	}
 
 	// render flags
 	if hf {
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 		if err := r.renderFlagGroups(branch.FlagGroups(), 0, out); err != nil {
 			return err
 		}
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 	}
 
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
@@ -98,7 +101,7 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 		return err
 	}
 
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
@@ -121,7 +124,7 @@ func (r comBranchRenderer) renderCommandBranchUsage(node CommandBranch, out *buf
 		for _, group := range node.FlagGroups() {
 			for _, flag := range group.Flags() {
 				if flag.IsRequired() {
-					if err := out.WriteByte(charSpace); err != nil {
+					if err := out.WriteByte(chars.CharSpace); err != nil {
 						return err
 					}
 					if err := r.renderShortestFlagLine(flag, out); err != nil {

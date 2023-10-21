@@ -3,6 +3,9 @@ package argo
 import (
 	"errors"
 	"os"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 // A CommandBranchBuilder instance may be used to configure a new CommandBranch
@@ -84,8 +87,8 @@ type CommandBranchBuilder interface {
 func NewCommandBranchBuilder(name string) CommandBranchBuilder {
 	return &commandBranchBuilder{
 		name:       name,
-		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(defaultGroupName)},
-		comGroups:  []CommandGroupBuilder{NewCommandGroupBuilder(defaultGroupName)},
+		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(chars.DefaultGroupName)},
+		comGroups:  []CommandGroupBuilder{NewCommandGroupBuilder(chars.DefaultGroupName)},
 	}
 }
 
@@ -161,13 +164,13 @@ func (c *commandBranchBuilder) Build(ctx *WarningContext) (CommandBranch, error)
 	errs := newMultiError()
 
 	// Ensure name is not blank
-	if err := validateCommandNodeName(c.name); err != nil {
+	if err := chars.ValidateCommandNodeName(c.name); err != nil {
 		errs.AppendError(err)
 	}
 
 	// Ensure aliases are not blank
 	for _, alias := range c.aliases {
-		if isBlank(alias) {
+		if chars.IsBlank(alias) {
 			errs.AppendError(errors.New("command branch aliases must not be blank"))
 		}
 	}
@@ -192,7 +195,7 @@ func (c *commandBranchBuilder) Build(ctx *WarningContext) (CommandBranch, error)
 
 		// If the default group name has been changed to a custom name then enable
 		// the meta group.
-		if c.flagGroups[0].getName() != defaultGroupName {
+		if c.flagGroups[0].getName() != chars.DefaultGroupName {
 			metaGroup = true
 		}
 
@@ -236,7 +239,7 @@ func (c *commandBranchBuilder) Build(ctx *WarningContext) (CommandBranch, error)
 			flag := NewFlagBuilder().
 				WithDescription("Prints this help text.").
 				WithCallback(func(f Flag) {
-					must(comBranchRenderer{}.RenderHelp(out, os.Stdout))
+					util.Must(comBranchRenderer{}.RenderHelp(out, os.Stdout))
 					os.Exit(0)
 				})
 

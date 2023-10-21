@@ -3,6 +3,8 @@ package argo
 import (
 	"bufio"
 	"slices"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
 )
 
 const (
@@ -12,7 +14,7 @@ const (
 func renderCommandGroups(groups []CommandGroup, padding uint8, sb *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
-			if _, err := sb.WriteString(paragraphBreak); err != nil {
+			if _, err := sb.WriteString(chars.ParagraphBreak); err != nil {
 				return err
 			}
 		}
@@ -26,11 +28,11 @@ func renderCommandGroups(groups []CommandGroup, padding uint8, sb *bufio.Writer)
 }
 
 func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) error {
-	if _, err := sb.WriteString(headerPadding[padding]); err != nil {
+	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
-	if group.Name() == defaultGroupName {
+	if group.Name() == chars.DefaultGroupName {
 		if _, err := sb.WriteString(defaultComGroupName); err != nil {
 			return err
 		}
@@ -40,15 +42,16 @@ func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) err
 		}
 	}
 
-	if err := sb.WriteByte(charLF); err != nil {
+	if err := sb.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
 	if group.HasDescription() {
-		if err := breakFmt(group.Description(), descriptionPadding[padding], helpTextMaxWidth, sb); err != nil {
+		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], chars.HelpTextMaxWidth, sb)
+		if err := formatter.Format(group.Description()); err != nil {
 			return err
 		}
-		if _, err := sb.WriteString(paragraphBreak); err != nil {
+		if _, err := sb.WriteString(chars.ParagraphBreak); err != nil {
 			return err
 		}
 	}
@@ -77,12 +80,12 @@ func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) err
 
 	for i, name := range ordered {
 		if i > 0 {
-			if err := sb.WriteByte(charLF); err != nil {
+			if err := sb.WriteByte(chars.CharLF); err != nil {
 				return err
 			}
 		}
 
-		if _, err := sb.WriteString(headerPadding[padding+1]); err != nil {
+		if _, err := sb.WriteString(chars.HeaderPadding[padding+1]); err != nil {
 			return err
 		}
 		if _, err := sb.WriteString(name); err != nil {
@@ -92,7 +95,7 @@ func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) err
 		node := lookup[name]
 
 		if node.HasAliases() {
-			if err := pad(maxLen-len(name), sb); err != nil {
+			if err := chars.Pad(maxLen-len(name), sb); err != nil {
 				return err
 			}
 
@@ -116,10 +119,12 @@ func renderCommandGroup(group CommandGroup, padding uint8, sb *bufio.Writer) err
 		}
 
 		if node.HasDescription() {
-			if err := sb.WriteByte(charLF); err != nil {
+			if err := sb.WriteByte(chars.CharLF); err != nil {
 				return err
 			}
-			if err := breakFmt(node.Description(), descriptionPadding[padding+1], helpTextMaxWidth, sb); err != nil {
+
+			formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding+1], chars.HelpTextMaxWidth, sb)
+			if err := formatter.Format(node.Description()); err != nil {
 				return err
 			}
 		}

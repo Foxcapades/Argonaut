@@ -2,6 +2,8 @@ package argo
 
 import (
 	"os"
+
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 // CommandBranch represents a subcommand under a CommandTree that is an
@@ -166,6 +168,6 @@ func (c commandBranch) AppendWarning(warning string) {
 }
 
 func (c commandBranch) onIncomplete() {
-	must(comBranchRenderer{}.RenderHelp(c, os.Stdout))
+	util.Must(comBranchRenderer{}.RenderHelp(c, os.Stdout))
 	os.Exit(1)
 }

@@ -3,6 +3,9 @@ package argo
 import (
 	"errors"
 	"os"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 // A CommandTreeBuilder is a builder type used to construct a CommandTree
@@ -85,8 +88,8 @@ type CommandTreeBuilder interface {
 
 func NewCommandTreeBuilder() CommandTreeBuilder {
 	return &commandTreeBuilder{
-		commandGroups: []CommandGroupBuilder{NewCommandGroupBuilder(defaultGroupName)},
-		flagGroups:    []FlagGroupBuilder{NewFlagGroupBuilder(defaultGroupName)},
+		commandGroups: []CommandGroupBuilder{NewCommandGroupBuilder(chars.DefaultGroupName)},
+		flagGroups:    []FlagGroupBuilder{NewFlagGroupBuilder(chars.DefaultGroupName)},
 	}
 }
 
@@ -155,8 +158,8 @@ func (t commandTreeBuilder) Parse(args []string) (CommandTree, error) {
 
 func (t commandTreeBuilder) MustParse(args []string) CommandTree {
 	ctx := new(WarningContext)
-	ct := mustReturn(t.Build(ctx))
-	must(newCommandTreeInterpreter(args, ct).Run())
+	ct := util.MustReturn(t.Build(ctx))
+	util.Must(newCommandTreeInterpreter(args, ct).Run())
 	return ct
 }
 
@@ -251,7 +254,7 @@ func makeCommandTreeHelpFlag(short, long bool, tree CommandTree) FlagBuilder {
 	out := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			must(comTreeRenderer{}.RenderHelp(tree, os.Stdout))
+			util.Must(comTreeRenderer{}.RenderHelp(tree, os.Stdout))
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

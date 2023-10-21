@@ -3,6 +3,9 @@ package argo
 import (
 	"fmt"
 	"os"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 // A CommandBuilder provides an API to configure the construction of a new
@@ -71,7 +74,7 @@ type CommandBuilder interface {
 
 func NewCommandBuilder() CommandBuilder {
 	return &commandBuilder{
-		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(defaultGroupName)},
+		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(chars.DefaultGroupName)},
 	}
 }
 
@@ -127,7 +130,7 @@ func (b commandBuilder) Parse(args []string) (Command, error) {
 }
 
 func (b commandBuilder) MustParse(args []string) Command {
-	return mustReturn(b.Parse(args))
+	return util.MustReturn(b.Parse(args))
 }
 
 func (b commandBuilder) Build(ctx *WarningContext) (Command, error) {
@@ -215,7 +218,7 @@ func makeCommandHelpFlag(short, long bool, com Command) FlagBuilder {
 	out := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			must(comRenderer{}.RenderHelp(com, os.Stdout))
+			util.Must(comRenderer{}.RenderHelp(com, os.Stdout))
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

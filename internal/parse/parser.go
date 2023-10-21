@@ -1,7 +1,10 @@
-package argo
+package parse
 
 import (
 	"strings"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/emit"
 )
 
 type state uint8
@@ -11,66 +14,66 @@ const (
 	statePass
 )
 
-type elementType uint8
+type ElementType uint8
 
 const (
-	// elementTypeLongFlagPair represents a longform flag with a value directly
+	// ElementTypeLongFlagPair represents a longform flag with a value directly
 	// attached by use of an equals ('=') character.
-	elementTypeLongFlagPair elementType = iota
+	ElementTypeLongFlagPair ElementType = iota
 
-	// elementTypeLongFlagSolo represents a longform flag that did not have a value
+	// ElementTypeLongFlagSolo represents a longform flag that did not have a value
 	// directly attached by use of an equals ('=') character.
-	elementTypeLongFlagSolo
+	ElementTypeLongFlagSolo
 
-	// elementTypeShortBlockSolo represents a group of one or more characters
+	// ElementTypeShortBlockSolo represents a group of one or more characters
 	// following a single dash ('-') character with no value directly attached via
 	// an equals ('=') character.
-	elementTypeShortBlockSolo
+	ElementTypeShortBlockSolo
 
-	// elementTypeShortBlockPair represents a group of one or more characters
+	// ElementTypeShortBlockPair represents a group of one or more characters
 	// following a single dash ('-') character with a value directly attached via
 	// an equals ('=') character.
-	elementTypeShortBlockPair
+	ElementTypeShortBlockPair
 
-	// elementTypePlainText represents a plain-text argument that has no flag
+	// ElementTypePlainText represents a plain-text argument that has no flag
 	// indicators
-	elementTypePlainText
+	ElementTypePlainText
 
-	elementTypeBoundary
+	ElementTypeBoundary
 
-	elementTypeEnd
+	ElementTypeEnd
 )
 
-func newParser(e emitter) parser {
-	return parser{emitter: e}
+func NewParser(e emit.Emitter) Parser {
+	return Parser{emitter: e}
 }
 
-type parser struct {
+type Parser struct {
 	sb      strings.Builder
 	state   state
-	emitter emitter
+	emitter emit.Emitter
 }
 
-func (p *parser) Next() element {
+func (p *Parser) Next() Element {
 	next := p.emitter.Next()
 
-	if p.state == statePass && next.Kind != eventKindEnd {
+	if p.state == statePass && next.Kind != emit.EventKindEnd {
 		return p.consumeString(next.Data)
 	}
 
 	switch next.Kind {
-	case eventKindDash:
+	case emit.EventKindDash:
 		return p.handleDash()
-	case eventKindText:
+	case emit.EventKindText:
 		return p.handleText(next.Data)
-	case eventKindEnd:
+	case emit.EventKindEnd:
 		return p.handleEnd()
 	default:
 		panic("illegal state: got event kind " + next.Kind.String())
 	}
 }
 
-func (p *parser) handleDash() element {
+func (p *Parser) handleDash() Element {
 	// Things that may follow a dash:
 	// - Break
 	// - Text
@@ -85,7 +88,7 @@ func (p *parser) handleDash() element {
 
 		// If we hit a break, then all we've seen are dashes (because we return on
 		// anything else).
-		case eventKindBreak:
+		case emit.EventKindBreak:
 
 			// If there were 2 dashes specifically, then we hit our boundary
 			if dashes == 2 {
@@ -94,21 +97,21 @@ func (p *parser) handleDash() element {
 			}
 
 			for i := 0; i < dashes; i++ {
-				p.sb.WriteByte(charDash)
+				p.sb.WriteByte(chars.CharDash)
 			}
 
 			tmp := p.sb.String()
 			p.sb.Reset()
 			return textElement(tmp)
 
-		case eventKindText:
+		case emit.EventKindText:
 			if dashes > 1 {
 				return p.consumeLongFlag(dashes, next.Data)
 			}
 
 			return p.consumeShortFlag(next.Data)
 
-		case eventKindDash:
+		case emit.EventKindDash:
 			dashes++
 
 		default:
@@ -117,13 +120,13 @@ func (p *parser) handleDash() element {
 	}
 }
 
-func (p *parser) consumeString(start string) element {
+func (p *Parser) consumeString(start string) Element {
 	p.sb.WriteString(start)
 
 	for {
 		next := p.emitter.Next()
 
-		if next.Kind == eventKindBreak {
+		if next.Kind == emit.EventKindBreak {
 			tmp := p.sb.String()
 			p.sb.Reset()
 			return textElement(tmp)
@@ -133,20 +136,20 @@ func (p *parser) consumeString(start string) element {
 	}
 }
 
-func (p *parser) consumeLongFlag(dashes int, name string) element {
+func (p *Parser) consumeLongFlag(dashes int, name string) Element {
 	// If there is a whitespace in the name string, then it's not actually a flag
 	// it's just a string that happened to start with "--", which is stupid, but
 	// what are you gonna do?
-	if idx := nextWhitespace(name); idx > -1 {
+	if idx := chars.NextWhitespace(name); idx > -1 {
 		for i := 0; i < dashes; i++ {
-			p.sb.WriteByte(charDash)
+			p.sb.WriteByte(chars.CharDash)
 		}
 
 		p.sb.WriteString(name)
 
 		next := p.emitter.Next()
 
-		if next.Kind == eventKindBreak {
+		if next.Kind == emit.EventKindBreak {
 			tmp := p.sb.String()
 			p.sb.Reset()
 			p.state = stateNone
@@ -166,12 +169,12 @@ func (p *parser) consumeLongFlag(dashes int, name string) element {
 	switch next.Kind {
 
 	// We hit a break, meaning we have something like "--flag" as our input arg.
-	case eventKindBreak:
+	case emit.EventKindBreak:
 		return longSoloElement(name)
 
 	// We hit an equals, meaning we have something like "--flag=value" as our
 	// input arg.  This means we need to keep eating to get the flag argument.
-	case eventKindEquals:
+	case emit.EventKindEquals:
 		// continue
 
 	default:
@@ -182,7 +185,7 @@ func (p *parser) consumeLongFlag(dashes int, name string) element {
 	// the flag argument value.
 	next = p.emitter.Next()
 
-	if next.Kind != eventKindText {
+	if next.Kind != emit.EventKindText {
 		panic("illegal state")
 	}
 
@@ -190,7 +193,7 @@ func (p *parser) consumeLongFlag(dashes int, name string) element {
 
 	// Now consume the trailing break.
 	next = p.emitter.Next()
-	if next.Kind != eventKindBreak {
+	if next.Kind != emit.EventKindBreak {
 		panic("illegal state")
 	}
 
@@ -200,18 +203,19 @@ func (p *parser) consumeLongFlag(dashes int, name string) element {
 	return longPairElement(name, tmp)
 }
 
-func (p *parser) consumeShortFlag(flags string) element {
+func (p *Parser) consumeShortFlag(flags string) Element {
 	next := p.emitter.Next()
 
 	// If there is a whitespace character in the middle of this flag group then it
 	// isn't really a flag group at all.
-	if idx := nextWhitespace(flags); idx > -1 {
+	if idx := chars.NextWhitespace(flags); idx > -1 {
+		p.sb.WriteByte(chars.CharDash)
 		p.sb.WriteString(flags)
 
 		for {
 			next = p.emitter.Next()
 
-			if next.Kind == eventKindBreak {
+			if next.Kind == emit.EventKindBreak || next.Kind == emit.EventKindEnd {
 				tmp := p.sb.String()
 				p.sb.Reset()
 
@@ -222,32 +226,32 @@ func (p *parser) consumeShortFlag(flags string) element {
 		}
 	}
 
-	if next.Kind == eventKindBreak {
+	if next.Kind == emit.EventKindBreak {
 		return shortSoloElement(flags)
 	}
 
-	if next.Kind != eventKindEquals {
+	if next.Kind != emit.EventKindEquals {
 		panic("illegal state")
 	}
 
 	// Skip the equals
 	next = p.emitter.Next()
 
-	if next.Kind != eventKindText {
+	if next.Kind != emit.EventKindText {
 		panic("illegal state")
 	}
 
 	data := next.Data
 
 	next = p.emitter.Next()
-	if next.Kind != eventKindBreak {
+	if next.Kind != emit.EventKindBreak {
 		panic("illegal state: expected break, got " + next.Kind.String())
 	}
 
 	return shortPairElement(flags, data)
 }
 
-func (p *parser) handleText(data string) element {
+func (p *Parser) handleText(data string) Element {
 	p.sb.WriteString(data)
 
 	// Loop here because we may be followed by a break, or an equals event which
@@ -255,7 +259,7 @@ func (p *parser) handleText(data string) element {
 	for {
 		next := p.emitter.Next()
 
-		if next.Kind == eventKindBreak {
+		if next.Kind == emit.EventKindBreak {
 			tmp := p.sb.String()
 			p.sb.Reset()
 
@@ -266,60 +270,60 @@ func (p *parser) handleText(data string) element {
 	}
 }
 
-func (p *parser) handleEnd() element {
+func (p *Parser) handleEnd() Element {
 	return endElement()
 }
 
-type element struct {
-	Type elementType
+type Element struct {
+	Type ElementType
 	Data []string
 }
 
-func (e element) String() string {
+func (e Element) String() string {
 	switch e.Type {
-	case elementTypeLongFlagPair:
+	case ElementTypeLongFlagPair:
 		return "--" + e.Data[0] + "=" + e.Data[1]
-	case elementTypeShortBlockPair:
+	case ElementTypeShortBlockPair:
 		return "-" + e.Data[0] + "=" + e.Data[1]
-	case elementTypeLongFlagSolo:
+	case ElementTypeLongFlagSolo:
 		return "--" + e.Data[0]
-	case elementTypeShortBlockSolo:
+	case ElementTypeShortBlockSolo:
 		return "-" + e.Data[0]
-	case elementTypeBoundary:
+	case ElementTypeBoundary:
 		return "--"
-	case elementTypePlainText:
+	case ElementTypePlainText:
 		return e.Data[0]
-	case elementTypeEnd:
+	case ElementTypeEnd:
 		return string(byte(0))
 	default:
 		panic("illegal state")
 	}
 }
 
-func longPairElement(flag, value string) element {
-	return element{Type: elementTypeLongFlagPair, Data: []string{flag, value}}
+func longPairElement(flag, value string) Element {
+	return Element{Type: ElementTypeLongFlagPair, Data: []string{flag, value}}
 }
 
-func longSoloElement(flag string) element {
-	return element{Type: elementTypeLongFlagSolo, Data: []string{flag}}
+func longSoloElement(flag string) Element {
+	return Element{Type: ElementTypeLongFlagSolo, Data: []string{flag}}
 }
 
-func shortPairElement(flags, value string) element {
-	return element{Type: elementTypeShortBlockPair, Data: []string{flags, value}}
+func shortPairElement(flags, value string) Element {
+	return Element{Type: ElementTypeShortBlockPair, Data: []string{flags, value}}
 }
 
-func shortSoloElement(flags string) element {
-	return element{Type: elementTypeShortBlockSolo, Data: []string{flags}}
+func shortSoloElement(flags string) Element {
+	return Element{Type: ElementTypeShortBlockSolo, Data: []string{flags}}
 }
 
-func textElement(text string) element {
-	return element{Type: elementTypePlainText, Data: []string{text}}
+func textElement(text string) Element {
+	return Element{Type: ElementTypePlainText, Data: []string{text}}
 }
 
-func boundaryElement() element {
-	return element{Type: elementTypeBoundary}
+func boundaryElement() Element {
+	return Element{Type: ElementTypeBoundary}
 }
 
-func endElement() element {
-	return element{Type: elementTypeEnd}
+func endElement() Element {
+	return Element{Type: ElementTypeEnd}
 }

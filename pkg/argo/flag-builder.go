@@ -1,6 +1,10 @@
 package argo
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+)
 
 // A FlagBuilder is used to construct a Flag instance which represents the input
 // from the CLI call.
@@ -241,7 +245,7 @@ func (b *flagBuilder) Build(ctx *WarningContext) (Flag, error) {
 }
 
 func validateShortForm(c byte) error {
-	if !isAlphanumeric(c) {
+	if !chars.IsAlphanumeric(c) {
 		return errors.New("short-form flags must be alphanumeric")
 	}
 
@@ -249,12 +253,12 @@ func validateShortForm(c byte) error {
 }
 
 func validateLongForm(f string) error {
-	if !isAlphanumeric(f[0]) {
+	if !chars.IsAlphanumeric(f[0]) {
 		return errors.New("long-form flags must begin with an alphanumeric character")
 	}
 
 	for i := 1; i < len(f); i++ {
-		if !isFlagStringSafe(f[i]) {
+		if !chars.IsFlagStringSafe(f[i]) {
 			return errors.New("long-form flags must only contain alphanumeric characters, dashes, and/or underscores")
 		}
 	}

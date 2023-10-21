@@ -59,8 +59,10 @@ func TestCommandHelpRendererFail01(t *testing.T) {
 		WithArgument(cli.Argument().
 			WithName("argument").
 			WithDescription("poo")).
+		WithArgument(cli.Argument()).
 		WithUnmappedLabel("asteroids...").
 		MustParse([]string{"command", "-m"})
+
 	ren := argo.CommandHelpRenderer()
 
 	for p := 1; p <= len(commandHelp001); p++ {

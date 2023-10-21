@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 // CommandLeafBuilder defines a builder type that is used to construct
@@ -68,7 +71,7 @@ type CommandLeafBuilder interface {
 func NewCommandLeafBuilder(name string) CommandLeafBuilder {
 	return &commandLeafBuilder{
 		name:       name,
-		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(defaultGroupName)},
+		flagGroups: []FlagGroupBuilder{NewFlagGroupBuilder(chars.DefaultGroupName)},
 	}
 }
 
@@ -158,13 +161,13 @@ func (l *commandLeafBuilder) Build(ctx *WarningContext) (CommandLeaf, error) {
 	errs := newMultiError()
 
 	// Ensure the group name is not blank
-	if err := validateCommandNodeName(l.name); err != nil {
+	if err := chars.ValidateCommandNodeName(l.name); err != nil {
 		errs.AppendError(err)
 	}
 
 	// Ensure the aliases are all not blank
 	for _, alias := range l.aliases {
-		if isBlank(alias) {
+		if chars.IsBlank(alias) {
 			errs.AppendError(errors.New("command leaf aliases must not be blank"))
 		}
 	}
@@ -224,7 +227,7 @@ func (l *commandLeafBuilder) Build(ctx *WarningContext) (CommandLeaf, error) {
 		}
 
 		if useShortH || useLongH {
-			if len(leaf.flags) == 0 || leaf.flags[0].Name() != defaultGroupName || leaf.flags[0].size() > 5 {
+			if len(leaf.flags) == 0 || leaf.flags[0].Name() != chars.DefaultGroupName || leaf.flags[0].size() > 5 {
 				group, err := NewFlagGroupBuilder("Help Flags").
 					WithFlag(makeLeafHelp(useShortH, useLongH, leaf)).
 					Build(ctx)
@@ -265,7 +268,7 @@ func makeLeafHelp(short, long bool, leaf CommandLeaf) FlagBuilder {
 	builder := NewFlagBuilder().
 		setIsHelpFlag().
 		WithCallback(func(flag Flag) {
-			must(comLeafRenderer{}.RenderHelp(leaf, os.Stdout))
+			util.Must(comLeafRenderer{}.RenderHelp(leaf, os.Stdout))
 			os.Exit(0)
 		}).
 		WithDescription("Prints this help text.")

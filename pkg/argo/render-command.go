@@ -3,6 +3,8 @@ package argo
 import (
 	"bufio"
 	"io"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
 )
 
 // CommandHelpRenderer returns a HelpRenderer instance that is suited to
@@ -28,7 +30,7 @@ func (r comRenderer) renderCommand(com Command, out *bufio.Writer) error {
 	if err := r.renderCommandUsageBlock(com, out); err != nil {
 		return err
 	}
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 	return r.renderCommandBackHalf(com, out)
@@ -38,7 +40,7 @@ func (r comRenderer) renderCommandUsageBlock(com Command, out *bufio.Writer) err
 	if _, err := out.WriteString(comPrefix); err != nil {
 		return err
 	}
-	if _, err := out.WriteString(subLinePadding[0]); err != nil {
+	if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
 		return err
 	}
 	if _, err := out.WriteString(com.Name()); err != nil {

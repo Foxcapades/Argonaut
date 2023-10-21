@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"io"
 	"slices"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
 )
 
 // CommandLeafHelpRenderer returns a HelpRenderer instance that is suited to
@@ -29,12 +31,12 @@ func (r comLeafRenderer) renderCommandLeaf(leaf CommandLeaf, out *bufio.Writer) 
 	if err := r.renderCommandLeafUsage(leaf, out); err != nil {
 		return err
 	}
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
 	if leaf.HasAliases() {
-		if _, err := out.WriteString(subLinePadding[0]); err != nil {
+		if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
 			return err
 		}
 		if _, err := out.WriteString("Aliases: "); err != nil {
@@ -54,7 +56,7 @@ func (r comLeafRenderer) renderCommandLeaf(leaf CommandLeaf, out *bufio.Writer) 
 				return err
 			}
 		}
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 	}

@@ -1,16 +1,17 @@
-package argo
+package util
 
-type deque[T any] interface {
+type Deque[T any] interface {
 	IsEmpty() bool
 	Poll() T
 	Offer(value T) bool
+	LastIndex() int
 }
 
-func newDeque[T any](initialSize int) deque[T] {
-	return newCappedDeque[T](-1, initialSize)
+func NewDeque[T any](initialSize int) Deque[T] {
+	return NewCappedDeque[T](-1, initialSize)
 }
 
-func newCappedDeque[T any](maxSize, initialSize int) deque[T] {
+func NewCappedDeque[T any](maxSize, initialSize int) Deque[T] {
 	return &dequeImpl[T]{maxSize: maxSize, initSize: initialSize}
 }
 
@@ -27,18 +28,6 @@ type dequeImpl[T any] struct {
 //   INTERNAL API
 //
 // // // // // // // // // // // // // // // // // // // // // // // // // // //
-
-func (d *dequeImpl[T]) compact() {
-	d.copyElements(len(d.container))
-}
-
-func (d *dequeImpl[T]) trimToSize() {
-	d.copyElements(d.size)
-}
-
-func (d *dequeImpl[T]) isInline() bool {
-	return d.realHead <= d.LastIndex()
-}
 
 func (d *dequeImpl[T]) ensureCapacity(minimum int) {
 	if !d.canGrowTo(minimum) {
@@ -57,25 +46,9 @@ func (d *dequeImpl[T]) ensureCapacity(minimum int) {
 	d.copyElements(d.newCap(len(d.container), minimum))
 }
 
-func (d *dequeImpl[T]) vei(i int) int {
-	if i < 0 || i > d.size-1 {
-		panic("index out of bounds")
-	}
-
-	return d.internalIndex(i)
-}
-
 func (d *dequeImpl[T]) positiveMod(i int) int {
 	if i >= len(d.container) {
 		return i - len(d.container)
-	}
-
-	return i
-}
-
-func (d *dequeImpl[T]) negativeMod(i int) int {
-	if i < 0 {
-		return i + len(d.container)
 	}
 
 	return i
@@ -91,14 +64,6 @@ func (d *dequeImpl[T]) incremented(i int) int {
 	}
 
 	return i + 1
-}
-
-func (d *dequeImpl[T]) decremented(i int) int {
-	if i < 1 {
-		return len(d.container) - 1
-	}
-
-	return i - 1
 }
 
 func (d *dequeImpl[T]) copyElements(capacity int) {

@@ -1,16 +1,22 @@
 package argo
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/parse"
+	"github.com/Foxcapades/Argonaut/internal/util"
+)
 
 type commandInterpreter struct {
-	parser   parser
+	parser   parse.Parser
 	command  Command
 	flagHits []Flag
-	elements deque[element]
+	elements util.Deque[parse.Element]
 	boundary bool
 }
 
-func (c *commandInterpreter) nextElement() element {
+func (c *commandInterpreter) nextElement() parse.Element {
 	if c.elements.IsEmpty() {
 		c.elements.Offer(c.parser.Next())
 	}
@@ -28,7 +34,7 @@ FOR:
 		// If we've already hit the boundary marker then everything else is just a
 		// passthrough.
 		if c.boundary {
-			if element.Type == elementTypeEnd {
+			if element.Type == parse.ElementTypeEnd {
 				break
 			}
 
@@ -38,36 +44,36 @@ FOR:
 
 		switch element.Type {
 
-		case elementTypePlainText:
+		case parse.ElementTypePlainText:
 			if err = c.command.appendArgument(element.String()); err != nil {
 				return err
 			}
 
-		case elementTypeShortBlockSolo:
+		case parse.ElementTypeShortBlockSolo:
 			if c.boundary, err = c.interpretShortSolo(&element); err != nil {
 				return err
 			}
 
-		case elementTypeShortBlockPair:
+		case parse.ElementTypeShortBlockPair:
 			if c.boundary, err = c.interpretShortPair(&element); err != nil {
 				return err
 			}
 
-		case elementTypeLongFlagSolo:
+		case parse.ElementTypeLongFlagSolo:
 			if c.boundary, err = c.interpretLongSolo(&element); err != nil {
 				return err
 			}
 
-		case elementTypeLongFlagPair:
+		case parse.ElementTypeLongFlagPair:
 			if c.boundary, err = c.interpretLongPair(&element); err != nil {
 				return err
 			}
 
-		case elementTypeBoundary:
+		case parse.ElementTypeBoundary:
 			c.boundary = true
 			continue
 
-		case elementTypeEnd:
+		case parse.ElementTypeEnd:
 			break FOR
 
 		default:
@@ -136,7 +142,7 @@ FOR:
 	return nil
 }
 
-func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
+func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) {
 	remainder := e.Data[0]
 
 	for i := 0; i < len(e.Data[0]); i++ {
@@ -152,7 +158,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 		// on to the next character.
 		if f == nil {
 			c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
-			c.command.appendUnmapped(strDash + remainder[0:1])
+			c.command.appendUnmapped(chars.StrDash + remainder[0:1])
 			remainder = remainder[1:]
 			continue
 		}
@@ -171,11 +177,11 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 
 				// If the next element is literally the end of the cli args, then we
 				// obviously can't set an argument on this flag.  Tough luck, dude.
-				if nextElement.Type == elementTypeEnd {
+				if nextElement.Type == parse.ElementTypeEnd {
 					return false, f.hit()
 				}
 
-				if nextElement.Type == elementTypeBoundary {
+				if nextElement.Type == parse.ElementTypeBoundary {
 					return true, f.hit()
 				}
 
@@ -220,22 +226,22 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 
 				switch nextElement.Type {
 
-				case elementTypeEnd:
+				case parse.ElementTypeEnd:
 					if hasBooleanArgument(f) {
 						return false, f.hitWithArg("true")
 					}
 					return false, f.hit()
 
-				case elementTypeBoundary:
+				case parse.ElementTypeBoundary:
 					if hasBooleanArgument(f) {
 						return true, f.hitWithArg("true")
 					}
 					return true, f.hit()
 
-				case elementTypePlainText:
+				case parse.ElementTypePlainText:
 					return false, f.hitWithArg(nextElement.Data[0])
 
-				case elementTypeShortBlockSolo:
+				case parse.ElementTypeShortBlockSolo:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
@@ -243,7 +249,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 
 					return false, f.hitWithArg(nextElement.String())
 
-				case elementTypeShortBlockPair:
+				case parse.ElementTypeShortBlockPair:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
@@ -251,7 +257,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 
 					return false, f.hitWithArg(nextElement.String())
 
-				case elementTypeLongFlagPair:
+				case parse.ElementTypeLongFlagPair:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
@@ -259,7 +265,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 
 					return false, f.hitWithArg(nextElement.String())
 
-				case elementTypeLongFlagSolo:
+				case parse.ElementTypeLongFlagSolo:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 						c.elements.Offer(nextElement)
 						return false, f.hit()
@@ -286,7 +292,7 @@ func (c *commandInterpreter) interpretShortSolo(e *element) (bool, error) {
 	return false, nil
 }
 
-func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
+func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) {
 	block := e.Data[0]
 
 	if len(block) == 0 {
@@ -315,7 +321,7 @@ func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
 
 		if f == nil {
 			c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
-			c.command.appendUnmapped(strDash + block[0:1])
+			c.command.appendUnmapped(chars.StrDash + block[0:1])
 			continue
 		}
 
@@ -359,7 +365,7 @@ func (c *commandInterpreter) interpretShortPair(e *element) (bool, error) {
 	panic("illegal state")
 }
 
-func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
+func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 	f := c.command.FindLongFlag(e.Data[0])
 
 	if f == nil {
@@ -371,11 +377,11 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 	if f.RequiresArgument() {
 		nextElement := c.parser.Next()
 
-		if nextElement.Type == elementTypeEnd {
+		if nextElement.Type == parse.ElementTypeEnd {
 			return false, f.hit()
 		}
 
-		if nextElement.Type == elementTypeBoundary {
+		if nextElement.Type == parse.ElementTypeBoundary {
 			return true, f.hit()
 		}
 
@@ -387,16 +393,16 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 
 		switch nextElement.Type {
 
-		case elementTypeEnd:
+		case parse.ElementTypeEnd:
 			return false, f.hit()
 
-		case elementTypeBoundary:
+		case parse.ElementTypeBoundary:
 			return true, f.hit()
 
-		case elementTypePlainText:
+		case parse.ElementTypePlainText:
 			return false, f.hitWithArg(nextElement.Data[0])
 
-		case elementTypeLongFlagSolo:
+		case parse.ElementTypeLongFlagSolo:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
@@ -404,7 +410,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 
 			return false, f.hitWithArg(nextElement.String())
 
-		case elementTypeLongFlagPair:
+		case parse.ElementTypeLongFlagPair:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
@@ -412,7 +418,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 
 			return false, f.hitWithArg(nextElement.String())
 
-		case elementTypeShortBlockSolo:
+		case parse.ElementTypeShortBlockSolo:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
@@ -420,7 +426,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 
 			return false, f.hitWithArg(nextElement.String())
 
-		case elementTypeShortBlockPair:
+		case parse.ElementTypeShortBlockPair:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.elements.Offer(nextElement)
 				return false, f.hit()
@@ -436,7 +442,7 @@ func (c *commandInterpreter) interpretLongSolo(e *element) (bool, error) {
 	return false, f.hit()
 }
 
-func (c *commandInterpreter) interpretLongPair(e *element) (bool, error) {
+func (c *commandInterpreter) interpretLongPair(e *parse.Element) (bool, error) {
 	flag := c.command.FindLongFlag(e.Data[0])
 
 	if flag == nil {

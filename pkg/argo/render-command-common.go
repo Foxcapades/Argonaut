@@ -3,6 +3,8 @@ package argo
 import (
 	"bufio"
 	"slices"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
 )
 
 const (
@@ -26,13 +28,13 @@ func renderSubCommandPath(node CommandNode, out *bufio.Writer) error {
 
 	slices.Reverse(path)
 
-	if _, err := out.WriteString(subLinePadding[0]); err != nil {
+	if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
 		return err
 	}
 
 	for i, segment := range path {
 		if i > 0 {
-			if err := out.WriteByte(charSpace); err != nil {
+			if err := out.WriteByte(chars.CharSpace); err != nil {
 				return err
 			}
 		}
@@ -50,10 +52,12 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 
 	// If the command has a description, append it.
 	if com.HasDescription() {
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
-		if err := breakFmt(com.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
+
+		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], chars.HelpTextMaxWidth, out)
+		if err := formatter.Format(com.Description()); err != nil {
 			return err
 		}
 	}
@@ -77,12 +81,12 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 
 	if com.HasFlagGroups() {
 		if com.HasDescription() {
-			if err := out.WriteByte(charLF); err != nil {
+			if err := out.WriteByte(chars.CharLF); err != nil {
 				return err
 			}
 		}
 
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 		if err := r.renderFlagGroups(com.FlagGroups(), 0, out); err != nil {
@@ -91,10 +95,10 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 	}
 
 	if writeArgs {
-		if _, err := out.WriteString(paragraphBreak); err != nil {
+		if _, err := out.WriteString(chars.ParagraphBreak); err != nil {
 			return err
 		}
-		if _, err := out.WriteString(headerPadding[0]); err != nil {
+		if _, err := out.WriteString(chars.HeaderPadding[0]); err != nil {
 			return err
 		}
 		if _, err := out.WriteString(comArgs); err != nil {
@@ -105,11 +109,11 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 
 		for i, arg := range com.Arguments() {
 			if i > 0 {
-				if err := out.WriteByte(charLF); err != nil {
+				if err := out.WriteByte(chars.CharLF); err != nil {
 					return err
 				}
 			}
-			if err := out.WriteByte(charLF); err != nil {
+			if err := out.WriteByte(chars.CharLF); err != nil {
 				return err
 			}
 			if multiArgs {
@@ -124,7 +128,7 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 		}
 	}
 
-	return out.WriteByte(charLF)
+	return out.WriteByte(chars.CharLF)
 }
 
 func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Writer) error {
@@ -137,7 +141,7 @@ func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Wr
 		for _, group := range com.FlagGroups() {
 			for _, flag := range group.Flags() {
 				if flag.IsRequired() {
-					if err := out.WriteByte(charSpace); err != nil {
+					if err := out.WriteByte(chars.CharSpace); err != nil {
 						return err
 					}
 					if err := r.renderShortestFlagLine(flag, out); err != nil {
@@ -162,7 +166,7 @@ func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Wr
 		multiArgs := len(com.Arguments()) > 1
 
 		for i, arg := range com.Arguments() {
-			if err := out.WriteByte(charSpace); err != nil {
+			if err := out.WriteByte(chars.CharSpace); err != nil {
 				return err
 			}
 			if multiArgs {
@@ -178,7 +182,7 @@ func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Wr
 	}
 
 	if com.HasUnmappedLabel() {
-		if err := out.WriteByte(charSpace); err != nil {
+		if err := out.WriteByte(chars.CharSpace); err != nil {
 			return err
 		}
 		if err := out.WriteByte(argOptPrefix); err != nil {

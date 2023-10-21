@@ -2,22 +2,26 @@ package argo
 
 import (
 	"fmt"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/parse"
+	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 type commandTreeInterpreter struct {
-	parser   parser
+	parser   parse.Parser
 	current  CommandNode
 	boundary bool
 
 	tree     CommandTree
 	branches []CommandBranch
 	leaf     CommandLeaf
-	queue    deque[element]
+	queue    util.Deque[parse.Element]
 
 	flagHits []Flag
 }
 
-func (c *commandTreeInterpreter) next() element {
+func (c *commandTreeInterpreter) next() parse.Element {
 	if c.queue.IsEmpty() {
 		c.queue.Offer(c.parser.Next())
 	}
@@ -37,7 +41,7 @@ FOR:
 		// passthrough element.
 		if c.boundary {
 
-			if element.Type == elementTypeEnd {
+			if element.Type == parse.ElementTypeEnd {
 				break
 			}
 
@@ -46,7 +50,7 @@ FOR:
 		}
 
 		switch element.Type {
-		case elementTypePlainText:
+		case parse.ElementTypePlainText:
 			// If we've hit the leaf node, then the plain text becomes an argument on
 			// that node.  If we haven't yet hit the leaf node, then we must treat the
 			// plaintext value as the name of the next node in the tree.  If no such
@@ -73,30 +77,30 @@ FOR:
 				panic("illegal state: command node was neither a leaf or a parent")
 			}
 
-		case elementTypeLongFlagPair:
+		case parse.ElementTypeLongFlagPair:
 			if err := c.interpretLongPair(&element, &unmapped); err != nil {
 				return err
 			}
 
-		case elementTypeLongFlagSolo:
+		case parse.ElementTypeLongFlagSolo:
 			if err := c.interpretLongSolo(&element, &unmapped); err != nil {
 				return err
 			}
 
-		case elementTypeShortBlockSolo:
+		case parse.ElementTypeShortBlockSolo:
 			if err := c.interpretShortSolo(&element, &unmapped); err != nil {
 				return err
 			}
 
-		case elementTypeShortBlockPair:
+		case parse.ElementTypeShortBlockPair:
 			if err := c.interpretShortPair(&element, &unmapped); err != nil {
 				return err
 			}
 
-		case elementTypeBoundary:
+		case parse.ElementTypeBoundary:
 			c.boundary = true
 
-		case elementTypeEnd:
+		case parse.ElementTypeEnd:
 			break FOR
 
 		default:
@@ -200,7 +204,7 @@ FOR:
 	return nil
 }
 
-func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unmapped *[]string) error {
 	remainder := element.Data[0]
 
 	for i := 0; i < len(element.Data[0]); i++ {
@@ -216,7 +220,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 		// on to the next character.
 		if f == nil {
 			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
-			*unmapped = append(*unmapped, strDash+remainder[0:1])
+			*unmapped = append(*unmapped, chars.StrDash+remainder[0:1])
 			continue
 		}
 
@@ -234,11 +238,11 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 
 				// If the next element is literally the end of the cli args, then we
 				// obviously can't set an argument on this flag.  Tough luck, dude.
-				if nextElement.Type == elementTypeEnd {
+				if nextElement.Type == parse.ElementTypeEnd {
 					return f.hit()
 				}
 
-				if nextElement.Type == elementTypeBoundary {
+				if nextElement.Type == parse.ElementTypeBoundary {
 					c.boundary = true
 					return f.hit()
 				}
@@ -287,23 +291,23 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 
 				switch nextElement.Type {
 
-				case elementTypeEnd:
+				case parse.ElementTypeEnd:
 					if hasBooleanArgument(f) {
 						return f.hitWithArg("true")
 					}
 					return f.hit()
 
-				case elementTypeBoundary:
+				case parse.ElementTypeBoundary:
 					if hasBooleanArgument(f) {
 						return f.hitWithArg("true")
 					}
 					c.boundary = true
 					return f.hit()
 
-				case elementTypePlainText:
+				case parse.ElementTypePlainText:
 					return f.hitWithArg(nextElement.Data[0])
 
-				case elementTypeShortBlockSolo:
+				case parse.ElementTypeShortBlockSolo:
 					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.queue.Offer(nextElement)
 						return f.hit()
@@ -311,7 +315,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 						return f.hitWithArg(nextElement.String())
 					}
 
-				case elementTypeShortBlockPair:
+				case parse.ElementTypeShortBlockPair:
 					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.queue.Offer(nextElement)
 						return f.hit()
@@ -319,7 +323,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 						return f.hitWithArg(nextElement.String())
 					}
 
-				case elementTypeLongFlagPair:
+				case parse.ElementTypeLongFlagPair:
 					if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 						c.queue.Offer(nextElement)
 						return f.hit()
@@ -327,7 +331,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 						return f.hitWithArg(nextElement.String())
 					}
 
-				case elementTypeLongFlagSolo:
+				case parse.ElementTypeLongFlagSolo:
 					if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 						c.queue.Offer(nextElement)
 						return f.hit()
@@ -354,7 +358,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *element, unmapped *
 	return nil
 }
 
-func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unmapped *[]string) error {
 	block := element.Data[0]
 
 	if len(block) == 0 {
@@ -385,7 +389,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 
 		if f == nil {
 			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
-			*unmapped = append(*unmapped, strDash+block[0:1])
+			*unmapped = append(*unmapped, chars.StrDash+block[0:1])
 			block = block[1:]
 			continue
 		}
@@ -444,7 +448,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *element, unmapped *
 	panic("illegal state")
 }
 
-func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretLongSolo(element *parse.Element, unmapped *[]string) error {
 	f := c.current.FindLongFlag(element.Data[0])
 
 	if f == nil {
@@ -458,11 +462,11 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 	if f.RequiresArgument() {
 		nextElement := c.next()
 
-		if nextElement.Type == elementTypeEnd {
+		if nextElement.Type == parse.ElementTypeEnd {
 			return f.hit()
 		}
 
-		if nextElement.Type == elementTypeBoundary {
+		if nextElement.Type == parse.ElementTypeBoundary {
 			c.boundary = true
 			return f.hit()
 		}
@@ -475,17 +479,17 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 
 		switch nextElement.Type {
 
-		case elementTypeEnd:
+		case parse.ElementTypeEnd:
 			return f.hit()
 
-		case elementTypeBoundary:
+		case parse.ElementTypeBoundary:
 			c.boundary = true
 			return f.hit()
 
-		case elementTypePlainText:
+		case parse.ElementTypePlainText:
 			return f.hitWithArg(nextElement.Data[0])
 
-		case elementTypeLongFlagSolo:
+		case parse.ElementTypeLongFlagSolo:
 			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 				c.queue.Offer(nextElement)
 				return f.hit()
@@ -493,7 +497,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 				return f.hitWithArg(nextElement.String())
 			}
 
-		case elementTypeLongFlagPair:
+		case parse.ElementTypeLongFlagPair:
 			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
 				c.queue.Offer(nextElement)
 				return f.hit()
@@ -501,7 +505,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 				return f.hitWithArg(nextElement.String())
 			}
 
-		case elementTypeShortBlockSolo:
+		case parse.ElementTypeShortBlockSolo:
 			if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.queue.Offer(nextElement)
 				return f.hit()
@@ -509,7 +513,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 				return f.hitWithArg(nextElement.String())
 			}
 
-		case elementTypeShortBlockPair:
+		case parse.ElementTypeShortBlockPair:
 			if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 				c.queue.Offer(nextElement)
 				return f.hit()
@@ -525,7 +529,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *element, unmapped *[
 	return f.hit()
 }
 
-func (c *commandTreeInterpreter) interpretLongPair(element *element, unmapped *[]string) error {
+func (c *commandTreeInterpreter) interpretLongPair(element *parse.Element, unmapped *[]string) error {
 	flag := c.current.FindLongFlag(element.Data[0])
 
 	if flag == nil {

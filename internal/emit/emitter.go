@@ -1,68 +1,73 @@
-package argo
+package emit
 
-type event struct {
-	Kind eventKind
+import (
+	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/Foxcapades/Argonaut/internal/util"
+)
+
+type Event struct {
+	Kind EventKind
 	Data string
 }
 
-type eventKind uint8
+type EventKind uint8
 
 const (
-	eventKindDash eventKind = iota
-	eventKindText
-	eventKindEquals
-	eventKindBreak
-	eventKindEnd
+	EventKindDash EventKind = iota
+	EventKindText
+	EventKindEquals
+	EventKindBreak
+	EventKindEnd
 )
 
-func (k eventKind) String() string {
+func (k EventKind) String() string {
 	switch k {
-	case eventKindDash:
+	case EventKindDash:
 		return "dash"
-	case eventKindText:
+	case EventKindText:
 		return "text"
-	case eventKindEquals:
+	case EventKindEquals:
 		return "equals"
-	case eventKindBreak:
+	case EventKindBreak:
 		return "break"
-	case eventKindEnd:
+	case EventKindEnd:
 		return "end"
 	default:
 		return "invalid"
 	}
 }
 
-func endEvent() event {
-	return event{Kind: eventKindEnd, Data: strEmpty}
+func endEvent() Event {
+	return Event{Kind: EventKindEnd, Data: chars.StrEmpty}
 }
 
-func breakEvent() event {
-	return event{Kind: eventKindBreak, Data: strEmpty}
+func breakEvent() Event {
+	return Event{Kind: EventKindBreak, Data: chars.StrEmpty}
 }
 
-func dashEvent() event {
-	return event{Kind: eventKindDash, Data: strDash}
+func dashEvent() Event {
+	return Event{Kind: EventKindDash, Data: chars.StrDash}
 }
 
-func textEvent(txt string) event {
-	return event{Kind: eventKindText, Data: txt}
+func textEvent(txt string) Event {
+	return Event{Kind: EventKindText, Data: txt}
 }
 
-func equalsEvent() event {
-	return event{Kind: eventKindEquals, Data: strEquals}
+func equalsEvent() Event {
+	return Event{Kind: EventKindEquals, Data: chars.StrEquals}
 }
 
-func newEmitter(args []string) emitter {
-	return emitter{arguments: args, next: newDeque[event](6), argumentIndex: 1}
+func NewEmitter(args []string) Emitter {
+	return Emitter{arguments: args, next: util.NewDeque[Event](6), argumentIndex: 1}
 }
 
-type emitter struct {
+type Emitter struct {
 	arguments     []string
 	argumentIndex int
-	next          deque[event]
+	next          util.Deque[Event]
 }
 
-func (e *emitter) Next() event {
+func (e *Emitter) Next() Event {
 	if e.next.IsEmpty() {
 		e.queueNext()
 	}
@@ -70,7 +75,7 @@ func (e *emitter) Next() event {
 	return e.next.Poll()
 }
 
-func (e *emitter) queueNext() {
+func (e *Emitter) queueNext() {
 	if e.argumentIndex >= len(e.arguments) {
 		e.next.Offer(endEvent())
 	} else {
@@ -79,7 +84,7 @@ func (e *emitter) queueNext() {
 	}
 }
 
-func (e *emitter) scan(arg string) {
+func (e *Emitter) scan(arg string) {
 	// If the argument is an empty string.
 	if len(arg) == 0 {
 		e.next.Offer(textEvent(arg))
@@ -89,7 +94,7 @@ func (e *emitter) scan(arg string) {
 
 	// Consume any leading dash characters and pass them up.
 	i := 0
-	for i < len(arg) && arg[i] == charDash {
+	for i < len(arg) && arg[i] == chars.CharDash {
 		e.next.Offer(dashEvent())
 		i++
 	}
@@ -104,7 +109,7 @@ func (e *emitter) scan(arg string) {
 	sub := arg[i:]
 
 	// Find the next equals character
-	ne := nextEquals(sub)
+	ne := chars.NextEquals(sub)
 
 	// If there is no next equals character, pass up the whole substring
 	if ne == -1 {

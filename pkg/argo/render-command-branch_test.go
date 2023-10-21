@@ -115,7 +115,7 @@ func TestCommandBranchHelpRendererFail01(t *testing.T) {
 		MustParse([]string{"command", "branch1", "cruise", "-a"})
 	ren := argo.CommandBranchHelpRenderer()
 
-	for p := 1; p <= 536; p++ {
+	for p := 1; p <= len(branchHelp001); p++ {
 		wri := FailingWriter{FailAfter: p}
 		buf := bufio.NewWriterSize(&wri, 1)
 

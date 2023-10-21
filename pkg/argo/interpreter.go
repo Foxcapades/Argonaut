@@ -1,21 +1,27 @@
 package argo
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/Foxcapades/Argonaut/internal/emit"
+	"github.com/Foxcapades/Argonaut/internal/parse"
+	"github.com/Foxcapades/Argonaut/internal/util"
+)
 
 func newCommandInterpreter(args []string, command Command) interpreter {
 	return &commandInterpreter{
-		parser:   newParser(newEmitter(args)),
+		parser:   parse.NewParser(emit.NewEmitter(args)),
 		command:  command,
-		elements: newDeque[element](2),
+		elements: util.NewDeque[parse.Element](2),
 	}
 }
 
 func newCommandTreeInterpreter(args []string, command CommandTree) interpreter {
 	return &commandTreeInterpreter{
-		parser:  newParser(newEmitter(args)),
+		parser:  parse.NewParser(emit.NewEmitter(args)),
 		current: command,
 		tree:    command,
-		queue:   newDeque[element](2),
+		queue:   util.NewDeque[parse.Element](2),
 	}
 }
 

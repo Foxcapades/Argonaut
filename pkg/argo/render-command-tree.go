@@ -3,6 +3,8 @@ package argo
 import (
 	"bufio"
 	"io"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
 )
 
 // CommandTreeHelpRenderer returns a HelpRenderer instance that is suited to
@@ -28,7 +30,7 @@ func (r comTreeRenderer) renderCommandTree(tree CommandTree, out *bufio.Writer) 
 	if err := r.renderCommandTreeUsageBlock(tree, out); err != nil {
 		return err
 	}
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
@@ -36,34 +38,35 @@ func (r comTreeRenderer) renderCommandTree(tree CommandTree, out *bufio.Writer) 
 	hf := tree.HasFlagGroups()
 
 	if hd {
-		if err := breakFmt(tree.Description(), descriptionPadding[0], helpTextMaxWidth, out); err != nil {
+		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], chars.HelpTextMaxWidth, out)
+		if err := formatter.Format(tree.Description()); err != nil {
 			return err
 		}
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 	}
 
 	if hf {
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 		if err := r.renderFlagGroups(tree.FlagGroups(), 0, out); err != nil {
 			return err
 		}
-		if err := out.WriteByte(charLF); err != nil {
+		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
 	}
 
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 	if err := renderCommandGroups(tree.CommandGroups(), 0, out); err != nil {
 		return err
 	}
 
-	if err := out.WriteByte(charLF); err != nil {
+	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
@@ -74,7 +77,7 @@ func (r comTreeRenderer) renderCommandTreeUsageBlock(tree CommandTree, out *bufi
 	if _, err := out.WriteString(comPrefix); err != nil {
 		return err
 	}
-	if _, err := out.WriteString(subLinePadding[0]); err != nil {
+	if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
 		return err
 	}
 	if _, err := out.WriteString(tree.Name()); err != nil {
@@ -87,7 +90,7 @@ func (r comTreeRenderer) renderCommandTreeUsageBlock(tree CommandTree, out *bufi
 		for _, group := range tree.FlagGroups() {
 			for _, flag := range group.Flags() {
 				if flag.IsRequired() {
-					if err := out.WriteByte(charSpace); err != nil {
+					if err := out.WriteByte(chars.CharSpace); err != nil {
 						return err
 					}
 					if err := r.renderShortestFlagLine(flag, out); err != nil {

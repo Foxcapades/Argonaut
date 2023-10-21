@@ -1,6 +1,10 @@
 package argo
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/Foxcapades/Argonaut/internal/chars"
+)
 
 // A FlagGroupBuilder is used to build a group or category of flags that go
 // together.  This is primarily used for rendering help text.
@@ -65,7 +69,7 @@ func (g *flagGroupBuilder) Build(ctx *WarningContext) (FlagGroup, error) {
 	flags := make([]Flag, 0, len(g.flags))
 
 	// Ensure the group name is not blank
-	if isBlank(g.name) {
+	if chars.IsBlank(g.name) {
 		errs.AppendError(errors.New("flag group names must not be blank"))
 	}
 
