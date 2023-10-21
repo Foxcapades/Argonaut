@@ -14,12 +14,83 @@ image:https://img.shields.io/github/license/Foxcapades/Argonaut[GitHub]
 
 A builder style CLI creation kit.
 
+== Features
+
+* Builder-style construction of singular commands or command trees.
++
+[source, go]
+----
+    com := cli.Command().
+        WithFlag(cli.Flag().
+            WithLongForm("string-slice").
+            WithShortForm('s').
+            WithBinding(&conf.Strings, true)).
+        WithFlag(cli.Flag().
+            WithLongForm("int-bool-map").
+            WithShortForm('i').
+            WithBinding(&conf.IntToBool, true)).
+        WithFlag(cli.Flag().
+            WithLongForm("string-bytes").
+            WithShortForm('b').
+            WithBinding(&conf.StringToBytes, true)).
+        MustParse(os.Args)
+----
+* Automatic help text generation.
++
+[source]
+----
+Usage:
+  main [options] <command>
+    This is a simple command tree example.
+
+Flags
+  -h | --help
+      Prints this help text.
+
+Commands
+  fizz    Aliases: fi
+      This is the description for the fizz branch.
+  foo     Aliases: fo
+      this is the description for the foo branch
+----
+* API that allows for unmarshalling of command line arguments into arbitrary
+  types, including custom types using the `argo.Unmarshaler` interface.
++
+[source, go]
+----
+type MyType struct {
+    Value int
+}
+
+func (h *MyType) Unmarshal(value string) (err error) {
+    h.Value, err = strconv.ParseInt(value, 16, strconv.IntSize)
+    return
+}
+
+func main() {
+    var val MyType
+    var foo string
+    var bar []int
+
+    cli.Command().
+        WithFlag(cli.ShortFlag('f').WithBinding(&foo, true)).
+        WithFlag(cli.LongFlag("bar").WithBinding(&bar, true)).
+        WithArgument(cli.Argument().WithBinding(&val).Require()).
+        MustParse(os.Args)
+
+    fmt.Println(val)
+    fmt.Println(foo)
+    fmt.Println(bar)
+}
+----
 
 == Supported Types
 
-By default Argonaut can parse the following built-in Go types.
+=== Built-In
 
-=== Basic Types
+By default, Argonaut can parse the following built-in Go types.
+
+==== Basic Types
 
 In following tables, all entries in this table will be referenced by `<basic>`.
 
@@ -36,7 +107,7 @@ Currently `complex64` and `complex128` are not supported.
 
 Additionally, pointers of arbitrary depth to these types are can also be parsed.
 
-=== Container Types
+==== Container Types
 
 Like with the basic types, references to `<basic>` here can be pointers of
 arbitrary depth to those basic types.
