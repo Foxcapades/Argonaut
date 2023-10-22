@@ -153,8 +153,7 @@ arbitrary depth.
 | map[<basic>]<basic> | map[<basic>][]byte
 |===
 
-A planned future feature is to allow maps to slices of any
-of the basic types.
+A planned future feature is to allow maps to slices of the basic types.
 
 === Custom types
 
@@ -210,8 +209,8 @@ o77
 O77
 ----
 
-Additionally, the `argo` package contains predefined types
-to force base8 parsing without requiring a prefix.
+Additionally, the `argo` package contains predefined types to force base8
+parsing without requiring a prefix.
 
 .Provided Octal Types
 [cols="m,m,m", width="100%"]
@@ -225,8 +224,7 @@ to force base8 parsing without requiring a prefix.
 
 === Boolean
 
-Arguments of type `bool` can be represented by the following
-formats.
+Arguments of type `bool` can be represented by the following formats.
 
 [cols="h,m,m,m,m,m,m", width="100%"]
 |===
@@ -234,9 +232,8 @@ formats.
 | false | false | f | no  | n | 0 | off
 |===
 
-A boolean argument attached to a flag can also be set to
-`true` simply by the existence of that flag in the CLI
-input.
+A boolean argument attached to a flag can also be set to `true` simply by the
+existence of that flag in the CLI input.
 
 == Examples
 
