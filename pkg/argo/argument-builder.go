@@ -39,11 +39,11 @@ type ArgumentBuilder interface {
 	// will result in an error being returned when building the argument is
 	// attempted.
 	//
-	// Example 1:
+	// Example 1 (a simple var binding):
 	//     var myValue time.Duration
 	//     cli.Argument.WithBinding(&myValue)
 	//
-	// Example 2:
+	// Example 2 (a consumer func):
 	//     cli.Argument.WithBinding(UnmarshalerFunc(func(raw string) error {
 	//         fmt.Println(raw)
 	//         return nil
@@ -52,6 +52,22 @@ type ArgumentBuilder interface {
 	// Example 3 (lets get silly with it):
 	//     var myValue map[bool]**string
 	//     cli.Argument.WithBinding(&myValue)
+	//
+	// Example 4 (custom type)
+	//     type Foo struct {
+	//         // some fields
+	//     }
+	//
+	//     func (f *Foo) Unmarshal(raw string) error {
+	//         // parse the given string
+	//         return nil
+	//     }
+	//
+	//     func main() {
+	//         var foo Foo
+	//         cli.Argument().WithBinding(&foo)
+	//     }
+	//
 	WithBinding(pointer any) ArgumentBuilder
 
 	getBinding() any
@@ -64,12 +80,15 @@ type ArgumentBuilder interface {
 	// is parsed.
 	//
 	// When used, the type of this value must meet one of the following criteria:
-	//   1. `val` is compatible with the type of the value used with `Bind()`
-	//   2. `val` is a function which returns a type that is compatible with the
-	//      type of the value used with `Bind()`
+	//   1. `val` is compatible with the type of the value used with
+	//      WithBinding.
+	//   2. `val` is a string that may be parsed into a value of the type used
+	//      with WithBinding.
 	//   3. `val` is a function which returns a type that is compatible with the
-	//      type of the value used with `Bind()` in addition to returning an error
-	//      as the second return value.
+	//      type of the value used with WithBinding
+	//   4. `val` is a function which returns a type that is compatible with the
+	//      type of the value used with WithBinding in addition to returning an
+	//      error as the second return value.
 	//
 	// Examples:
 	//     arg.WithBinding(&fooString).WithDefault(3)   // Type mismatch
