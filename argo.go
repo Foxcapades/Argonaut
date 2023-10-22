@@ -1,3 +1,29 @@
+// Package cli provides a convenience methods for constructing command line
+// interfaces using the argo package.
+//
+// Commands may be either singular commands or command trees.  A singular
+// command has no subcommand and may take any number of flags and/or arguments.
+// A command tree is a root command that may have an arbitrary depth of
+// branching subcommands which each may take their own flags, with the leaf
+// nodes of the tree also accepting arguments.
+//
+// An example single command:
+//     tar -xf foo.tgz
+//
+// Here the single command `tar` accepts the flags `-x` and -f`, with the `-f`
+// flag taking the argument `foo.tgz`.
+//
+// An example command tree:
+//     docker compose -f my-docker-compose.yml up my-service
+//
+// Here the command tree is constructed of 3 levels, the root of the tree
+// (docker), the intermediary branch (compose) and the leaf command (up).  The
+// branch is taking an argument (-f) which is itself taking an argument
+// (my-docker-compose.yml).  The leaf command (up) is accepting an optional
+// argument (my-service).
+//
+// Command construction starts with either the `cli.Command` function or the
+// `cli.Tree` function.
 package cli
 
 import (
