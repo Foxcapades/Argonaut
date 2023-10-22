@@ -200,7 +200,7 @@ func (r renderBase) renderShortestFlagLine(flag Flag, sb *bufio.Writer) error {
 		}
 
 		if flag.HasArgument() {
-			if err := sb.WriteByte(chars.CharSpace); err != nil {
+			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
 			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {

@@ -8,7 +8,7 @@ import (
 )
 
 const branchHelp001 = `Usage:
-  %s branch1 -a [arg] [options] <command>
+  %s branch1 -a=[arg] [options] <command>
   Aliases: branch2, branch3
 
     A description of this command.

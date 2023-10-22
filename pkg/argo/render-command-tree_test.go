@@ -120,7 +120,7 @@ func TestCommandTreeHelpRenderer005(t *testing.T) {
 }
 
 const treeHelp006 = `Usage:
-  %s -c <arg> [options] <command>
+  %s -c=<arg> [options] <command>
 
 Flags
   -c <arg>
