@@ -107,30 +107,34 @@ func (v valueUnmarshaler) unmarshalSlice(val reflect.Value, raw string) error {
 }
 
 func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
-	key, val, err := parseMapEntry(raw, &v.props.Maps)
+	parser := newMapElementParser(v.props.Maps, raw)
 
-	if err != nil {
-		return err
+	for parser.HasNext() {
+		key, val, err := parseMapEntry(&parser)
+		if err != nil {
+			return err
+		}
+
+		mt := m.Type()
+		kt := mt.Key()
+		vt := mt.Elem()
+
+		kv := reflect.New(kt).Interface()
+		if err := v.Unmarshal(key, kv); err != nil {
+			return err
+		}
+
+		vv, err := v.unmarshalValue(vt, val)
+		if err != nil {
+			return err
+		}
+
+		if m.IsNil() {
+			m.Set(reflect.MakeMap(mt))
+		}
+		m.SetMapIndex(reflect.ValueOf(kv).Elem(), vv)
 	}
 
-	mt := m.Type()
-	kt := mt.Key()
-	vt := mt.Elem()
-
-	kv := reflect.New(kt).Interface()
-	if err := v.Unmarshal(key, kv); err != nil {
-		return err
-	}
-
-	vv, err := v.unmarshalValue(vt, val)
-	if err != nil {
-		return err
-	}
-
-	if m.IsNil() {
-		m.Set(reflect.MakeMap(mt))
-	}
-	m.SetMapIndex(reflect.ValueOf(kv).Elem(), vv)
 	return nil
 }
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	cli "github.com/Foxcapades/Argonaut"
@@ -17,7 +16,7 @@ type Inputs struct {
 func main() {
 	var conf Inputs
 
-	com := cli.Command().
+	cli.Command().
 		WithFlag(cli.Flag().
 			WithLongForm("string-slice").
 			WithShortForm('s').
@@ -31,8 +30,6 @@ func main() {
 			WithShortForm('b').
 			WithBinding(&conf.StringToBytes, true)).
 		MustParse(os.Args)
-
-	fmt.Println(com.UnmappedInputs())
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
