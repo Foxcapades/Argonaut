@@ -80,18 +80,18 @@ type FlagBuilder interface {
 	// to the given pointer.
 	//
 	// Bind is equivalent to calling one of the following:
-	//    Argument(NewArgument().Bind(ptr))
+	//    WithArgument(cli.Argument().Bind(ptr))
 	//    // or
-	//    Argument(NewArgument().Bind(ptr).Require())
+	//    WithArgument(cli.Argument().Bind(ptr).Require())
 	WithBinding(pointer any, required bool) FlagBuilder
 
 	// WithBindingAndDefault is a shortcut method for attaching an argument,
 	// binding it to the given pointer, and setting a default on that argument.
 	//
 	// BindWithDefault is equivalent to calling one of the following:
-	//     WithArgument(Argument().WithBinding(ptr).WithDefault(something))
+	//     WithArgument(cli.Argument().WithBinding(ptr).WithDefault(something))
 	//     // or
-	//     WithArgument(Argument().WithBinding(ptr).WithDefault(something).Require())
+	//     WithArgument(cli.Argument().WithBinding(ptr).WithDefault(something).Require())
 	WithBindingAndDefault(pointer, def any, required bool) FlagBuilder
 
 	setIsHelpFlag() FlagBuilder
