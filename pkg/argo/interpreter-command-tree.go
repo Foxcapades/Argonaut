@@ -126,43 +126,10 @@ FOR:
 			node.appendPassthrough(value)
 		}
 
-		for i, arg := range node.Arguments() {
-			if arg.IsRequired() {
-				if !arg.WasHit() {
-					if arg.HasName() {
-						errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i+1, arg.Name()))
-					} else {
-						errs.AppendError(fmt.Errorf("argument %d is required", i+1))
-					}
-				}
-			} else if !arg.WasHit() && arg.HasDefault() {
-				if err := arg.setToDefault(); err != nil {
-					errs.AppendError(err)
-				}
-			}
-		}
+		c.checkRequiredArgsWereHit(node.Arguments(), errs)
 	}
 
-	current := c.current
-	for current != nil {
-		for _, group := range current.FlagGroups() {
-			for _, f := range group.Flags() {
-				if f.IsRequired() {
-					if !f.WasHit() {
-						errs.AppendError(fmt.Errorf("required flag %s was not used", printFlagNames(f)))
-					} else if f.RequiresArgument() && !f.Argument().WasHit() {
-						errs.AppendError(fmt.Errorf("flag %s requires an argument", printFlagNames(f)))
-					}
-				} else if !f.WasHit() && f.HasArgument() && f.Argument().HasDefault() {
-					if err := f.Argument().setToDefault(); err != nil {
-						errs.AppendError(err)
-					}
-				}
-			}
-		}
-
-		current = current.Parent()
-	}
+	c.checkRequiredFlagsWereHit(c.current, errs)
 
 	for i, flag := range c.flagHits {
 		if flag.isHelpFlag() {
@@ -202,6 +169,46 @@ FOR:
 	c.tree.selectCommand(c.leaf)
 
 	return nil
+}
+
+func (c *commandTreeInterpreter) checkRequiredArgsWereHit(args []Argument, errs MultiError) {
+	for i, arg := range args {
+		if arg.IsRequired() {
+			if !arg.WasHit() {
+				if arg.HasName() {
+					errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i+1, arg.Name()))
+				} else {
+					errs.AppendError(fmt.Errorf("argument %d is required", i+1))
+				}
+			}
+		} else if !arg.WasHit() && arg.HasDefault() {
+			if err := arg.setToDefault(); err != nil {
+				errs.AppendError(err)
+			}
+		}
+	}
+}
+
+func (c *commandTreeInterpreter) checkRequiredFlagsWereHit(current CommandNode, errs MultiError) {
+	for current != nil {
+		for _, group := range current.FlagGroups() {
+			for _, f := range group.Flags() {
+				if f.IsRequired() {
+					if !f.WasHit() {
+						errs.AppendError(fmt.Errorf("required flag %s was not used", printFlagNames(f)))
+					} else if f.RequiresArgument() && !f.Argument().WasHit() {
+						errs.AppendError(fmt.Errorf("flag %s requires an argument", printFlagNames(f)))
+					}
+				} else if !f.WasHit() && f.HasArgument() && f.Argument().HasDefault() {
+					if err := f.Argument().setToDefault(); err != nil {
+						errs.AppendError(err)
+					}
+				}
+			}
+		}
+
+		current = current.Parent()
+	}
 }
 
 func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unmapped *[]string) error {
