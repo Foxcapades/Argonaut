@@ -8,6 +8,14 @@ import (
 
 // An ArgumentBuilder instance is used to construct a CLI argument that may be
 // attached to a Flag or CommandLeaf.
+//
+// Full Example:
+//     cli.Argument().
+//         WithName("file").
+//         WithDescription("File that will be processed by super-app").
+//         WithBinding(&someValue).
+//         WithDefault("a default value").
+//         WithUnmarshaler(argo.NewMagicUnmarshaler(props))
 type ArgumentBuilder interface {
 
 	// WithName sets the name for this argument.
@@ -15,8 +23,8 @@ type ArgumentBuilder interface {
 	// The name value is used when rendering help information about this argument.
 	WithName(name string) ArgumentBuilder
 
-	// WithDescription sets the description of this argument to be shown in rendered
-	// help text.
+	// WithDescription sets the description of this argument to be shown in
+	// rendered help text.
 	WithDescription(desc string) ArgumentBuilder
 
 	// Require marks the output Argument as being required.
@@ -32,12 +40,12 @@ type ArgumentBuilder interface {
 	// called to unmarshal the raw string value into a value of the type passed
 	// to this method.
 	//
-	// If the bind value is a Unmarshaler instance, that instance's Unmarshal method
-	// will be called with the raw input from the CLI.
+	// If the bind value is an Unmarshaler instance, that instance's Unmarshal
+	// method will be called with the raw input from the CLI.
 	//
-	// Setting this value to anything other than a pointer or a Unmarshaler instance
-	// will result in an error being returned when building the argument is
-	// attempted.
+	// Setting this value to anything other than a pointer or an Unmarshaler
+	// instance will result in an error being returned when building the argument
+	// is attempted.
 	//
 	// Example 1 (a simple var binding):
 	//     var myValue time.Duration
@@ -121,6 +129,8 @@ type ArgumentBuilder interface {
 
 	// Build attempts to build an Argument instance out of the configuration given
 	// to this ArgumentBuilder instance.
+	//
+	// This function shouldn't need to be called in normal use of this library.
 	Build(ctx *WarningContext) (Argument, error)
 }
 
