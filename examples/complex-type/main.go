@@ -8,9 +8,7 @@ import (
 )
 
 type Inputs struct {
-	Strings       []string
-	IntToBool     map[int]bool
-	StringToBytes map[string]*[]byte
+	Map map[string][]string
 }
 
 func main() {
@@ -18,17 +16,8 @@ func main() {
 
 	cli.Command().
 		WithFlag(cli.Flag().
-			WithLongForm("string-slice").
 			WithShortForm('s').
-			WithBinding(&conf.Strings, true)).
-		WithFlag(cli.Flag().
-			WithLongForm("int-bool-map").
-			WithShortForm('i').
-			WithBinding(&conf.IntToBool, true)).
-		WithFlag(cli.Flag().
-			WithLongForm("string-bytes").
-			WithShortForm('b').
-			WithBinding(&conf.StringToBytes, true)).
+			WithBinding(&conf.Map, true)).
 		MustParse(os.Args)
 
 	enc := json.NewEncoder(os.Stdout)

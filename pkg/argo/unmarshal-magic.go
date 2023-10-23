@@ -132,7 +132,22 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 		if m.IsNil() {
 			m.Set(reflect.MakeMap(mt))
 		}
-		m.SetMapIndex(reflect.ValueOf(kv).Elem(), vv)
+
+		if reflectIsBasicSlice(vt) {
+			rkv := reflect.ValueOf(kv).Elem()
+
+			tmp := m.MapIndex(rkv)
+			if tmp.Kind() == reflect.Invalid {
+				slice := reflect.MakeSlice(vt, 1, 10)
+				rvv := slice.Index(0)
+				rvv.Set(vv)
+				m.SetMapIndex(rkv, slice)
+			} else {
+				m.SetMapIndex(rkv, reflect.Append(tmp, vv))
+			}
+		} else {
+			m.SetMapIndex(reflect.ValueOf(kv).Elem(), vv)
+		}
 	}
 
 	return nil
@@ -149,6 +164,10 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 			return reflect.Value{}, err
 		}
 		return reflect.ValueOf(vv).Elem(), nil
+	}
+
+	if reflectIsBasicSlice(vt) {
+		return v.unmarshalValue(vt.Elem(), raw)
 	}
 
 	if vt.Kind() == reflect.Ptr {
@@ -304,6 +323,9 @@ func validateContainerValue(t reflect.Type, ov reflect.Value) error {
 		if reflectIsByteSlice(t.Elem()) {
 			return nil
 		}
+		if reflectIsBasicSlice(t.Elem()) {
+			return nil
+		}
 		if reflectIsUnmarshaler(t.Elem()) {
 			return nil
 		}
@@ -315,6 +337,9 @@ func validateContainerValue(t reflect.Type, ov reflect.Value) error {
 	}
 
 	if reflectIsByteSlice(t) {
+		return nil
+	}
+	if reflectIsBasicSlice(t) {
 		return nil
 	}
 	if reflectIsUnmarshaler(t) {

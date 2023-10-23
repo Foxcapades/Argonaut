@@ -93,3 +93,8 @@ func reflectIsByteSlice(t reflect.Type) bool {
 func reflectCompatible(val, test *reflect.Value) bool {
 	return val.Type().AssignableTo(test.Type())
 }
+
+func reflectIsBasicSlice(t reflect.Type) bool {
+	return t.Kind() == reflect.Slice &&
+		reflectIsBasicKind(t.Elem().Kind())
+}
