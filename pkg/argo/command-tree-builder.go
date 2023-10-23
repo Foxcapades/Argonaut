@@ -8,6 +8,10 @@ import (
 	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
+// OnIncompleteHandler defines a function type that may be used as a callback
+// for when a command leaf is not reached when parsing a command tree structure.
+type OnIncompleteHandler = func(command CommandParent)
+
 // A CommandTreeBuilder is a builder type used to construct a CommandTree
 // instance.
 //
@@ -74,6 +78,15 @@ type CommandTreeBuilder interface {
 	// are primarily used for rendering help text.
 	WithFlagGroup(flagGroup FlagGroupBuilder) CommandTreeBuilder
 
+	// OnIncomplete sets the incomplete command handler.
+	//
+	// The incomplete command handler is called when a command tree is called, but
+	// a leaf node is not reached.
+	//
+	// If this is unset, the default behavior is to print the help text for the
+	// furthest command node reached and exit with code 1.
+	OnIncomplete(handler OnIncompleteHandler) CommandTreeBuilder
+
 	Build(warnings *WarningContext) (CommandTree, error)
 
 	// Parse builds the command tree and attempts to parse the given CLI arguments
@@ -99,6 +112,8 @@ type commandTreeBuilder struct {
 	commandGroups []CommandGroupBuilder
 	flagGroups    []FlagGroupBuilder
 	callback      CommandTreeCallback
+
+	onIncompleteHandler OnIncompleteHandler
 }
 
 func (t *commandTreeBuilder) WithDescription(desc string) CommandTreeBuilder {
@@ -138,6 +153,11 @@ func (t *commandTreeBuilder) WithFlag(flag FlagBuilder) CommandTreeBuilder {
 
 func (t *commandTreeBuilder) WithFlagGroup(flagGroup FlagGroupBuilder) CommandTreeBuilder {
 	t.flagGroups = append(t.flagGroups, flagGroup)
+	return t
+}
+
+func (t *commandTreeBuilder) OnIncomplete(handler OnIncompleteHandler) CommandTreeBuilder {
+	t.onIncompleteHandler = handler
 	return t
 }
 
@@ -246,6 +266,7 @@ func (t *commandTreeBuilder) Build(warnings *WarningContext) (CommandTree, error
 	tree.flagGroups = flagGroups
 	tree.commandGroups = commandGroups
 	tree.callback = t.callback
+	tree.onIncompleteHandler = util.IfElse(t.onIncompleteHandler == nil, onIncompleteCT, t.onIncompleteHandler)
 
 	return tree, nil
 }
@@ -268,4 +289,9 @@ func makeCommandTreeHelpFlag(short, long bool, tree CommandTree) FlagBuilder {
 	}
 
 	return out
+}
+
+func onIncompleteCT(tree CommandParent) {
+	util.Must(comTreeRenderer{}.RenderHelp(tree.(CommandTree), os.Stdout))
+	os.Exit(1)
 }

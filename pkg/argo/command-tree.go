@@ -3,8 +3,6 @@ package argo
 import (
 	"os"
 	"path/filepath"
-
-	"github.com/Foxcapades/Argonaut/internal/util"
 )
 
 // CommandTree represents the root of a tree of subcommands.
@@ -52,6 +50,8 @@ type commandTree struct {
 	selected      CommandLeaf
 	callback      CommandTreeCallback
 	warnings      *WarningContext
+
+	onIncompleteHandler OnIncompleteHandler
 }
 
 func (_ commandTree) Name() string {
@@ -135,8 +135,7 @@ func (t commandTree) FindLongFlag(name string) Flag {
 }
 
 func (t commandTree) onIncomplete() {
-	util.Must(comTreeRenderer{}.RenderHelp(&t, os.Stdout))
-	os.Exit(1)
+	t.onIncompleteHandler(&t)
 }
 
 func (t *commandTree) Warnings() []string {

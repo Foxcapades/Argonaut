@@ -1,11 +1,5 @@
 package argo
 
-import (
-	"os"
-
-	"github.com/Foxcapades/Argonaut/internal/util"
-)
-
 // CommandBranch represents a subcommand under a CommandTree that is an
 // intermediate node between the tree root and an executable CommandLeaf.
 //
@@ -43,6 +37,8 @@ type commandBranch struct {
 	commandGroups []CommandGroup
 	callback      CommandBranchCallback
 	warnings      *WarningContext
+
+	onIncompleteHandler OnIncompleteHandler
 }
 
 // Find Child //////////////////////////////////////////////////////////////////
@@ -168,6 +164,5 @@ func (c commandBranch) AppendWarning(warning string) {
 }
 
 func (c commandBranch) onIncomplete() {
-	util.Must(comBranchRenderer{}.RenderHelp(c, os.Stdout))
-	os.Exit(1)
+	c.onIncompleteHandler(c)
 }

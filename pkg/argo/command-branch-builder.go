@@ -81,6 +81,15 @@ type CommandBranchBuilder interface {
 
 	WithCallback(cb CommandBranchCallback) CommandBranchBuilder
 
+	// OnIncomplete sets the incomplete command handler.
+	//
+	// The incomplete command handler is called when a command tree is called, but
+	// a leaf node is not reached.
+	//
+	// If this is unset, the default behavior is to print the help text for the
+	// furthest command node reached and exit with code 1.
+	OnIncomplete(handler OnIncompleteHandler) CommandBranchBuilder
+
 	Build(warnings *WarningContext) (CommandBranch, error)
 }
 
@@ -101,6 +110,8 @@ type commandBranchBuilder struct {
 	aliases      []string
 	parentNode   CommandNode
 	callback     CommandBranchCallback
+
+	onIncompleteHandler OnIncompleteHandler
 }
 
 func (c commandBranchBuilder) getName() string {
@@ -157,6 +168,11 @@ func (c *commandBranchBuilder) WithFlag(flag FlagBuilder) CommandBranchBuilder {
 
 func (c *commandBranchBuilder) WithFlagGroup(flagGroup FlagGroupBuilder) CommandBranchBuilder {
 	c.flagGroups = append(c.flagGroups, flagGroup)
+	return c
+}
+
+func (c *commandBranchBuilder) OnIncomplete(handler OnIncompleteHandler) CommandBranchBuilder {
+	c.onIncompleteHandler = handler
 	return c
 }
 
@@ -293,6 +309,12 @@ func (c *commandBranchBuilder) Build(ctx *WarningContext) (CommandBranch, error)
 	out.parent = c.parentNode
 	out.aliases = c.aliases
 	out.callback = c.callback
+	out.onIncompleteHandler = util.IfElse(c.onIncompleteHandler != nil, c.onIncompleteHandler, onIncompleteCB)
 
 	return out, nil
+}
+
+func onIncompleteCB(parent CommandParent) {
+	util.Must(comBranchRenderer{}.RenderHelp(parent.(CommandBranch), os.Stdout))
+	os.Exit(1)
 }
