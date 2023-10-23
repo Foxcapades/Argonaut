@@ -148,12 +148,16 @@ arbitrary depth.
 |===
 
 .Maps
-[cols="m,m", width="100%"]
+[cols="m,m,m", width="100%"]
 |===
-| map[<basic>]<basic> | map[<basic>][]byte
+| map[<basic>]<basic> | map[<basic>][]byte | map[<basic>][]<basic>
 |===
 
-A planned future feature is to allow maps to slices of the basic types.
+Note that `map[<basic>][]byte` is separate from and appears before
+`map[<basic>][]<basic>`.  This is because byte slices are treated differently
+and are processed as raw input, whereas slices of other basic types will be
+parsed element by element.  Byte slice parsing takes priority over parsing
+slices of other types.
 
 === Custom types
 
