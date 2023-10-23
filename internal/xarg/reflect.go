@@ -20,14 +20,23 @@ import (
 //
 // In the above example, the type T must match the given binding type passed
 // as the second argument to this function.
-func SiftValidators(validators []any, root *reflect.Value) ([]any, []any, error) {
-	bt := root.Type()
+func SiftValidators(
+	validators []any,
+	root *reflect.Value,
+	includePostParse bool,
+) ([]any, []any, error) {
+	var bt reflect.Type
+	if includePostParse {
+		bt = root.Type()
+	} else {
+		bt = reflect.TypeOf(nil)
+	}
 
 	pre := make([]any, 0, 1)
 	post := make([]any, 0, 1)
 
 	for i, fn := range validators {
-		count, err := ValidateValidator(i, fn, bt)
+		count, err := ValidateValidator(i, fn, bt, includePostParse)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -36,7 +45,9 @@ func SiftValidators(validators []any, root *reflect.Value) ([]any, []any, error)
 		case 1:
 			pre = append(pre, fn)
 		case 2:
-			post = append(post, fn)
+			if includePostParse {
+				post = append(post, fn)
+			}
 		default:
 			panic(fmt.Errorf("illegal state: expected count to equal 1 or 2 but it was %d", count))
 		}
@@ -50,7 +61,12 @@ func SiftValidators(validators []any, root *reflect.Value) ([]any, []any, error)
 //
 // See SiftValidators for more details about what constitutes a valid validator
 // function.
-func ValidateValidator(idx int, validator any, bt reflect.Type) (uint8, error) {
+func ValidateValidator(
+	idx int,
+	validator any,
+	bt reflect.Type,
+	includePostParse bool,
+) (uint8, error) {
 	rv := reflect.ValueOf(validator)
 
 	// Verify that the given value is a function.
@@ -72,7 +88,11 @@ func ValidateValidator(idx int, validator any, bt reflect.Type) (uint8, error) {
 	case 1:
 		return 1, ValidateSoloValidator(idx, rt)
 	case 2:
-		return 2, ValidateDoubleValidator(idx, rt, bt)
+		if includePostParse {
+			return 2, ValidateDoubleValidator(idx, rt, bt)
+		} else {
+			return 2, nil
+		}
 	default:
 		return 0, fmt.Errorf("given validator #%d accepts %d arguments when 1 or 2 were expected", idx+2, rt.NumIn())
 	}

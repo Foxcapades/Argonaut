@@ -9,26 +9,6 @@ import (
 	"github.com/Foxcapades/Argonaut/internal/xarg"
 )
 
-// ArgumentPreParseValidatorFn defines the type of function that is used to
-// validate incoming argument values before they are parsed into the argument's
-// binding type.
-//
-// On execution, the function will be passed the raw argument value from the
-// command line call.
-//
-// Functions of this type are used with ArgumentBuilder.WithValidator.
-type ArgumentPreParseValidatorFn = func(string) error
-
-// ArgumentPostParseValidatorFn defines the type of function that is used to
-// validate argument values after they have been parsed into the argument's
-// binding type.
-//
-// On execution, the function will be passed the parsed argument value as well
-// as the raw value from the command line call.
-//
-// Functions of this type are used with ArgumentBuilder.WithValidator.
-type ArgumentPostParseValidatorFn = func(any, string) error
-
 // An ArgumentBuilder instance is used to construct a CLI argument that may be
 // attached to a Flag or CommandLeaf.
 //
@@ -267,9 +247,13 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 	valDefault := true
 	bindSafe := true
 
-	if err := a.validateBinding(); err != nil {
-		errs.AppendError(err)
-		valDefault = false
+	if a.hasBind {
+		if err := a.validateBinding(); err != nil {
+			errs.AppendError(err)
+			valDefault = false
+			bindSafe = false
+		}
+	} else {
 		bindSafe = false
 	}
 
@@ -281,11 +265,9 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 
 	var pre, post []any
 	var err error
-	if a.hasBind && bindSafe {
-		pre, post, err = xarg.SiftValidators(a.validators, &a.rootBind)
-		if err != nil {
-			errs.AppendError(err)
-		}
+	pre, post, err = xarg.SiftValidators(a.validators, &a.rootBind, bindSafe)
+	if err != nil {
+		errs.AppendError(err)
 	}
 
 	if len(errs.Errors()) > 0 {
@@ -310,10 +292,6 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 }
 
 func (a *argumentBuilder) validateBinding() error {
-	if !a.hasBind {
-		return nil
-	}
-
 	if tmp, err := unmarshal.ToUnmarshalable("", reflect.ValueOf(a.bind), false, unmarshalerType); err != nil {
 		return newInvalidArgError(ArgErrInvalidBindingBadType, a, "")
 	} else {

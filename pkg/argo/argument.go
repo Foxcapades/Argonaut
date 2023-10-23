@@ -244,14 +244,14 @@ func (a *argument) setValue(rawString string) error {
 	a.isUsed = true
 	a.raw = rawString
 
-	if !a.isBindSet {
-		return nil
-	}
-
 	for _, fn := range a.preParseValidators {
 		if err := a.callPreArgFunc(fn, rawString); err != nil {
 			return err
 		}
+	}
+
+	if !a.isBindSet {
+		return nil
 	}
 
 	// TODO: why the heck is this here? what did past me know that present me doesn't?
