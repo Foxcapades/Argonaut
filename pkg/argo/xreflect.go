@@ -94,6 +94,11 @@ func reflectCompatible(val, test *reflect.Value) bool {
 	return val.Type().AssignableTo(test.Type())
 }
 
+func reflectIsPointerToBasicSlice(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr &&
+		reflectIsBasicSlice(t.Elem())
+}
+
 func reflectIsBasicSlice(t reflect.Type) bool {
 	return t.Kind() == reflect.Slice &&
 		reflectIsBasicKind(t.Elem().Kind())

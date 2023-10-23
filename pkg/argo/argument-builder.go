@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/Foxcapades/Argonaut/internal/unmarshal"
+	"github.com/Foxcapades/Argonaut/internal/xarg"
 )
 
 // An ArgumentBuilder instance is used to construct a CLI argument that may be
@@ -124,8 +127,38 @@ type ArgumentBuilder interface {
 	// not be used.
 	//
 	// If a custom unmarshaler is not provided by way of this method, then the
-	// internal magic unmarshaler will be used to parse raw arguments.
+	// internal magic unmarshaler will be used to parse raw argument values.
 	WithUnmarshaler(fn ValueUnmarshaler) ArgumentBuilder
+
+	// WithValidator appends the given validator function to the argument's
+	// internal slice of validators.
+	//
+	// There are 2 types of validators that may be set here, each of which going
+	// to a separate slice.  Type 1 is a pre-parse validator which will be called
+	// when an argument is first hit, but before it is parsed.  Type 2 is a
+	// post-parse validator which will be called immediately after an argument is
+	// parsed to validate the parsed value.
+	//
+	// When appending a validator function, if it is of type 1 it will go to the
+	// pre-parse validator slice, and if it is of type 2 it will go to the
+	// post-parse validator slice.
+	//
+	// Pre-parse (type 1) validators must match the following function signature:
+	//     func(string) error
+	//
+	// The value that is passed to the function will be the raw value that was
+	// passed to the command on the CLI.  If an error is returned, CLI parsing
+	// will halt, and the returned error will be passed up.
+	//
+	// Post-parse (type 2) validators must match the following function signature:
+	//     func(any, string) error
+	//
+	// Two values are passed to the function, the parsed value, and the raw value
+	// that was passed to the command ont he CLI.  If an error is returned, CLI
+	// parsing will halt, and the returned error will be passed up.
+	//
+	// Validators will be executed in the order they are appended.
+	WithValidator(validatorFn any) ArgumentBuilder
 
 	// Build attempts to build an Argument instance out of the configuration given
 	// to this ArgumentBuilder instance.
@@ -156,6 +189,8 @@ type argumentBuilder struct {
 	rootBind reflect.Value
 
 	marsh ValueUnmarshaler
+
+	validators []any
 }
 
 func (a *argumentBuilder) WithName(name string) ArgumentBuilder {
@@ -202,17 +237,33 @@ func (a *argumentBuilder) WithUnmarshaler(fn ValueUnmarshaler) ArgumentBuilder {
 	return a
 }
 
+func (a *argumentBuilder) WithValidator(fn any) ArgumentBuilder {
+	a.validators = append(a.validators, fn)
+	return a
+}
+
 func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 	errs := newMultiError()
 	valDefault := true
+	bindSafe := true
 
 	if err := a.validateBinding(); err != nil {
 		errs.AppendError(err)
 		valDefault = false
+		bindSafe = false
 	}
 
 	if valDefault {
 		if err := a.validateDefault(); err != nil {
+			errs.AppendError(err)
+		}
+	}
+
+	var pre, post []any
+	var err error
+	if a.hasBind && bindSafe {
+		pre, post, err = xarg.SiftValidators(a.validators, &a.rootBind)
+		if err != nil {
 			errs.AppendError(err)
 		}
 	}
@@ -222,17 +273,19 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 	}
 
 	return &argument{
-		warnings:  warnings,
-		name:      a.name,
-		desc:      a.desc,
-		required:  a.required,
-		isBindSet: a.hasBind,
-		isDefSet:  a.hasDef,
-		bindVal:   a.bind,
-		defVal:    a.def,
-		rootBind:  a.rootBind,
-		rootDef:   a.rootDef,
-		unmarshal: a.marsh,
+		warnings:            warnings,
+		name:                a.name,
+		desc:                a.desc,
+		required:            a.required,
+		isBindSet:           a.hasBind,
+		isDefSet:            a.hasDef,
+		bindVal:             a.bind,
+		defVal:              a.def,
+		rootBind:            a.rootBind,
+		rootDef:             a.rootDef,
+		unmarshal:           a.marsh,
+		preParseValidators:  pre,
+		postParseValidators: post,
 	}, nil
 }
 
@@ -241,7 +294,7 @@ func (a *argumentBuilder) validateBinding() error {
 		return nil
 	}
 
-	if tmp, err := toUnmarshalable("", reflect.ValueOf(a.bind), false); err != nil {
+	if tmp, err := unmarshal.ToUnmarshalable("", reflect.ValueOf(a.bind), false, unmarshalerType); err != nil {
 		return newInvalidArgError(ArgErrInvalidBindingBadType, a, "")
 	} else {
 		a.rootBind = tmp
@@ -272,7 +325,7 @@ func (a *argumentBuilder) validateDefault() error {
 		return a.validateDefaultProvider()
 	}
 
-	if tmp, err := toUnmarshalable("", reflect.ValueOf(a.def), true); err != nil {
+	if tmp, err := unmarshal.ToUnmarshalable("", reflect.ValueOf(a.def), true, unmarshalerType); err != nil {
 		// TODO: This is not necessarily the correct error type
 		return invalidDefaultValError(a)
 	} else {

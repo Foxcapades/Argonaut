@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/Foxcapades/Argonaut/internal/unmarshal"
 )
 
 var unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
@@ -36,7 +38,7 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 
 	ptrVal := reflect.ValueOf(val)
 
-	if ptrVal, err = toUnmarshalable(raw, ptrVal, false); err != nil {
+	if ptrVal, err = unmarshal.ToUnmarshalable(raw, ptrVal, false, unmarshalerType); err != nil {
 		return err
 	}
 
@@ -148,7 +150,7 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 			m.Set(reflect.MakeMap(mt))
 		}
 
-		if reflectIsBasicSlice(vt) {
+		if reflectIsBasicSlice(vt) && !reflectIsByteSlice(vt) {
 			rkv := reflect.ValueOf(kv).Elem()
 
 			tmp := m.MapIndex(rkv)
@@ -201,7 +203,7 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 		}
 	}
 
-	panic("invalid state")
+	panic("invalid state: the given type cannot be unmarshalled")
 }
 
 func unmarshalInt(v reflect.Value, raw string, size int, props *UnmarshalIntegerProps) error {
@@ -257,124 +259,4 @@ func unmarshalBool(v reflect.Value, raw string) error {
 		v.SetBool(tmp)
 	}
 	return nil
-}
-
-// ////////////////////////////////////////////////////////////////////////// //
-
-func toUnmarshalable(arg string, ov reflect.Value, skipPtr bool) (reflect.Value, error) {
-
-	if !skipPtr && ((ov.Kind() != reflect.Ptr && ov.Kind() != reflect.Func) || isNil(&ov)) {
-		return reflect.Value{}, &InvalidUnmarshalError{Value: ov, Argument: arg}
-	}
-
-	v := reflectGetRootValue(ov)
-
-	kind := v.Kind()
-
-	if reflectIsBasicKind(kind) {
-		return v, nil
-	}
-
-	if v.Type().AssignableTo(unmarshalerType) {
-		return v, nil
-	}
-
-	if kind == reflect.Slice {
-		return toValidSlice(v, ov)
-	}
-	if kind == reflect.Map {
-		return toValidMap(v, ov)
-	}
-	if kind == reflect.Struct && ov.Type().AssignableTo(reflect.TypeOf((*time.Time)(nil))) {
-		return v, nil
-	}
-	if kind == reflect.Interface {
-		return v, nil
-	}
-
-	return reflect.Value{}, &InvalidTypeError{Value: v}
-}
-
-// Valid slice types:
-//   []<basic>
-//   []<*basic>
-//   [][]byte
-//   []*[]byte
-func toValidSlice(v, ov reflect.Value) (out reflect.Value, err error) {
-	err = validateContainerValue(v.Type().Elem(), ov)
-	if err != nil {
-		return
-	}
-	return v, nil
-}
-
-// Valid map types:
-//   map[<basic>]<basic>
-//   map[<basic>]<*basic>
-//   map[<basic>][]byte
-//   map[<basic>]<*[]byte>
-func toValidMap(v, ov reflect.Value) (reflect.Value, error) {
-	vt := v.Type()
-
-	if !reflectIsBasicKind(vt.Key().Kind()) {
-		return reflect.Value{}, &InvalidTypeError{Value: ov}
-	}
-
-	if err := validateContainerValue(vt.Elem(), ov); err != nil {
-		return reflect.Value{}, err
-	}
-
-	return v, nil
-}
-
-func validateContainerValue(t reflect.Type, ov reflect.Value) error {
-	sk := t.Kind()
-
-	if reflectIsBasicKind(sk) {
-		return nil
-	}
-
-	if sk == reflect.Ptr {
-		if reflectIsBasicKind(t.Elem().Kind()) {
-			return nil
-		}
-		if reflectIsByteSlice(t.Elem()) {
-			return nil
-		}
-		if reflectIsBasicSlice(t.Elem()) {
-			return nil
-		}
-		if reflectIsUnmarshaler(t.Elem()) {
-			return nil
-		}
-		if reflectIsInterface(t.Elem()) {
-			return nil
-		}
-
-		return &InvalidTypeError{Value: ov}
-	}
-
-	if reflectIsByteSlice(t) {
-		return nil
-	}
-	if reflectIsBasicSlice(t) {
-		return nil
-	}
-	if reflectIsUnmarshaler(t) {
-		return nil
-	}
-	if reflectIsInterface(t) {
-		return nil
-	}
-
-	return &InvalidTypeError{Value: ov}
-}
-
-func isNil(v *reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Ptr, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Slice:
-		return v.IsNil()
-	default:
-		return false
-	}
 }

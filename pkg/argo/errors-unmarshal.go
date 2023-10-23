@@ -39,31 +39,3 @@ type formatError struct {
 func (f formatError) Error() string {
 	return fmt.Sprintf(errFormat, f.Kind)
 }
-
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ //
-// ┃     Nil or Non-Ptr          ┃ //
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ //
-
-type InvalidUnmarshalError struct {
-	Value    reflect.Value
-	Argument string
-}
-
-func (i *InvalidUnmarshalError) Error() string {
-	if i.Value.IsNil() {
-		return "Attempted to unmarshal into nil"
-	}
-	return "Attempted to unmarshal into a non-pointer"
-}
-
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ //
-// ┃     Invalid Type            ┃ //
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ //
-
-type InvalidTypeError struct {
-	Value reflect.Value
-}
-
-func (i *InvalidTypeError) Error() string {
-	return fmt.Sprintf("Cannot unmarshal type %s", i.Value.Type())
-}

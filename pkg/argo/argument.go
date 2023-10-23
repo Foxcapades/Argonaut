@@ -102,6 +102,9 @@ type argument struct {
 	rootDef  reflect.Value
 
 	unmarshal ValueUnmarshaler
+
+	preParseValidators  []any
+	postParseValidators []any
 }
 
 func (a argument) Name() string {
@@ -245,19 +248,57 @@ func (a *argument) setValue(rawString string) error {
 		return nil
 	}
 
+	for _, fn := range a.preParseValidators {
+		if err := a.callPreArgFunc(fn, rawString); err != nil {
+			return err
+		}
+	}
+
 	// TODO: why the heck is this here? what did past me know that present me doesn't?
 	if a.isBoolArg() {
 		if _, err := parseBool(rawString); err != nil {
 			return err
 		}
 
-		return a.unmarshal.Unmarshal(rawString, a.bindVal)
+		if err := a.unmarshal.Unmarshal(rawString, a.bindVal); err != nil {
+			return err
+		}
+	} else {
+		if err := a.unmarshal.Unmarshal(rawString, a.bindVal); err != nil {
+			return err
+		}
 	}
 
-	return a.unmarshal.Unmarshal(rawString, a.bindVal)
+	for _, fn := range a.postParseValidators {
+		if err := a.callPostArgFunc(fn, rawString); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *argument) isBoolArg() bool {
 	bt := a.rootBind.Type().String()
 	return bt == "bool" || bt == "*bool" || bt == "[]bool" || bt == "[]*bool"
+}
+
+func (a *argument) callPreArgFunc(fn any, raw string) error {
+	errs := reflect.ValueOf(fn).Call([]reflect.Value{reflect.ValueOf(raw)})
+
+	if !errs[0].IsNil() {
+		return errs[0].Interface().(error)
+	}
+
+	return nil
+}
+
+func (a *argument) callPostArgFunc(fn any, raw string) error {
+	errs := reflect.ValueOf(fn).Call([]reflect.Value{a.rootBind, reflect.ValueOf(raw)})
+
+	if !errs[0].IsNil() {
+		return errs[0].Interface().(error)
+	}
+
+	return nil
 }

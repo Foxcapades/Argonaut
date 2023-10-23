@@ -153,3 +153,67 @@ func TestArgumentDefault07(t *testing.T) {
 		t.Error("expected unmarshaler value to have been replaced but it wasn't")
 	}
 }
+
+func TestArgument_PreParseValidator01(t *testing.T) {
+	var binding int
+
+	_, err := cli.Command().
+		WithArgument(cli.Argument().
+			WithValidator(func(string) error { return errors.New("dummy error") }).
+			WithBinding(&binding)).
+		Parse([]string{"command", "32"})
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	} else if err.Error() != "dummy error" {
+		t.Error("expected err to match validator output but it didn't")
+	}
+	t.Log(err)
+}
+
+func TestArgument_PreParseValidator02(t *testing.T) {
+	var binding int
+
+	_, err := cli.Command().
+		WithArgument(cli.Argument().
+			WithValidator(func(string) error { return nil }).
+			WithBinding(&binding)).
+		Parse([]string{"command", "32"})
+
+	if err != nil {
+		t.Error("expected err to be nil but it wasn't")
+	}
+	t.Log(err)
+}
+
+func TestArgument_PostParseValidator01(t *testing.T) {
+	var binding int
+
+	_, err := cli.Command().
+		WithArgument(cli.Argument().
+			WithValidator(func(int, string) error { return errors.New("dummy error") }).
+			WithBinding(&binding)).
+		Parse([]string{"command", "32"})
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	} else if err.Error() != "dummy error" {
+		t.Error("expected err to match validator output but it didn't")
+	}
+	t.Log(err)
+}
+
+func TestArgument_PostParseValidator02(t *testing.T) {
+	var binding int
+
+	_, err := cli.Command().
+		WithArgument(cli.Argument().
+			WithValidator(func(int, string) error { return nil }).
+			WithBinding(&binding)).
+		Parse([]string{"command", "32"})
+
+	if err != nil {
+		t.Error("expected err to be nil but it wasn't")
+	}
+	t.Log(err)
+}

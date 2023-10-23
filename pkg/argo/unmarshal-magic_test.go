@@ -109,6 +109,89 @@ func TestMagicUnmarshaler001(t *testing.T) {
 	if v016.String() != "10m0s" {
 		t.Fail()
 	}
+
+	var v017 time.Time
+	must(un.Unmarshal("2023-10-23T15:13:43.1234-04:00", &v017))
+	if v017.Format(time.RFC3339Nano) != "2023-10-23T15:13:43.1234-04:00" {
+		t.Fail()
+	}
+}
+
+func TestMagicUnmarshaler_MapOfSlice(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo map[string][]string
+
+	must(un.Unmarshal("foo:bar,foo:fizz,foo:buzz,fizz:buzz", &foo))
+
+	if slice, ok := foo["foo"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if len(slice) != 3 {
+			t.Error("expected slice to have 3 elements but it didn't")
+		} else {
+			if slice[0] != "bar" || slice[1] != "fizz" || slice[2] != "buzz" {
+				t.Error("expected slice to contain input values but it didn't")
+			}
+		}
+	}
+
+	if slice, ok := foo["fizz"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if len(slice) != 1 {
+			t.Error("expected slice to have 1 element but it didn't")
+		} else {
+			if slice[0] != "buzz" {
+				t.Error("expected slice to contain input value but it didn't")
+			}
+		}
+	}
+}
+
+func TestMagicUnmarshaler_MapOfByteSlice(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo map[string][]byte
+
+	must(un.Unmarshal("foo:bar,fizz:buzz", &foo))
+
+	if bytes, ok := foo["foo"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if string(bytes) != "bar" {
+			t.Error("expected byte slice to match input value but it didn't")
+		}
+	}
+
+	if bytes, ok := foo["fizz"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if string(bytes) != "buzz" {
+			t.Error("expected byte slice to match input value but it didn't")
+		}
+	}
+}
+
+func TestMagicUnmarshaler_MapOfByteSlicePointer(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo map[string]*[]byte
+
+	must(un.Unmarshal("foo:bar,fizz:buzz", &foo))
+
+	if bytes, ok := foo["foo"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if string(*bytes) != "bar" {
+			t.Error("expected byte slice to match input value but it didn't")
+		}
+	}
+
+	if bytes, ok := foo["fizz"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if string(*bytes) != "buzz" {
+			t.Error("expected byte slice to match input value but it didn't")
+		}
+	}
 }
 
 func must(err error) {
