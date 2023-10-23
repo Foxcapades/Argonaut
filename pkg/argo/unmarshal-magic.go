@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"errors"
 	"reflect"
 	"strconv"
 	"time"
@@ -82,7 +83,10 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	case reflect.Interface:
 		ptrVal.Set(reflect.ValueOf(raw))
 	case reflect.Struct:
-		// TODO: handle time
+		if ptrDef.AssignableTo(reflect.TypeOf(time.Time{})) {
+			return v.unmarshalTime(ptrVal, raw)
+		}
+
 		fallthrough
 
 	default:
@@ -90,6 +94,17 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	}
 
 	return
+}
+
+func (v valueUnmarshaler) unmarshalTime(val reflect.Value, raw string) error {
+	for _, format := range v.props.Time.DateFormats {
+		if tim, err := time.Parse(format, raw); err == nil {
+			val.Set(reflect.ValueOf(tim))
+			return nil
+		}
+	}
+
+	return errors.New("could not parse input string as a time value")
 }
 
 func (v valueUnmarshaler) unmarshalSlice(val reflect.Value, raw string) error {
@@ -269,6 +284,9 @@ func toUnmarshalable(arg string, ov reflect.Value, skipPtr bool) (reflect.Value,
 	}
 	if kind == reflect.Map {
 		return toValidMap(v, ov)
+	}
+	if kind == reflect.Struct && ov.Type().AssignableTo(reflect.TypeOf((*time.Time)(nil))) {
+		return v, nil
 	}
 	if kind == reflect.Interface {
 		return v, nil

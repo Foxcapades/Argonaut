@@ -1,5 +1,7 @@
 package argo
 
+import "time"
+
 // UnmarshalProps defines configuration options for the included "magic"
 // Unmarshaler implementation.
 //
@@ -16,6 +18,8 @@ type UnmarshalProps struct {
 	Maps UnmarshalMapProps `json:"maps"`
 
 	Slices UnmarshalSliceProps `json:"slices"`
+
+	Time UnmarshalTimeProps `json:"time"`
 }
 
 // UnmarshalIntegerProps defines int parsing specific options for the "magic"
@@ -98,6 +102,14 @@ type UnmarshalMapProps struct {
 type UnmarshalSliceProps struct {
 }
 
+type UnmarshalTimeProps struct {
+	// DateFormats configures the date-time formats that the unmarshaler will use
+	// when attempting to parse a date value.
+	//
+	// By default, the RFC3339 and RFC3339 nano patterns are used.
+	DateFormats []string
+}
+
 // ////////////////////////////////////////////////////////////////////////// //
 
 // DefaultUnmarshalProps returns an UnmarshalProps instance with the default
@@ -117,4 +129,7 @@ var defaultUnmarshalProps = UnmarshalProps{
 		EntrySeparatorChars:  ",; ",
 	},
 	Slices: UnmarshalSliceProps{},
+	Time: UnmarshalTimeProps{
+		DateFormats: []string{time.RFC3339, time.RFC3339Nano},
+	},
 }
