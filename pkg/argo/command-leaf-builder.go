@@ -135,20 +135,6 @@ func (l *commandLeafBuilder) getName() string {
 	return l.name
 }
 
-func (l *commandLeafBuilder) hasFlags() bool {
-	for _, group := range l.flagGroups {
-		if group.hasFlags() {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (l *commandLeafBuilder) hasCustomFlagGroups() bool {
-	return len(l.flagGroups) > 1
-}
-
 func (l *commandLeafBuilder) parent(node CommandNode) {
 	l.parentNode = node
 }
