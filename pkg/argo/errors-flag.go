@@ -32,10 +32,6 @@ func (m missingFlagError) Error() string {
 	return fmt.Sprintf("required flag %s was missing from the CLI call", printFlagNames(m.flag))
 }
 
-func (m missingFlagError) StrictOnly() bool {
-	return false
-}
-
 func (m missingFlagError) Flag() Flag {
 	return m.flag
 }
