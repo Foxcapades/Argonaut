@@ -68,8 +68,6 @@ type Argument interface {
 	// returned.
 	IsRequired() bool
 
-	binding() any
-
 	// HasBinding indicates whether this Argument has a value binding.
 	HasBinding() bool
 
@@ -121,10 +119,6 @@ func (a argument) Description() string {
 
 func (a argument) HasDescription() bool {
 	return len(a.desc) > 0
-}
-
-func (a argument) binding() any {
-	return a.bindVal
 }
 
 func (a argument) HasBinding() bool {

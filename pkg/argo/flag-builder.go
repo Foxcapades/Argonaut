@@ -96,8 +96,6 @@ type FlagBuilder interface {
 
 	setIsHelpFlag() FlagBuilder
 
-	isHelpFlag() bool
-
 	// Require marks this Flag as being required.
 	//
 	// If this flag is not present in the CLI call, an error will be returned when
@@ -193,10 +191,6 @@ func (b *flagBuilder) WithBindingAndDefault(pointer, def any, required bool) Fla
 func (b *flagBuilder) setIsHelpFlag() FlagBuilder {
 	b.isHelp = true
 	return b
-}
-
-func (b flagBuilder) isHelpFlag() bool {
-	return b.isHelp
 }
 
 func (b *flagBuilder) Build(ctx *WarningContext) (Flag, error) {

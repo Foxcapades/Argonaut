@@ -249,3 +249,87 @@ func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
 		t.Error("expected command tree warning to match expected warning but it didn't")
 	}
 }
+
+// Conflicting branch and leaf names in a single command group
+func TestCommandTreeBuilder_Build01(t *testing.T) {
+	_, err := cli.Tree().
+		WithBranch(cli.Branch("something").WithLeaf(cli.Leaf("something-else"))).
+		WithLeaf(cli.Leaf("something")).
+		Build(nil)
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	}
+}
+
+// Conflicting branch and leaf names across command groups
+func TestCommandTreeBuilder_Build02(t *testing.T) {
+	_, err := cli.Tree().
+		WithCommandGroup(cli.CommandGroup("foo").
+			WithBranch(cli.Branch("something").WithLeaf(cli.Leaf("something-else")))).
+		WithCommandGroup(cli.CommandGroup("bar").
+			WithLeaf(cli.Leaf("something"))).
+		Build(nil)
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	}
+}
+
+// Conflicting long flag names in a single flag group
+func TestCommandTreeBuilder_Build03(t *testing.T) {
+	_, err := cli.Tree().
+		WithFlag(cli.LongFlag("hello")).
+		WithFlag(cli.LongFlag("hello")).
+		WithLeaf(cli.Leaf("something")).
+		Build(nil)
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	}
+}
+
+// Conflicting short flag names in a single flag group
+func TestCommandTreeBuilder_Build04(t *testing.T) {
+	_, err := cli.Tree().
+		WithFlag(cli.ShortFlag('f')).
+		WithFlag(cli.ShortFlag('f')).
+		WithLeaf(cli.Leaf("something")).
+		Build(nil)
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	}
+}
+
+// Conflicting long flag names across flag groups
+func TestCommandTreeBuilder_Build05(t *testing.T) {
+	_, err := cli.Tree().
+		WithFlagGroup(cli.FlagGroup("hoopla").
+			WithFlag(cli.LongFlag("hello"))).
+		WithFlagGroup(cli.FlagGroup("wednesday").
+			WithFlag(cli.LongFlag("hello"))).
+		Build(nil)
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	} else {
+		t.Log(err)
+	}
+}
+
+// Conflicting short flag names across flag groups
+func TestCommandTreeBuilder_Build06(t *testing.T) {
+	_, err := cli.Tree().
+		WithFlagGroup(cli.FlagGroup("hoopla").
+			WithFlag(cli.ShortFlag('g'))).
+		WithFlagGroup(cli.FlagGroup("wednesday").
+			WithFlag(cli.ShortFlag('g'))).
+		Build(nil)
+
+	if err == nil {
+		t.Error("expected err not to be nil but it was")
+	} else {
+		t.Log(err)
+	}
+}

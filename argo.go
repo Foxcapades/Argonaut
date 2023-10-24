@@ -81,6 +81,12 @@ func Leaf(name string) argo.CommandLeafBuilder {
 	return argo.NewCommandLeafBuilder(name)
 }
 
+// CommandGroup returns a new CommandGroupBuilder in stance which can be used to
+// construct a CommandGroup instance.
+func CommandGroup(name string) argo.CommandGroupBuilder {
+	return argo.NewCommandGroupBuilder(name)
+}
+
 // FlagGroup returns a new FlagGroupBuilder instance which can be used to
 // construct an FlagGroup instance.
 func FlagGroup(name string) argo.FlagGroupBuilder {
