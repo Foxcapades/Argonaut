@@ -148,6 +148,21 @@ func TestMagicUnmarshaler_MapOfSlice(t *testing.T) {
 	}
 }
 
+func TestMagicUnmarshaler_MapOfBasicPointer(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo map[string]*string
+
+	must(un.Unmarshal("foo:bar,foo:fizz,foo:buzz", &foo))
+
+	if value, ok := foo["foo"]; !ok {
+		t.Error("expected key was not found in unmarshalled map")
+	} else {
+		if *value != "buzz" {
+			t.Errorf("expected value to equal \"buzz\" but it was \"%s\"", *value)
+		}
+	}
+}
+
 func TestMagicUnmarshaler_MapOfByteSlice(t *testing.T) {
 	un := argo.NewDefaultMagicUnmarshaler()
 	var foo map[string][]byte
@@ -190,6 +205,51 @@ func TestMagicUnmarshaler_MapOfByteSlicePointer(t *testing.T) {
 	} else {
 		if string(*bytes) != "buzz" {
 			t.Error("expected byte slice to match input value but it didn't")
+		}
+	}
+}
+
+func TestMagicUnmarshaler_Interface(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo interface{}
+
+	must(un.Unmarshal("foo", &foo))
+
+	if foo != "foo" {
+		t.Errorf(`expected variable to equal "foo" but it was "%s"`, foo)
+	}
+}
+
+func TestMagicUnmarshaler_Slice(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo []string
+
+	must(un.Unmarshal("foo", &foo))
+	must(un.Unmarshal("bar", &foo))
+
+	if len(foo) != 2 {
+		t.Errorf(`expected slice length to be 2 but it was %d`, len(foo))
+	} else {
+		if foo[0] != "foo" {
+			t.Errorf(`expected slice[0] to equal "foo" but it was "%s"`, foo[0])
+		}
+		if foo[1] != "bar" {
+			t.Errorf(`expected slice[0] to equal "bar" but it was "%s"`, foo[0])
+		}
+	}
+}
+
+func TestMagicUnmarshaler_ByteSlice(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo []byte
+
+	must(un.Unmarshal("foo", &foo))
+
+	if len(foo) != 3 {
+		t.Errorf(`expected slice length to be 3 but it was %d`, len(foo))
+	} else {
+		if string(foo) != "foo" {
+			t.Errorf(`expected slice to equal "foo" but it was "%s"`, string(foo))
 		}
 	}
 }

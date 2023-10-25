@@ -2,7 +2,6 @@ package argo
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 
 	"github.com/Foxcapades/Argonaut/internal/unmarshal"
@@ -37,11 +36,16 @@ type ArgumentBuilder interface {
 
 	// WithBinding sets the bind value for the Argument.
 	//
-	// The bind value may either be a pointer or an instance of Unmarshaler.
+	// The bind value may be one of a value pointer, a consumer function, or an
+	// Unmarshaler instance.  For demonstrations of each, see the examples below.
 	//
 	// If the bind value is a pointer, the Argument's value unmarshaler will be
 	// called to unmarshal the raw string value into a value of the type passed
 	// to this method.
+	//
+	// If the bind value is a consumer function, that function will be called with
+	// the parsed value from the CLI.  The consumer function may optionally return
+	// an error which, if not nil, will be passed up as a parsing error.
 	//
 	// If the bind value is an Unmarshaler instance, that instance's Unmarshal
 	// method will be called with the raw input from the CLI.
@@ -54,7 +58,7 @@ type ArgumentBuilder interface {
 	//     var myValue time.Duration
 	//     cli.Argument.WithBinding(&myValue)
 	//
-	// Example 2 (a consumer func):
+	// Example 2 (an unmarshaler func):
 	//     cli.Argument.WithBinding(UnmarshalerFunc(func(raw string) error {
 	//         fmt.Println(raw)
 	//         return nil
@@ -62,7 +66,7 @@ type ArgumentBuilder interface {
 	//
 	// Example 3 (lets get silly with it):
 	//     var myValue map[bool]**string
-	//     cli.Argument.WithBinding(&myValue)
+	//     cli.Argument().WithBinding(&myValue)
 	//
 	// Example 4 (custom type)
 	//     type Foo struct {
@@ -78,6 +82,12 @@ type ArgumentBuilder interface {
 	//         var foo Foo
 	//         cli.Argument().WithBinding(&foo)
 	//     }
+	//
+	// Example 5 (plain consumer func which returns an error):
+	//     cli.Argument().WithBinding(func(value int) error { do something })
+	//
+	// Example 6 (plain consumer func which returns nothing):
+	//     cli.Argument().WithBinding(func(value int) { do something })
 	//
 	WithBinding(pointer any) ArgumentBuilder
 
@@ -175,12 +185,12 @@ func NewArgumentBuilder() ArgumentBuilder {
 
 type argumentBuilder struct {
 	name string
-
 	desc string
 
 	required bool
-	hasBind  bool
-	hasDef   bool
+
+	bindKind    xarg.BindKind
+	defaultKind xarg.DefaultKind
 
 	def  any
 	bind any
@@ -191,6 +201,8 @@ type argumentBuilder struct {
 	marsh ValueUnmarshaler
 
 	validators []any
+
+	errors []error
 }
 
 func (a *argumentBuilder) WithName(name string) ArgumentBuilder {
@@ -213,7 +225,7 @@ func (a argumentBuilder) isRequired() bool {
 }
 
 func (a *argumentBuilder) WithBinding(binding any) ArgumentBuilder {
-	a.hasBind = true
+	a.bindKind = xarg.BindKindUnknown
 	a.bind = binding
 	return a
 }
@@ -223,7 +235,7 @@ func (a *argumentBuilder) getBinding() any {
 }
 
 func (a *argumentBuilder) WithDefault(def any) ArgumentBuilder {
-	a.hasDef = true
+	a.defaultKind = xarg.DefaultKindUnknown
 	a.def = def
 	return a
 }
@@ -244,22 +256,32 @@ func (a *argumentBuilder) WithValidator(fn any) ArgumentBuilder {
 
 func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 	errs := newMultiError()
-	valDefault := true
 	bindSafe := true
 
-	if a.hasBind {
-		if err := a.validateBinding(); err != nil {
+	if a.bindKind != xarg.BindKindNone {
+		kind, err := xarg.DetermineBindKind(a.bind, unmarshalerType)
+		a.bindKind = kind
+		if err != nil {
 			errs.AppendError(err)
-			valDefault = false
 			bindSafe = false
+		} else {
+			a.rootBind = unmarshal.GetRootValue(reflect.ValueOf(a.bind), unmarshalerType)
 		}
 	} else {
 		bindSafe = false
 	}
 
-	if valDefault {
-		if err := a.validateDefault(); err != nil {
-			errs.AppendError(err)
+	if a.defaultKind != xarg.DefaultKindNone {
+		if a.bindKind == xarg.BindKindNone {
+			errs.AppendError(errors.New("default value set with no binding"))
+		} else if a.bindKind != xarg.BindKindInvalid {
+			kind, err := xarg.DetermineDefaultKind(a.bind, a.def)
+			a.defaultKind = kind
+			if err != nil {
+				errs.AppendError(err)
+			} else {
+				a.rootDef = reflect.ValueOf(a.def)
+			}
 		}
 	}
 
@@ -279,8 +301,8 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 		name:                a.name,
 		desc:                a.desc,
 		required:            a.required,
-		isBindSet:           a.hasBind,
-		isDefSet:            a.hasDef,
+		bindingKind:         a.bindKind,
+		defaultKind:         a.defaultKind,
 		bindVal:             a.bind,
 		defVal:              a.def,
 		rootBind:            a.rootBind,
@@ -289,100 +311,4 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 		preParseValidators:  pre,
 		postParseValidators: post,
 	}, nil
-}
-
-func (a *argumentBuilder) validateBinding() error {
-	if tmp, err := unmarshal.ToUnmarshalable("", reflect.ValueOf(a.bind), false, unmarshalerType); err != nil {
-		return newInvalidArgError(ArgErrInvalidBindingBadType, a, "")
-	} else {
-		a.rootBind = tmp
-	}
-
-	return nil
-}
-
-const (
-	errDefFnOutNum = "default value providers must return either 1 or 2 values"
-	err2ndOut      = "the second output type of a default value provider must " +
-		"be compatible with error"
-	errBadType = "default value type %s is not compatible with binding type %s"
-)
-
-func (a *argumentBuilder) validateDefault() error {
-	if !a.hasDef {
-		return nil
-	}
-
-	if !a.hasBind {
-		// TODO: this should be a real error
-		return errors.New("default set with no binding")
-	}
-
-	if a.hasDef && reflectGetRootValue(reflect.ValueOf(a.def)).Kind() == reflect.Func {
-		a.rootDef = reflectGetRootValue(reflect.ValueOf(a.def))
-		return a.validateDefaultProvider()
-	}
-
-	if tmp, err := unmarshal.ToUnmarshalable("", reflect.ValueOf(a.def), true, unmarshalerType); err != nil {
-		// TODO: This is not necessarily the correct error type
-		return invalidDefaultValError(a)
-	} else {
-		a.rootDef = tmp
-	}
-
-	if a.rootDef.Kind() != reflect.String && !reflectCompatible(&a.rootDef, &a.rootBind) {
-		return invalidDefaultValError(a)
-	}
-
-	return nil
-}
-
-func (a *argumentBuilder) validateDefaultProvider() error {
-	root := &a.rootDef
-	defType := root.Type()
-
-	oLen := defType.NumOut()
-	if oLen == 0 || oLen > 2 {
-		return newInvalidArgError(ArgErrInvalidDefaultFn, a, errDefFnOutNum)
-	}
-
-	outType := defType.Out(0)
-
-	if !defType.Out(0).AssignableTo(a.rootBind.Type()) {
-
-		// Second chance for Unmarshalable short-circuit logic.
-		//
-		// In this case we can attempt to unmarshal in 2 different scenarios:
-		//   1. The bind value is an unmarshaler func AND the default provider
-		//      returns a string.
-		//   2. The bind value is an unmarshaler instance AND the default provider
-		//      returns a value that is of that implementing type.
-		if reflectIsUnmarshaler(a.rootBind.Type()) {
-			// If the output type is a string, then it is compatible with both the
-			// unmarshaler and unmarshaler func.
-			if outType.Kind() == reflect.String {
-				return nil
-			}
-
-			if a.rootBind.Type().Kind() != reflect.Func {
-				if outType.AssignableTo(a.rootBind.Type().Elem()) {
-					return nil
-				}
-			}
-		}
-
-		return newInvalidArgError(ArgErrInvalidDefaultVal, a,
-			fmt.Sprintf(errBadType, defType.Out(0), reflect.TypeOf(a.bind)))
-	}
-
-	if oLen == 2 && !defType.Out(1).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
-		return newInvalidArgError(ArgErrInvalidDefaultFn, a, err2ndOut)
-	}
-
-	return nil
-}
-
-func invalidDefaultValError(b *argumentBuilder) error {
-	return newInvalidArgError(ArgErrInvalidDefaultVal, b,
-		fmt.Sprintf(errBadType, b.rootDef.Type(), b.rootBind.Type()))
 }

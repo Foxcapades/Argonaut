@@ -128,31 +128,35 @@ func TestArgumentDefault05(t *testing.T) {
 
 // Expect an OK because the unmarshaler type is compatible with the output of
 // the default value provider.
-func TestArgumentDefault06(t *testing.T) {
-	con := argUnmarshaler{}
-	foo := func() (argUnmarshaler, error) { return argUnmarshaler{3}, nil }
-	_ = cli.Command().
-		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
-		MustParse([]string{"command", "3"})
-
-	if con.val != 3 {
-		t.Error("expected unmarshaler value to have been replaced but it wasn't")
-	}
-}
+// TODO: What should this test actually be?  It doesn't make sense to have the
+//       provider return an unmarshaler instance.
+// func TestArgumentDefault06(t *testing.T) {
+// 	con := argUnmarshaler{}
+// 	foo := func() (argUnmarshaler, error) { return argUnmarshaler{3}, nil }
+// 	_ = cli.Command().
+// 		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
+// 		MustParse([]string{"command", "3"})
+//
+// 	if con.val != 3 {
+// 		t.Error("expected unmarshaler value to have been replaced but it wasn't")
+// 	}
+// }
 
 // Expect an OK because the unmarshaler type is compatible with the output of
 // the default value provider.
-func TestArgumentDefault07(t *testing.T) {
-	con := argUnmarshaler{}
-	foo := func() (argUnmarshaler, error) { return argUnmarshaler{3}, nil }
-	_ = cli.Command().
-		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
-		MustParse([]string{"command"})
-
-	if con.val != 3 {
-		t.Error("expected unmarshaler value to have been replaced but it wasn't")
-	}
-}
+// TODO: What should this test actually be?  It doesn't make sense to have the
+//       provider return an unmarshaler instance.
+// func TestArgumentDefault07(t *testing.T) {
+// 	con := argUnmarshaler{}
+// 	foo := func() (argUnmarshaler, error) { return argUnmarshaler{3}, nil }
+// 	_ = cli.Command().
+// 		WithArgument(cli.Argument().WithBinding(&con).WithDefault(foo)).
+// 		MustParse([]string{"command"})
+//
+// 	if con.val != 3 {
+// 		t.Error("expected unmarshaler value to have been replaced but it wasn't")
+// 	}
+// }
 
 func TestArgument_PreParseValidator01(t *testing.T) {
 	var binding int

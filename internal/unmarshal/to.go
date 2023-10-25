@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/Foxcapades/Argonaut/internal/xreflect"
 )
 
 type InvalidTypeError struct {
@@ -20,7 +22,7 @@ type InvalidUnmarshalError struct {
 }
 
 func (i InvalidUnmarshalError) Error() string {
-	if i.Value.IsNil() {
+	if xreflect.IsNil(&i.Value) {
 		return "Attempted to unmarshal into nil"
 	}
 	return "Attempted to unmarshal into a non-pointer"
@@ -33,7 +35,7 @@ func ToUnmarshalable(
 	unmarshalerType reflect.Type,
 ) (reflect.Value, error) {
 
-	if !skipPtr && ((ov.Kind() != reflect.Ptr && ov.Kind() != reflect.Func) || isNil(&ov)) {
+	if !skipPtr && ((ov.Kind() != reflect.Ptr && ov.Kind() != reflect.Func) || xreflect.IsNil(&ov)) {
 		return reflect.Value{}, &InvalidUnmarshalError{Value: ov, Argument: arg}
 	}
 
@@ -41,7 +43,7 @@ func ToUnmarshalable(
 
 	kind := v.Kind()
 
-	if reflectIsBasicKind(kind) {
+	if xreflect.IsBasicKind(kind) {
 		return v, nil
 	}
 
@@ -50,10 +52,10 @@ func ToUnmarshalable(
 	}
 
 	if kind == reflect.Slice {
-		return toValidSlice(v, ov, unmarshalerType)
+		return ToValidSlice(v, ov, unmarshalerType)
 	}
 	if kind == reflect.Map {
-		return toValidMap(v, ov, unmarshalerType)
+		return ToValidMap(v, ov, unmarshalerType)
 	}
 	if kind == reflect.Struct && ov.Type().AssignableTo(reflect.TypeOf((*time.Time)(nil))) {
 		return v, nil
@@ -65,85 +67,80 @@ func ToUnmarshalable(
 	return reflect.Value{}, &InvalidTypeError{Value: v}
 }
 
+// ToValidSlice is an internal method that is not exposed to package consumers.
+//
 // Valid slice types:
 //   []<basic>
 //   []<*basic>
 //   [][]byte
 //   []*[]byte
-func toValidSlice(v, ov reflect.Value, ut reflect.Type) (out reflect.Value, err error) {
-	err = validateContainerValue(v.Type().Elem(), ov, ut)
+func ToValidSlice(v, ov reflect.Value, ut reflect.Type) (out reflect.Value, err error) {
+	err = ValidateContainerValue(v.Type().Elem(), ov, ut)
 	if err != nil {
 		return
 	}
 	return v, nil
 }
 
+// ToValidMap is butts and this comment line is meaningless.
+//
 // Valid map types:
 //   map[<basic>]<basic>
 //   map[<basic>]<*basic>
 //   map[<basic>][]byte
 //   map[<basic>]<*[]byte>
-func toValidMap(v, ov reflect.Value, ut reflect.Type) (reflect.Value, error) {
+func ToValidMap(v, ov reflect.Value, ut reflect.Type) (reflect.Value, error) {
 	vt := v.Type()
 
-	if !reflectIsBasicKind(vt.Key().Kind()) {
+	if !xreflect.IsBasicKind(vt.Key().Kind()) {
 		return reflect.Value{}, &InvalidTypeError{Value: ov}
 	}
 
-	if err := validateContainerValue(vt.Elem(), ov, ut); err != nil {
+	if err := ValidateContainerValue(vt.Elem(), ov, ut); err != nil {
 		return reflect.Value{}, err
 	}
 
 	return v, nil
 }
 
-func validateContainerValue(t reflect.Type, ov reflect.Value, ut reflect.Type) error {
+func ValidateContainerValue(t reflect.Type, ov reflect.Value, ut reflect.Type) error {
 	sk := t.Kind()
 
-	if reflectIsBasicKind(sk) {
+	if xreflect.IsBasicKind(sk) {
 		return nil
 	}
 
 	if sk == reflect.Ptr {
-		if reflectIsBasicKind(t.Elem().Kind()) {
+		if xreflect.IsBasicKind(t.Elem().Kind()) {
 			return nil
 		}
-		if reflectIsByteSlice(t.Elem()) {
+		if xreflect.IsByteSlice(t.Elem()) {
 			return nil
 		}
-		if reflectIsUnmarshaler(t.Elem(), ut) {
+		if xreflect.IsUnmarshaler(t.Elem(), ut) {
 			return nil
 		}
-		if reflectIsInterface(t.Elem()) {
+		if xreflect.IsInterface(t.Elem()) {
 			return nil
 		}
 
 		return &InvalidTypeError{Value: ov}
 	}
 
-	if reflectIsByteSlice(t) {
+	if xreflect.IsByteSlice(t) {
 		return nil
 	}
-	if reflectIsBasicSlice(t) {
+	if xreflect.IsBasicSlice(t) {
 		return nil
 	}
-	if reflectIsUnmarshaler(t, ut) {
+	if xreflect.IsUnmarshaler(t, ut) {
 		return nil
 	}
-	if reflectIsInterface(t) {
+	if xreflect.IsInterface(t) {
 		return nil
 	}
 
 	return &InvalidTypeError{Value: ov}
-}
-
-func isNil(v *reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Ptr, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Slice:
-		return v.IsNil()
-	default:
-		return false
-	}
 }
 
 // GetRootValue returns the root of the given value.  The root will be the
@@ -185,7 +182,9 @@ func GetRootValue(v reflect.Value, ut reflect.Type) reflect.Value {
 		}
 
 		if v.IsNil() {
-			v.Set(reflect.New(v.Type().Elem()))
+			if v.CanAddr() {
+				v.Set(reflect.New(v.Type().Elem()))
+			}
 		}
 
 		if v.Type().AssignableTo(ut) {

@@ -3,6 +3,8 @@ package xarg
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/Foxcapades/Argonaut/internal/xreflect"
 )
 
 // SiftValidators iterates through all the given validators, sifting them into
@@ -27,7 +29,7 @@ func SiftValidators(
 ) ([]any, []any, error) {
 	var bt reflect.Type
 	if includePostParse {
-		bt = root.Type()
+		bt = xreflect.RootType(root.Type())
 	} else {
 		bt = reflect.TypeOf(nil)
 	}

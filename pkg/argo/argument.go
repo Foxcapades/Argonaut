@@ -3,6 +3,8 @@ package argo
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/Foxcapades/Argonaut/internal/xarg"
 )
 
 // Argument represents a positional or flag argument that may be attached
@@ -88,10 +90,11 @@ type argument struct {
 	desc string
 	raw  string
 
-	required  bool
-	isBindSet bool
-	isDefSet  bool
-	isUsed    bool
+	required bool
+	isUsed   bool
+
+	bindingKind xarg.BindKind
+	defaultKind xarg.DefaultKind
 
 	bindVal any
 	defVal  any
@@ -122,11 +125,11 @@ func (a argument) HasDescription() bool {
 }
 
 func (a argument) HasBinding() bool {
-	return a.isBindSet
+	return a.bindingKind != xarg.BindKindNone
 }
 
 func (a argument) BindingType() reflect.Type {
-	if !a.isBindSet {
+	if !a.HasBinding() {
 		return nil
 	} else {
 		return a.rootBind.Type()
@@ -138,11 +141,11 @@ func (a argument) Default() any {
 }
 
 func (a argument) HasDefault() bool {
-	return a.isDefSet
+	return a.defaultKind != xarg.DefaultKindNone
 }
 
 func (a argument) DefaultType() reflect.Type {
-	if a.isDefSet {
+	if a.HasDefault() {
 		return a.rootDef.Type()
 	} else {
 		return nil
@@ -167,12 +170,12 @@ func (a argument) AppendWarning(warning string) {
 
 func (a *argument) setToDefault() error {
 	// If there is no binding set, what are we going to set to the default value?
-	if !a.isBindSet {
+	if !a.HasBinding() {
 		return nil
 	}
 
 	// If there is no default set, what are we going to do here?
-	if !a.isDefSet {
+	if !a.HasDefault() {
 		return nil
 	}
 
@@ -244,7 +247,7 @@ func (a *argument) setValue(rawString string) error {
 		}
 	}
 
-	if !a.isBindSet {
+	if !a.HasBinding() {
 		return nil
 	}
 
