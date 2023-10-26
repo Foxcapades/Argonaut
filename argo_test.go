@@ -22,7 +22,7 @@ func TestFlag_withSliceOfUnmarshalable(t *testing.T) {
 
 	cli.Command().
 		WithFlag(cli.ShortFlag('f').
-			WithBinding(&values, true)).
+			WithBinding(&values, false)).
 		MustParse([]string{"command", "-f", "goodbye", "-fcruel", "-f=world"})
 
 	if len(values) != 3 {
