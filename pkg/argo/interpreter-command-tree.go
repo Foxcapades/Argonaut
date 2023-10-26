@@ -18,7 +18,7 @@ type commandTreeInterpreter struct {
 	leaf     CommandLeaf
 	queue    util.Deque[parse.Element]
 
-	flagHits map[util.Pair[byte, string]]Flag
+	flagHits flagQueue
 }
 
 func (c *commandTreeInterpreter) next() parse.Element {
@@ -131,16 +131,24 @@ FOR:
 
 	c.checkRequiredFlagsWereHit(c.current, errs)
 
-	for key, flag := range c.flagHits {
+	it := c.flagHits.iterator()
+	hf := 0
+	for it.hasNext() {
+		flag := it.next()
 		if flag.isHelpFlag() {
 			flag.executeCallback()
-			delete(c.flagHits, key)
 			break
 		}
+		hf++
 	}
 
-	for _, flag := range c.flagHits {
-		flag.executeCallback()
+	it = c.flagHits.iterator()
+	cf := 0
+	for it.hasNext() {
+		if cf != hf {
+			it.next().executeCallback()
+		}
+		cf++
 	}
 
 	if onIncomplete != nil {
@@ -230,7 +238,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 			continue
 		}
 
-		c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+		c.flagHits.append(f)
 
 		// If the flag we found requires an argument, eat the rest of the block and
 		// pass it to the flag.Hit method.  Since the block will have been consumed
@@ -377,7 +385,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 	// in a simple check.
 	if len(block) == 1 {
 		if f := c.current.FindShortFlag(block[0]); f != nil {
-			c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+			c.flagHits.append(f)
 			return f.hitWithArg(element.Data[1])
 		} else {
 			*unmapped = append(*unmapped, element.String())
@@ -400,7 +408,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 			continue
 		}
 
-		c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+		c.flagHits.append(f)
 
 		if f.RequiresArgument() {
 			if h {
@@ -463,7 +471,7 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *parse.Element, unmap
 		return nil
 	}
 
-	c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+	c.flagHits.append(f)
 
 	if f.RequiresArgument() {
 		nextElement := c.next()
@@ -542,7 +550,7 @@ func (c *commandTreeInterpreter) interpretLongPair(element *parse.Element, unmap
 		c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
 		*unmapped = append(*unmapped, element.String())
 	} else {
-		c.flagHits[util.Pair[byte, string]{L: flag.ShortForm(), R: flag.LongForm()}] = flag
+		c.flagHits.append(flag)
 
 		if flag.HasArgument() {
 			return flag.hitWithArg(element.Data[1])

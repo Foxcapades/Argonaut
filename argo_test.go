@@ -87,3 +87,48 @@ func ExampleLeaf() {
 	fmt.Println(zone)
 	// Output: UTC
 }
+
+func ExampleCommandGroup() {
+	com := cli.Tree().
+		WithCommandGroup(cli.CommandGroup("my commands").
+			WithDescription("a group of commands for me").
+			WithLeaf(cli.Leaf("foo")).
+			WithLeaf(cli.Leaf("bar"))).
+		MustParse([]string{"command", "foo"})
+
+	fmt.Println(com.SelectedCommand().Name())
+	// Output: foo
+}
+
+func ExampleFlagGroup() {
+	cli.Command().
+		WithFlagGroup(cli.FlagGroup("my flags").
+			WithFlag(cli.ShortFlag('c').
+				WithCallback(func(flag argo.Flag) { fmt.Print("hello ") }))).
+		WithFlagGroup(cli.FlagGroup("your flags").
+			WithFlag(cli.LongFlag("clutch").
+				WithCallback(func(flag argo.Flag) { fmt.Println("world") }))).
+		MustParse([]string{"command", "-c", "--clutch"})
+
+	// Output: hello world
+}
+
+func ExampleLongFlag() {
+	cli.Command().
+		WithFlag(cli.LongFlag("hello").
+			WithCallback(func(flag argo.Flag) {
+				fmt.Println(flag.WasHit())
+			})).
+		MustParse([]string{"command", "--hello"})
+
+	// Output: true
+}
+
+func ExampleShortFlag() {
+	cli.Command().
+		WithFlag(cli.ShortFlag('a').
+			WithCallback(func(flag argo.Flag) { fmt.Println(flag.HitCount()) })).
+		MustParse([]string{"command", "-aaa", "-a", "-a"})
+
+	// Output: 5
+}

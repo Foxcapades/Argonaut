@@ -13,7 +13,7 @@ func newCommandInterpreter(args []string, command Command) interpreter {
 		parser:   parse.NewParser(emit.NewEmitter(args)),
 		command:  command,
 		elements: util.NewDeque[parse.Element](2),
-		flagHits: make(map[util.Pair[byte, string]]Flag, 4),
+		flagHits: newFlagQueue(),
 	}
 }
 
@@ -23,7 +23,7 @@ func newCommandTreeInterpreter(args []string, command CommandTree) interpreter {
 		current:  command,
 		tree:     command,
 		queue:    util.NewDeque[parse.Element](2),
-		flagHits: make(map[util.Pair[byte, string]]Flag, 4),
+		flagHits: newFlagQueue(),
 	}
 }
 

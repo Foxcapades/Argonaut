@@ -11,7 +11,7 @@ import (
 type commandInterpreter struct {
 	parser   parse.Parser
 	command  Command
-	flagHits map[util.Pair[byte, string]]Flag
+	flagHits flagQueue
 	elements util.Deque[parse.Element]
 	boundary bool
 }
@@ -121,16 +121,24 @@ FOR:
 		}
 	}
 
-	for key, flag := range c.flagHits {
+	var it = c.flagHits.iterator()
+	var hf = 0
+	for it.hasNext() {
+		flag := it.next()
 		if flag.isHelpFlag() {
 			flag.executeCallback()
-			delete(c.flagHits, key)
 			break
 		}
+		hf++
 	}
 
-	for _, flag := range c.flagHits {
-		flag.executeCallback()
+	it = c.flagHits.iterator()
+	var cf = 0
+	for it.hasNext() {
+		if cf != hf {
+			it.next().executeCallback()
+		}
+		cf++
 	}
 
 	if len(errs.Errors()) > 0 {
@@ -163,7 +171,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 			continue
 		}
 
-		c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+		c.flagHits.append(f)
 
 		// If the flag we found requires an argument, eat the rest of the block and
 		// pass it to the flag.Hit method.  Since the block will have been consumed
@@ -304,7 +312,7 @@ func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) 
 	// in a simple check.
 	if len(block) == 1 {
 		if f := c.command.FindShortFlag(block[0]); f != nil {
-			c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+			c.flagHits.append(f)
 			return false, f.hitWithArg(e.Data[1])
 		}
 
@@ -326,7 +334,7 @@ func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) 
 			continue
 		}
 
-		c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+		c.flagHits.append(f)
 
 		if f.RequiresArgument() {
 			if h {
@@ -377,7 +385,7 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 		return false, nil
 	}
 
-	c.flagHits[util.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}] = f
+	c.flagHits.append(f)
 
 	if f.RequiresArgument() {
 		nextElement := c.parser.Next()
@@ -454,7 +462,7 @@ func (c *commandInterpreter) interpretLongPair(e *parse.Element) (bool, error) {
 		c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
 		c.command.appendUnmapped(e.String())
 	} else {
-		c.flagHits[util.Pair[byte, string]{L: flag.ShortForm(), R: flag.LongForm()}] = flag
+		c.flagHits.append(flag)
 
 		if flag.HasArgument() {
 			return false, flag.hitWithArg(e.Data[1])
