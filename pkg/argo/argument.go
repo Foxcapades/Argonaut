@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/Foxcapades/Argonaut/internal/xarg"
+	"github.com/Foxcapades/Argonaut/internal/xreflect"
 )
 
 // Argument represents a positional or flag argument that may be attached
@@ -206,7 +207,7 @@ func (a *argument) setToDefault() error {
 				return ret[1].Interface().(error)
 			}
 
-			if reflectIsUnmarshaler(a.rootBind.Type()) {
+			if xreflect.IsUnmarshaler(a.rootBind.Type(), unmarshalerType) {
 				a.rootBind.Elem().Set(ret[0])
 			} else {
 				a.rootBind.Set(ret[0])

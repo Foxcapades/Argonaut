@@ -42,6 +42,74 @@ func TestFlag_withSliceOfUnmarshalable(t *testing.T) {
 	}
 }
 
+func TestFlag_withMapOfUnmarshalable(t *testing.T) {
+	var values map[string]*nmrshlr
+
+	cli.Command().
+		WithFlag(cli.ShortFlag('v').
+			WithBinding(&values, true)).
+		MustParse([]string{"command", "-v", "foo:bar", "-vfizz:buzz", "-v=happy:sad"})
+
+	if len(values) != 3 {
+		t.Errorf("expected values map to have a length of 3 but was %d", len(values))
+	}
+
+	if val, ok := values["foo"]; !ok {
+		t.Error("expected map key was not present")
+	} else if val.value != "bar" {
+		t.Error("expected map value to match input")
+	}
+
+	if val, ok := values["fizz"]; !ok {
+		t.Error("expected map key was not present")
+	} else if val.value != "buzz" {
+		t.Error("expected map value to match input")
+	}
+
+	if val, ok := values["happy"]; !ok {
+		t.Error("expected map key was not present")
+	} else if val.value != "sad" {
+		t.Error("expected map value to match input")
+	}
+}
+
+func TestFlag_withMapOfSliceOfUnmarshalable(t *testing.T) {
+	var values map[string][]*nmrshlr
+
+	cli.Command().
+		WithFlag(cli.ShortFlag('v').
+			WithBinding(&values, true)).
+		MustParse([]string{"command", "-v", "foo:bar", "-vfoo:fizz", "-v=foo:buzz"})
+
+	vals, ok := values["foo"]
+
+	if !ok {
+		t.Error("expected map to contain input map key")
+	} else {
+		if len(vals) != 3 {
+			t.Errorf("expected values map to have a length of 3 but was %d", len(values))
+		}
+
+		if val := vals[0]; !ok {
+			t.Error("expected map key was not present")
+		} else if val.value != "bar" {
+			t.Error("expected map value to match input")
+		}
+
+		if val := vals[1]; !ok {
+			t.Error("expected map key was not present")
+		} else if val.value != "fizz" {
+			t.Error("expected map value to match input")
+		}
+
+		if val := vals[2]; !ok {
+			t.Error("expected map key was not present")
+		} else if val.value != "buzz" {
+			t.Error("expected map value to match input")
+		}
+	}
+}
+
 func ExampleCommand() {
 	cli.Command().
 		WithCallback(func(command argo.Command) {
@@ -94,7 +162,7 @@ func ExampleCommand_complex() {
 				WithShortForm('0').
 				WithLongForm("nil-delim").
 				WithDescription("End output with a null byte instead of a newline.").
-				WithBinding(&config.NilDelim, true))).
+				WithBinding(&config.NilDelim, false))).
 		MustParse([]string{"command", "-0"})
 
 	fmt.Println(config.NilDelim)

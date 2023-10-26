@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Foxcapades/Argonaut/internal/unmarshal"
+	"github.com/Foxcapades/Argonaut/internal/xreflect"
 )
 
 var unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
@@ -110,7 +111,7 @@ func (v valueUnmarshaler) unmarshalTime(val reflect.Value, raw string) error {
 }
 
 func (v valueUnmarshaler) unmarshalSlice(val reflect.Value, raw string) error {
-	if reflectIsByteSlice(val.Type()) {
+	if xreflect.IsByteSlice(val.Type()) {
 		val.Set(reflect.ValueOf([]byte(raw)))
 		return nil
 	}
@@ -150,7 +151,7 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 			m.Set(reflect.MakeMap(mt))
 		}
 
-		if reflectIsBasicSlice(vt) && !reflectIsByteSlice(vt) {
+		if (xreflect.IsBasicSlice(vt) && !xreflect.IsByteSlice(vt)) || xreflect.IsUnmarshalerSlice(vt, unmarshalerType) {
 			rkv := reflect.ValueOf(kv).Elem()
 
 			tmp := m.MapIndex(rkv)
@@ -175,12 +176,12 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.Value, error) {
 	// If the type of the element is a byte slice, then pass it up in raw string
 	// form.
-	if reflectIsByteSlice(vt) {
+	if xreflect.IsByteSlice(vt) {
 		return reflect.ValueOf([]byte(raw)), nil
 	}
 
 	//
-	if reflectIsBasicKind(vt.Kind()) {
+	if xreflect.IsBasicKind(vt.Kind()) {
 		vv := reflect.New(vt).Interface()
 		if err := v.Unmarshal(raw, vv); err != nil {
 			return reflect.Value{}, err
@@ -188,18 +189,18 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 		return reflect.ValueOf(vv).Elem(), nil
 	}
 
-	if reflectIsBasicSlice(vt) {
+	if xreflect.IsBasicSlice(vt) {
 		return v.unmarshalValue(vt.Elem(), raw)
 	}
 
 	if vt.Kind() == reflect.Ptr {
 		vp := vt.Elem()
-		if reflectIsByteSlice(vp) {
+		if xreflect.IsByteSlice(vp) {
 			tmp := []byte(raw)
 			return reflect.ValueOf(&tmp), nil
 		}
 
-		if reflectIsBasicKind(vp.Kind()) {
+		if xreflect.IsBasicKind(vp.Kind()) {
 			vv := reflect.New(vp).Interface()
 			if err := v.Unmarshal(raw, vv); err != nil {
 				return reflect.Value{}, err
@@ -207,13 +208,17 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 			return reflect.ValueOf(vv), nil
 		}
 
-		if reflectIsUnmarshaler(vt) {
+		if xreflect.IsUnmarshaler(vt, unmarshalerType) {
 			vv := reflect.New(vp).Interface()
 			if err := vv.(Unmarshaler).Unmarshal(raw); err != nil {
 				return reflect.Value{}, err
 			}
 			return reflect.ValueOf(vv), nil
 		}
+	}
+
+	if xreflect.IsUnmarshalerSlice(vt, unmarshalerType) {
+		return v.unmarshalValue(vt.Elem(), raw)
 	}
 
 	panic("invalid state: the given type cannot be unmarshalled")

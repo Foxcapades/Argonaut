@@ -23,9 +23,9 @@ type InvalidUnmarshalError struct {
 
 func (i InvalidUnmarshalError) Error() string {
 	if xreflect.IsNil(&i.Value) {
-		return "Attempted to unmarshal into nil"
+		return "attempted to unmarshal into nil"
 	}
-	return "Attempted to unmarshal into a non-pointer"
+	return "attempted to unmarshal into a non-pointer"
 }
 
 func ToUnmarshalable(
@@ -134,6 +134,9 @@ func ValidateContainerValue(t reflect.Type, ov reflect.Value, ut reflect.Type) e
 		return nil
 	}
 	if xreflect.IsUnmarshaler(t, ut) {
+		return nil
+	}
+	if xreflect.IsUnmarshalerSlice(t, ut) {
 		return nil
 	}
 	if xreflect.IsInterface(t) {

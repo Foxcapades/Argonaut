@@ -107,6 +107,19 @@ func IsBasicMap(t reflect.Type) bool {
 	return IsBasicKind(vt.Kind()) || IsBasicSlice(vt) || IsBasicPointer(t)
 }
 
+func IsUnmarshalerMap(t, ut reflect.Type) bool {
+	return t.Kind() == reflect.Map &&
+		IsBasic(t.Key()) &&
+		IsUnmarshaler(t.Elem(), ut)
+}
+
+func IsUnmarshalerSliceMap(t, ut reflect.Type) bool {
+	return t.Kind() == reflect.Map &&
+		IsBasic(t.Key()) &&
+		t.Elem().Kind() == reflect.Slice &&
+		IsUnmarshaler(t.Elem().Elem(), ut)
+}
+
 func IsNil(v *reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Slice:

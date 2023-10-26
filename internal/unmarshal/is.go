@@ -27,7 +27,7 @@ func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
 	// If it's a pointer, then check that it's something that can actually validly
 	// be a pointer.
 	if vt.Kind() == reflect.Ptr {
-		if xreflect.IsBasicPointer(vt) || xreflect.IsUnmarshaler(vt.Elem(), ut) {
+		if xreflect.IsBasicPointer(vt) || xreflect.IsUnmarshaler(vt, ut) || xreflect.IsUnmarshaler(vt.Elem(), ut) {
 			return true
 		}
 
@@ -56,9 +56,17 @@ func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
 		return
 	}
 
+	if xreflect.IsUnmarshalerMap(vt, ut) {
+		return true
+	}
+
 	if xreflect.IsUnmarshalerSlice(vt, ut) {
 		out = true
 		return
+	}
+
+	if xreflect.IsUnmarshalerSliceMap(vt, ut) {
+		return true
 	}
 
 	out = false
