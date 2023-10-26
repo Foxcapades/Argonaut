@@ -47,3 +47,43 @@ func ExampleFlag() {
 
 	// Output: 6
 }
+
+func ExampleTree() {
+	cli.Tree().
+		WithLeaf(cli.Leaf("foo").
+			WithCallback(func(leaf argo.CommandLeaf) {
+				fmt.Println(leaf.PassthroughInputs())
+			})).
+		MustParse([]string{"command", "foo", "--", "bar"})
+
+	// Output: [bar]
+}
+
+func ExampleBranch() {
+	cli.Tree().
+		WithBranch(cli.Branch("foo").
+			WithCallback(func(branch argo.CommandBranch) {
+				fmt.Print("hello from ")
+			}).
+			WithLeaf(cli.Leaf("bar").
+				WithCallback(func(leaf argo.CommandLeaf) {
+					fmt.Println("a branch!")
+				}))).
+		MustParse([]string{"command", "foo", "bar"})
+
+	// Output: hello from a branch!
+}
+
+func ExampleLeaf() {
+	var zone string
+
+	cli.Tree().
+		WithLeaf(cli.Leaf("time").
+			WithArgument(cli.Argument().
+				WithName("zone").
+				WithBinding(&zone))).
+		MustParse([]string{"command", "time", "UTC"})
+
+	fmt.Println(zone)
+	// Output: UTC
+}
