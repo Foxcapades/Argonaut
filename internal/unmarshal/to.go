@@ -13,7 +13,7 @@ type InvalidTypeError struct {
 }
 
 func (i *InvalidTypeError) Error() string {
-	return fmt.Sprintf("Cannot unmarshal type %s", i.Value.Type())
+	return fmt.Sprintf("cannot unmarshal type %s", i.Value.Type())
 }
 
 type InvalidUnmarshalError struct {
@@ -117,7 +117,7 @@ func ValidateContainerValue(t reflect.Type, ov reflect.Value, ut reflect.Type) e
 		if xreflect.IsByteSlice(t.Elem()) {
 			return nil
 		}
-		if xreflect.IsUnmarshaler(t.Elem(), ut) {
+		if xreflect.IsUnmarshaler(t, ut) || xreflect.IsUnmarshaler(t.Elem(), ut) {
 			return nil
 		}
 		if xreflect.IsInterface(t.Elem()) {

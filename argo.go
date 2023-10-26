@@ -36,25 +36,6 @@ import (
 // This function and Tree are the two entrypoints into the Argonaut library.
 // This function returns a value that may be used in a call chain to construct
 // a full-featured command line interface.
-//
-// Example:
-//     cli.Command().
-//         WithFlag(cli.Flag().
-//             WithLongForm("hex").
-//             WithShortForm('x').
-//             WithDescription("Hex value").
-//             WithBinding(&conf.Hex, true)).
-//         WithFlag(cli.Flag().
-//             WithLongForm("uhex").
-//             WithShortForm('u').
-//             WithDescription("Unsigned hex value").
-//             WithBinding(&conf.UHex, true)).
-//         WithFlag(cli.Flag().
-//             WithLongForm("octal").
-//             WithShortForm('o').
-//             WithDescription("Octal value").
-//             WithBinding(&conf.Octal, true)).
-//         MustParse(os.Args)
 func Command() argo.CommandBuilder {
 	return argo.NewCommandBuilder()
 }

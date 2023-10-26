@@ -2,10 +2,45 @@ package cli_test
 
 import (
 	"fmt"
+	"testing"
 
 	cli "github.com/Foxcapades/Argonaut"
 	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
+
+type nmrshlr struct {
+	value string
+}
+
+func (n *nmrshlr) Unmarshal(raw string) error {
+	n.value = raw
+	return nil
+}
+
+func TestFlag_withSliceOfUnmarshalable(t *testing.T) {
+	var values []*nmrshlr
+
+	cli.Command().
+		WithFlag(cli.ShortFlag('f').
+			WithBinding(&values, true)).
+		MustParse([]string{"command", "-f", "goodbye", "-fcruel", "-f=world"})
+
+	if len(values) != 3 {
+		t.Errorf("expected values slice to have a length of 3 but was %d instead", len(values))
+	}
+
+	if values[0].value != "goodbye" {
+		t.Errorf("expected value 1 to be 'goodbye' but was '%s'", values[0].value)
+	}
+
+	if values[1].value != "cruel" {
+		t.Errorf("expected value 2 to be 'cruel' but was '%s'", values[1].value)
+	}
+
+	if values[2].value != "world" {
+		t.Errorf("expected value 2 to be 'world' but was '%s'", values[2].value)
+	}
+}
 
 func ExampleCommand() {
 	cli.Command().
@@ -46,6 +81,25 @@ func ExampleFlag() {
 		MustParse([]string{"command", "-ssss", "--selection", "--selection"})
 
 	// Output: 6
+}
+
+func ExampleCommand_complex() {
+	var config = struct {
+		NilDelim bool
+	}{}
+
+	cli.Command().
+		WithFlagGroup(cli.FlagGroup("Output Control").
+			WithFlag(cli.Flag().
+				WithShortForm('0').
+				WithLongForm("nil-delim").
+				WithDescription("End output with a null byte instead of a newline.").
+				WithBinding(&config.NilDelim, true))).
+		MustParse([]string{"command", "-0"})
+
+	fmt.Println(config.NilDelim)
+
+	// Output: true
 }
 
 func ExampleTree() {

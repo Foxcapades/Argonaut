@@ -201,6 +201,14 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 			}
 			return reflect.ValueOf(vv), nil
 		}
+
+		if reflectIsUnmarshaler(vt) {
+			vv := reflect.New(vp).Interface()
+			if err := vv.(Unmarshaler).Unmarshal(raw); err != nil {
+				return reflect.Value{}, err
+			}
+			return reflect.ValueOf(vv), nil
+		}
 	}
 
 	panic("invalid state: the given type cannot be unmarshalled")

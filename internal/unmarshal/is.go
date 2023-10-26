@@ -56,6 +56,11 @@ func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
 		return
 	}
 
+	if xreflect.IsUnmarshalerSlice(vt, ut) {
+		out = true
+		return
+	}
+
 	out = false
 	return
 }

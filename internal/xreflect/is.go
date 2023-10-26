@@ -71,6 +71,11 @@ func IsBasicSlice(t reflect.Type) bool {
 		IsBasicKind(t.Elem().Kind())
 }
 
+func IsUnmarshalerSlice(t, ut reflect.Type) bool {
+	return t.Kind() == reflect.Slice &&
+		IsUnmarshaler(t.Elem(), ut)
+}
+
 func FuncHasReturn(t reflect.Type) bool {
 	return t.NumOut() > 0
 }
