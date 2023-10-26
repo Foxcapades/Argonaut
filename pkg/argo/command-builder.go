@@ -60,6 +60,10 @@ type CommandBuilder interface {
 	//       my-command [FILE...]
 	WithUnmappedLabel(label string) CommandBuilder
 
+	// WithCallback sets a callback function that will be executed immediately
+	// after CLI parsing has completed successfully.
+	WithCallback(cb CommandCallback) CommandBuilder
+
 	Build(ctx *WarningContext) (Command, error)
 
 	// Parse reads the given arguments and attempts to populate the built Command
@@ -84,6 +88,7 @@ type commandBuilder struct {
 	flagGroups  []FlagGroupBuilder
 	arguments   []ArgumentBuilder
 	disableHelp bool
+	callback    CommandCallback
 }
 
 func (b *commandBuilder) WithDescription(desc string) CommandBuilder {
@@ -113,6 +118,11 @@ func (b *commandBuilder) WithFlag(flag FlagBuilder) CommandBuilder {
 
 func (b *commandBuilder) WithArgument(arg ArgumentBuilder) CommandBuilder {
 	b.arguments = append(b.arguments, arg)
+	return b
+}
+
+func (b *commandBuilder) WithCallback(cb CommandCallback) CommandBuilder {
+	b.callback = cb
 	return b
 }
 
@@ -210,6 +220,7 @@ func (b commandBuilder) Build(ctx *WarningContext) (Command, error) {
 
 	com.description = b.description
 	com.unmappedLabel = b.unmapLabel
+	com.callback = b.callback
 
 	return com, nil
 }

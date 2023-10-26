@@ -124,7 +124,7 @@ FOR:
 	for i, flag := range c.flagHits {
 		if flag.isHelpFlag() {
 			flag.executeCallback()
-			c.flagHits[i] = nil
+			c.flagHits[i] = nil // TODO: why is this here?
 			break
 		}
 	}
@@ -138,6 +138,8 @@ FOR:
 	if len(errs.Errors()) > 0 {
 		return errs
 	}
+
+	c.command.executeCallback()
 
 	return nil
 }
@@ -304,6 +306,7 @@ func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) 
 	// in a simple check.
 	if len(block) == 1 {
 		if f := c.command.FindShortFlag(block[0]); f != nil {
+			c.flagHits = append(c.flagHits, f)
 			return false, f.hitWithArg(e.Data[1])
 		}
 
@@ -324,6 +327,8 @@ func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) 
 			c.command.appendUnmapped(chars.StrDash + block[0:1])
 			continue
 		}
+
+		c.flagHits = append(c.flagHits, f)
 
 		if f.RequiresArgument() {
 			if h {
@@ -373,6 +378,8 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 		c.command.appendUnmapped(e.String())
 		return false, nil
 	}
+
+	c.flagHits = append(c.flagHits, f)
 
 	if f.RequiresArgument() {
 		nextElement := c.parser.Next()

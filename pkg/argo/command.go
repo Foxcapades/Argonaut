@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 )
 
+type CommandCallback = func(command Command)
+
 // Command represents a singular, non-nested command which accepts flags and
 // arguments.
 type Command interface {
@@ -98,6 +100,8 @@ type Command interface {
 	Warnings() []string
 
 	AppendWarning(warning string)
+
+	executeCallback()
 }
 
 type command struct {
@@ -108,6 +112,7 @@ type command struct {
 	arguments     []Argument
 	unmapped      []string
 	passthrough   []string
+	callback      CommandCallback
 }
 
 func (c command) Name() string {
@@ -169,9 +174,7 @@ func (c command) HasArguments() bool {
 func (c *command) appendArgument(rawArgument string) error {
 	for _, arg := range c.arguments {
 		if !arg.WasHit() {
-			if err := arg.setValue(rawArgument); err != nil {
-				return err
-			}
+			return arg.setValue(rawArgument)
 		}
 	}
 
@@ -197,6 +200,12 @@ func (c command) PassthroughInputs() []string {
 
 func (c command) HasPassthroughInputs() bool {
 	return len(c.passthrough) > 0
+}
+
+func (c *command) executeCallback() {
+	if c.callback != nil {
+		c.callback(c)
+	}
 }
 
 func (c *command) appendPassthrough(val string) {
