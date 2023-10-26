@@ -170,11 +170,16 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 	return nil
 }
 
+// unmarshalValue value is used to unmarshal the element contained within a map
+// or slice.
 func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.Value, error) {
+	// If the type of the element is a byte slice, then pass it up in raw string
+	// form.
 	if reflectIsByteSlice(vt) {
 		return reflect.ValueOf([]byte(raw)), nil
 	}
 
+	//
 	if reflectIsBasicKind(vt.Kind()) {
 		vv := reflect.New(vt).Interface()
 		if err := v.Unmarshal(raw, vv); err != nil {

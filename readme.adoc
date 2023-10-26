@@ -15,6 +15,13 @@ image:https://img.shields.io/badge/go-docs-blue[Static Badge,link=https://pkg.go
 
 A builder style CLI creation kit.
 
+[source, go]
+----
+import (
+    cli "github.com/Foxcapades/Argonaut"
+)
+----
+
 == Features
 
 * Builder-style construction of singular commands or command trees.
