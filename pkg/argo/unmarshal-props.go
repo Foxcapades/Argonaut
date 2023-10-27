@@ -9,12 +9,11 @@ import "time"
 // parses input values.
 type UnmarshalProps struct {
 
-	// Integers defines settings for parsing integral types
-	// (int, int*, uint, uint*).
+	// Integers defines settings for parsing integral types (int, int*, uint,
+	// uint*).
 	Integers UnmarshalIntegerProps `json:"integers"`
 
-	// Maps defines settings to use when parsing mappings from
-	// the command line
+	// Maps defines settings to use when parsing mappings from the command line
 	Maps UnmarshalMapProps `json:"maps"`
 
 	Slices UnmarshalSliceProps `json:"slices"`
@@ -26,8 +25,8 @@ type UnmarshalProps struct {
 // unmarshaler.
 type UnmarshalIntegerProps struct {
 
-	// OctalLeaders defines the prefixes used to signify
-	// that a value should be parsed as octal.
+	// OctalLeaders defines the prefixes used to signify that a value should be
+	// parsed as octal.
 	//
 	// An empty slice will disable octal value parsing.
 	//
@@ -42,8 +41,8 @@ type UnmarshalIntegerProps struct {
 	//     0666
 	OctalLeaders []string `json:"octalLeaderChars"`
 
-	// HexLeaders defines the prefixes used to signify that
-	// a value should be parsed as hexadecimal.
+	// HexLeaders defines the prefixes used to signify that a value should be
+	// parsed as hexadecimal.
 	//
 	// An empty slice will disable hex value parsing.
 	//
@@ -67,23 +66,19 @@ type UnmarshalIntegerProps struct {
 // unmarshaler.
 type UnmarshalMapProps struct {
 
-	// KeyValSeparatorChars defines characters used to
-	// separate a key from a value in an individual mapping
-	// entry.
+	// KeyValSeparatorChars defines characters used to separate a key from a value
+	// in an individual mapping entry.
 	//
-	// This character can be escaped with a '\' (backslash)
-	// character.
+	// This character can be escaped with a '\' (backslash) character.
 	//
-	// The first unescaped instance of one of the defined
-	// characters in the individual entry will be used as
-	// the divider, and any subsequent appearances in the
-	// entry will be included in the value.
+	// The first unescaped instance of one of the defined characters in the
+	// individual entry will be used as the divider, and any subsequent
+	// appearances in the entry will be included in the value.
 	//
 	// Default: "=:" (equals, colon)
 	//
-	// Example key/value pairs using the default divider
-	// characters.  The second column is a JSON
-	// representation of the parsed map
+	// Example key/value pairs using the default divider characters.  The second
+	// column is a JSON representation of the parsed map
 	//
 	//     key:value            {"key": "value"}
 	//     key=value            {"key": "value"}
