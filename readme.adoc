@@ -13,7 +13,8 @@ image:https://img.shields.io/badge/go-docs-blue[Static Badge,link=https://pkg.go
 </p>
 ++++
 
-A builder style CLI creation kit.
+A builder style CLI creation kit with bindings and automatic deserialization of
+arbitrary command-line inputs.
 
 [source, go]
 ----
@@ -26,9 +27,6 @@ import (
 
 * Builder-style construction of singular commands or command trees.
 +
-.Example
-[%collapsible]
-====
 [source, go]
 ----
     com := cli.Command().
@@ -46,12 +44,9 @@ import (
             WithBinding(&conf.StringToBytes, true)).
         MustParse(os.Args)
 ----
-====
+
 * Automatic help text generation.
 +
-.Example
-[%collapsible]
-====
 [source]
 ----
 Usage:
@@ -68,13 +63,10 @@ Commands
   foo     Aliases: fo
       this is the description for the foo branch
 ----
-====
+
 * API that allows for unmarshalling of command line arguments into arbitrary
   types, including custom types using the `argo.Unmarshaler` interface.
 +
-.Example
-[%collapsible]
-====
 [source, go]
 ----
 type MyType struct {
@@ -102,12 +94,9 @@ func main() {
     fmt.Println(bar)
 }
 ----
-====
+
 * Default values for flags and arguments.
 +
-.Example
-[%collapsible]
-====
 [source, go]
 ----
 var arg int
@@ -116,7 +105,6 @@ com := cli.Command().
     WithArgument(cli.Argument().WithBinding(&arg).WithDefault(3)).
     MustParse(os.Args)
 ----
-====
 
 == Supported Types
 
