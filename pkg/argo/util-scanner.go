@@ -18,6 +18,12 @@ type Scanner[T any] interface {
 // DelimitedSliceScanner returns a new scanner over the given string, breaking
 // it into substrings on every delimiter character.
 //
+// Examples:
+//     // Comma separated values:
+//     DelimitedSliceScanner("hello,world", ",")
+//     // Comma or semicolon separated values.
+//     DelimitedSliceScanner("goodbye,cruel;world", ",;")
+//
 // Parameters:
 //   1. input      = Input string that will be scanned.
 //   2. delimiters = Set of delimiter characters.  If this string is empty, the

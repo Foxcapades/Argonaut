@@ -30,7 +30,7 @@ type UnmarshalIntegerProps struct {
 	//
 	// An empty slice will disable octal value parsing.
 	//
-	// Default: ["0o", "0O", "o", "O"]
+	// Default: ["0o", "0O", "o", "O", "0"]
 	//
 	// Example octal values using the default prefixes:
 	//
