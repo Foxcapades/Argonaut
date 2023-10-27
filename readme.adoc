@@ -150,15 +150,16 @@ Additionally, `[]byte` can also be referenced by pointers of
 arbitrary depth.
 
 .Slices
-[cols="m,m,m,m", width="100%"]
+[cols="m,m,m,m,m", width="100%"]
 |===
-| []<basic> | [][]byte | []*[]byte | []interface{}
+| []<basic> | [][]byte | []*[]byte | []interface{} | []Unmarshaler
 |===
 
 .Maps
 [cols="m,m,m", width="100%"]
 |===
-| map[<basic>]<basic> | map[<basic>][]byte | map[<basic>][]<basic>
+| map[<basic>]<basic> | map[<basic>]Unmarshaler | map[<basic>][]byte
+| map[<basic>][]<basic> | map[<basic>][]Unmarshaler |
 |===
 
 Note that `map[<basic>][]byte` is separate from and appears before
@@ -170,7 +171,8 @@ slices of other types.
 === Custom types
 
 Argonaut provides an API which can be used to allow parsing custom types or
-controlling the specifics of how a type get unmarshalled.
+controlling the specifics of how a type get unmarshalled.  Any type implementing
+the `argo.Unmarshaler` interface may be handled by Argonaut.
 
 == Formats
 
