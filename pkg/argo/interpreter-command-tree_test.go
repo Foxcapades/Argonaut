@@ -545,7 +545,7 @@ func TestTreeInterpretShortPair09(t *testing.T) {
 	} else if !flag.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
 	} else if flag.Argument().RawValue() != "b=value" {
-		t.Error("expected flag argument to match input value but it doesn'")
+		t.Error("expected flag argument to match input value but it doesn't")
 	}
 }
 

@@ -360,7 +360,7 @@ func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) 
 		// Well let's see what we have to say about that.  It may be, if this is the
 		// last character in the block, that it has to have one anyway.
 		if !h {
-			c.command.AppendWarning(fmt.Sprintf("flag -%c recieved an argument it didn't expect", b))
+			c.command.AppendWarning(fmt.Sprintf("flag -%c received an argument it didn't expect", b))
 			return false, f.hitWithArg(e.Data[1])
 		}
 
@@ -467,7 +467,7 @@ func (c *commandInterpreter) interpretLongPair(e *parse.Element) (bool, error) {
 		if flag.HasArgument() {
 			return false, flag.hitWithArg(e.Data[1])
 		}
-		c.command.AppendWarning(fmt.Sprintf("flag --%s recieved an argument it didn't expect", e.Data[0]))
+		c.command.AppendWarning(fmt.Sprintf("flag --%s received an argument it didn't expect", e.Data[0]))
 		return false, flag.hit()
 	}
 

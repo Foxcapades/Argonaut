@@ -446,7 +446,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 		// Well let's see what we have to say about that.  It may be, if this is the
 		// last character in the block, that it has to have one anyway.
 		if !h {
-			c.tree.AppendWarning(fmt.Sprintf("flag -%c recieved an argument it didn't expect", b))
+			c.tree.AppendWarning(fmt.Sprintf("flag -%c received an argument it didn't expect", b))
 			return f.hitWithArg(element.Data[1])
 		}
 
@@ -555,7 +555,7 @@ func (c *commandTreeInterpreter) interpretLongPair(element *parse.Element, unmap
 		if flag.HasArgument() {
 			return flag.hitWithArg(element.Data[1])
 		} else {
-			c.tree.AppendWarning(fmt.Sprintf("flag --%s recieved an argument it didn't expect", element.Data[0]))
+			c.tree.AppendWarning(fmt.Sprintf("flag --%s received an argument it didn't expect", element.Data[0]))
 			return flag.hit()
 		}
 	}
