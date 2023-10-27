@@ -139,15 +139,7 @@ In following tables, all entries in this table will be referenced by `<basic>`.
 
 Currently `complex64` and `complex128` are not supported.
 
-Additionally, pointers of arbitrary depth to these types are can also be parsed.
-
 ==== Container Types
-
-Like with the basic types, references to `<basic>` here can be pointers of
-arbitrary depth to those basic types.
-
-Additionally, `[]byte` can also be referenced by pointers of
-arbitrary depth.
 
 .Slices
 [cols="m,m,m,m,m", width="100%"]
