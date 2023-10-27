@@ -254,6 +254,25 @@ func TestMagicUnmarshaler_ByteSlice(t *testing.T) {
 	}
 }
 
+func TestMagicUnmarshaler_delimitedSliceString(t *testing.T) {
+	un := argo.NewDefaultMagicUnmarshaler()
+	var foo []int
+
+	must(un.Unmarshal("1,2,3,4", &foo))
+
+	if len(foo) != 4 {
+		t.Errorf("expected slice to have length 4 but had length %d", len(foo))
+	} else if foo[0] != 1 {
+		t.Errorf("expected slice[0] to equal 1 but was %d", foo[0])
+	} else if foo[1] != 2 {
+		t.Errorf("expected slice[0] to equal 2 but was %d", foo[1])
+	} else if foo[2] != 3 {
+		t.Errorf("expected slice[0] to equal 3 but was %d", foo[2])
+	} else if foo[3] != 4 {
+		t.Errorf("expected slice[0] to equal 4 but was %d", foo[3])
+	}
+}
+
 func must(err error) {
 	if err != nil {
 		panic(err)

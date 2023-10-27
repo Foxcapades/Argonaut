@@ -72,7 +72,7 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	case reflect.Uint8:
 		return unmarshalUInt(ptrVal, raw, 8, &v.props.Integers)
 	case reflect.Slice:
-		return v.unmarshalSlice(ptrVal, raw)
+		return v.unmarshalSlice(ptrVal, raw, &v.props.Slices)
 	case reflect.Map:
 		return v.unmarshalMap(ptrVal, raw)
 	case reflect.Int8:
@@ -110,16 +110,28 @@ func (v valueUnmarshaler) unmarshalTime(val reflect.Value, raw string) error {
 	return errors.New("could not parse input string as a time value")
 }
 
-func (v valueUnmarshaler) unmarshalSlice(val reflect.Value, raw string) error {
+func (v valueUnmarshaler) unmarshalSlice(
+	val reflect.Value,
+	raw string,
+	props *UnmarshalSliceProps,
+) error {
 	if xreflect.IsByteSlice(val.Type()) {
-		val.Set(reflect.ValueOf([]byte(raw)))
-		return nil
+		if bytes, err := props.ByteSliceParser(raw); err != nil {
+			return err
+		} else {
+			val.Set(reflect.ValueOf(bytes))
+			return nil
+		}
 	}
 
-	if tmp, err := v.unmarshalValue(val.Type().Elem(), raw); err != nil {
-		return err
-	} else {
-		val.Set(reflect.Append(val, tmp))
+	scanner := props.Scanner(raw)
+
+	for scanner.HasNext() {
+		if tmp, err := v.unmarshalValue(val.Type().Elem(), scanner.Next()); err != nil {
+			return err
+		} else {
+			val.Set(reflect.Append(val, tmp))
+		}
 	}
 	return nil
 }

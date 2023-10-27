@@ -100,6 +100,31 @@ type UnmarshalMapProps struct {
 // UnmarshalSliceProps defines options for slice unmarshalling in the "magic"
 // unmarshaler.
 type UnmarshalSliceProps struct {
+	// Scanner is a function that provides a text scanner that will be used to
+	// break an argument string into individual slice elements.
+	//
+	// The values split by the scanner will then be parsed into the type expected
+	// by the argument binding slice.
+	//
+	// The default scanner breaks strings on comma characters.
+	//
+	// For example, given the input string "foo,bar,fizz,buzz" use of the default
+	// scanner would result in a slice containing the values:
+	// [ foo, bar, fizz, buzz ]
+	Scanner StringScannerFactory
+
+	// The ByteSliceParser property controls the parser that will be used to
+	// deserialize a raw argument string into a byte slice.
+	//
+	// This function will be called with the raw CLI input and will be expected to
+	// return either the parsed byte slice or an error.  If the function returns
+	// an error it will be passed up like any other parsing error.
+	//
+	// The default ByteSliceParser implementation takes the raw string and
+	// directly casts it to a byte slice.
+	//
+	// WARNING: In v2 the default behavior will be changed to expect base64 input.
+	ByteSliceParser ByteSliceParser
 }
 
 type UnmarshalTimeProps struct {
@@ -128,7 +153,10 @@ var defaultUnmarshalProps = UnmarshalProps{
 		KeyValSeparatorChars: "=:",
 		EntrySeparatorChars:  ",; ",
 	},
-	Slices: UnmarshalSliceProps{},
+	Slices: UnmarshalSliceProps{
+		Scanner:         func(s string) Scanner[string] { return DelimitedSliceScanner(s, ",") },
+		ByteSliceParser: ByteSliceParserRaw,
+	},
 	Time: UnmarshalTimeProps{
 		DateFormats: []string{time.RFC3339, time.RFC3339Nano},
 	},

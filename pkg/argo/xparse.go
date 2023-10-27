@@ -18,9 +18,9 @@ func parseBool(raw string) (bool, error) {
 	}
 }
 
+// TODO: Wrap the error returned by strconv
 func parseInt(v string, bits int, opt *UnmarshalIntegerProps) (int64, error) {
 	var neg string
-	// TODO: Wrap this error
 
 	if v[0] == '-' {
 		neg = "-"
