@@ -176,3 +176,26 @@ func TestCommandHelpRenderer_regression51(t *testing.T) {
 		renderOutputCheck(t, regression51Expected, com, argo.CommandHelpRenderer())
 	}
 }
+
+const commandHelpRendererExpectOptionalArgs = `Usage:
+  %s [options]
+
+Flags
+  -a [arg] | --all=[arg]
+
+  -h | --help
+      Prints this help text.
+`
+
+func TestCommandHelpRenderer_optionalArgs(t *testing.T) {
+	var bind string
+	com, err := cli.Command().
+		WithFlag(cli.ComboFlag('a', "all").WithBinding(&bind, false)).
+		Build(nil)
+
+	if err != nil {
+		t.Error("expected err to be nil but was", err)
+	} else {
+		renderOutputCheck(t, commandHelpRendererExpectOptionalArgs, com, argo.CommandHelpRenderer())
+	}
+}
