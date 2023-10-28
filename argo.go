@@ -98,6 +98,15 @@ func Flag() argo.FlagBuilder {
 	return argo.NewFlagBuilder()
 }
 
+// ComboFlag returns a new FlagBuilder instance with the short and long forms
+// already set to the given values.
+//
+// This function is a shortcut for:
+//     cli.Flag().WithShortForm(...).WithLongForm(...)
+func ComboFlag(short byte, long string) argo.FlagBuilder {
+	return argo.NewFlagBuilder().WithShortForm(short).WithLongForm(long)
+}
+
 // Argument returns a new ArgumentBuilder instance which can be used to
 // construct an Argument instance.
 func Argument() argo.ArgumentBuilder {

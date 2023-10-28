@@ -120,7 +120,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 				return err
 			}
 
-			if flag.HasArgument() {
+			if flag.HasArgument() && (flag.Argument().BindingType().Kind() != reflect.Bool || flag.Argument().IsRequired()) {
 				if err := sb.WriteByte(chars.CharSpace); err != nil {
 					return err
 				}
@@ -141,7 +141,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			return err
 		}
 
-		if flag.HasArgument() {
+		if flag.HasArgument() && (flag.Argument().BindingType().Kind() != reflect.Bool || flag.Argument().IsRequired()) {
 			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
@@ -157,7 +157,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			return err
 		}
 
-		if flag.HasArgument() {
+		if flag.HasArgument() && (flag.Argument().BindingType().Kind() != reflect.Bool || flag.Argument().IsRequired()) {
 			if err := sb.WriteByte(chars.CharSpace); err != nil {
 				return err
 			}
