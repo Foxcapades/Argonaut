@@ -248,19 +248,15 @@ func (a *argumentBuilder) WithValidator(fn any) ArgumentBuilder {
 
 func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 	errs := newMultiError()
-	bindSafe := true
 
 	if a.bindKind != xarg.BindKindNone {
 		kind, err := xarg.DetermineBindKind(a.bind, unmarshalerType)
 		a.bindKind = kind
 		if err != nil {
 			errs.AppendError(err)
-			bindSafe = false
 		} else {
 			a.rootBind = unmarshal.GetRootValue(reflect.ValueOf(a.bind), unmarshalerType)
 		}
-	} else {
-		bindSafe = false
 	}
 
 	if a.defaultKind != xarg.DefaultKindNone {
@@ -279,7 +275,7 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 
 	var pre, post []any
 	var err error
-	pre, post, err = xarg.SiftValidators(a.validators, &a.rootBind, bindSafe)
+	pre, post, err = xarg.SiftValidators(a.validators, &a.rootBind, a.bindKind)
 	if err != nil {
 		errs.AppendError(err)
 	}

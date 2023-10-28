@@ -1,6 +1,7 @@
 package xarg
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
@@ -25,8 +26,10 @@ import (
 func SiftValidators(
 	validators []any,
 	root *reflect.Value,
-	includePostParse bool,
+	bindKind BindKind,
 ) ([]any, []any, error) {
+	includePostParse := !(bindKind == BindKindNone || bindKind == BindKindInvalid)
+
 	var bt reflect.Type
 	if includePostParse {
 		bt = xreflect.RootType(root.Type())
@@ -47,6 +50,9 @@ func SiftValidators(
 		case 1:
 			pre = append(pre, fn)
 		case 2:
+			if bindKind == BindKindNone {
+				return nil, nil, errors.New("cannot use a post-parse validator with no argument binding")
+			}
 			if includePostParse {
 				post = append(post, fn)
 			}
