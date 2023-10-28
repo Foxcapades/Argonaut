@@ -10,14 +10,6 @@ import (
 
 // An ArgumentBuilder instance is used to construct a CLI argument that may be
 // attached to a Flag or CommandLeaf.
-//
-// Full Example:
-//     cli.Argument().
-//         WithName("file").
-//         WithDescription("File that will be processed by super-app").
-//         WithBinding(&someValue).
-//         WithDefault("a default value").
-//         WithUnmarshaler(argo.NewMagicUnmarshaler(props))
 type ArgumentBuilder interface {
 
 	// WithName sets the name for this argument.
@@ -161,7 +153,7 @@ type ArgumentBuilder interface {
 	// will halt, and the returned error will be passed up.
 	//
 	// Post-parse (type 2) validators must match the following function signature:
-	//     func(any, string) error
+	//     func(T, string) error
 	//
 	// Two values are passed to the function, the parsed value, and the raw value
 	// that was passed to the command ont he CLI.  If an error is returned, CLI

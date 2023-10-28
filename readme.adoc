@@ -1,5 +1,5 @@
 = Argonaut
-:source-highlighter: pygments
+:source-highlighter: highlightjs
 :pygments-style: monokai
 :toc: preamble
 
@@ -104,6 +104,28 @@ var arg int
 com := cli.Command().
     WithArgument(cli.Argument().WithBinding(&arg).WithDefault(3)).
     MustParse(os.Args)
+----
+
+* Input validation hooks.  Validation may be applied to inputs before and/or
+  after it has been parsed.
++
+[source, go]
+----
+cli.Argument().
+    WithBinding(&myVar).
+    // Pre-parse validator
+    WithValidator(func(s string) error {
+        if len(s) < 5 len(s) > 10 {
+            return errors.New("input must be between 5 and 10 characters in length")
+        }
+        return nil
+    }).
+    // Post-parse validator
+    WithValidator(func(value uint32, raw string) error {
+        if value < 50_000 {
+            return errors.New("input must be greater than or equal to 50000")
+        }
+    })
 ----
 
 == Supported Types
