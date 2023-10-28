@@ -16,7 +16,7 @@ func TestSiftValidators01(t *testing.T) {
 
 	rv := reflect.ValueOf(&bind)
 
-	a, b, e := xarg.SiftValidators(validators, &rv, true)
+	a, b, e := xarg.SiftValidators(validators, &rv, xarg.BindKindPointer)
 
 	if len(a) != 1 {
 		t.Error("expected pre-parse validator slice to have a length of 1")
@@ -39,7 +39,7 @@ func TestSiftValidators02(t *testing.T) {
 
 	rv := reflect.ValueOf(&bind)
 
-	a, b, e := xarg.SiftValidators(validators, &rv, true)
+	a, b, e := xarg.SiftValidators(validators, &rv, xarg.BindKindPointer)
 
 	if a != nil {
 		t.Error("expected pre-parse validator slice be nil")
@@ -63,7 +63,7 @@ func TestSiftValidators03(t *testing.T) {
 
 	rv := reflect.ValueOf(&bind)
 
-	a, b, e := xarg.SiftValidators(validators, &rv, false)
+	a, b, e := xarg.SiftValidators(validators, &rv, xarg.BindKindInvalid)
 
 	if len(a) != 1 {
 		t.Error("expected pre-parse validator slice to have a length of 1")
