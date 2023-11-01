@@ -101,7 +101,7 @@ caller stops on a branch or on the root tree node, a customizable action is
 executed.  The default action is to print the help text for the command node
 that was reached.
 
-[source, shell-session]
+[source, console]
 ----
 $ my-app
 Usage:
@@ -115,7 +115,7 @@ Commands
   fizz
   foo
 ----
-[source, shell-session]
+[source, console]
 ----
 $ my-app foo
 Usage:
