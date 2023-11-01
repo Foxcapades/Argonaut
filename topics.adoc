@@ -78,15 +78,56 @@ func main() {
 
 === Command Trees
 
-Command trees represent a tree of subcommands consisting of branches and leaves
-which allow the creation of multiple "separate" commands under a single root
-application.
+Command trees (buildable using `cli.Tree()`) represent a tree of subcommands
+consisting of branches and leaves which allow the creation of multiple
+"separate" commands under a single root application.
 
-Examples of command tree style applications include `docker`, `kubectl`, and
-`go`, each of which require a subcommand to be used to perform a specific
-action.
+[source, go]
+----
+cli.Tree().
+    WithBranch(cli.Branch("foo").
+        WithLeaf(cli.Leaf("bar"))).
+    WithBranch(cli.Branch("fizz").
+        WithLeaf(cli.Leaf("buzz"))).
+    MustParse(os.Args)
+----
 
-TODO
+Examples of command tree style applications include `go`, `docker`, `kubectl`,
+`vault`, and many more.
+
+For a call to a command tree to be valid, the caller must reach a leaf node
+under the tree or one of its branches, if a leaf node is not reached and the
+caller stops on a branch or on the root tree node, a customizable action is
+executed.  The default action is to print the help text for the command node
+that was reached.
+
+[source, shell-session]
+----
+$ my-app
+Usage:
+  my-app [options] <command>
+
+Flags
+  -h | --help
+      Prints this help text.
+
+Commands
+  fizz
+  foo
+----
+[source, shell-session]
+----
+$ my-app foo
+Usage:
+  my-app foo [options] <command>
+
+Flags
+  -h | --help
+      Prints this help text.
+
+Commands
+  bar
+----
 
 == Deserialization
 
