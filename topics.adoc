@@ -149,9 +149,8 @@ or a provided custom input unmarshaler.
 
 The variable binding of an argument controls the type of the argument and
 defines what default values, providers, or validators may be used with the
-argument.  Sadly due to the limitations currently present in Go's generics
-the argument type must take 'any' to avoid a significantly more inconvenient
-API.
+argument.  Due to limitations present in Go's current generics implementation
+the function argument type must be 'any'.
 
 ==== Binding Types
 
