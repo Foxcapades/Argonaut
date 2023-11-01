@@ -290,7 +290,7 @@ There are multiple levels of validation performed by Argonaut:
 . Post-parse argument validation
 . Flag and/or argument requirements
 
-=== Builder-Build-Time Sanity Checking
+=== Builder Sanity Checking
 
 This check is performed when an Argonaut component builder's `Build()` function
 is called.  At that time the configuration of the composed command structure is
