@@ -8,7 +8,7 @@ import (
 
 // A CommandGroupBuilder is used to construct a CommandGroup instance.
 type CommandGroupBuilder interface {
-	parent(node CommandNode)
+	parent(node CommandParent)
 
 	// WithDescription sets a description value for this CommandGroupBuilder.
 	//
@@ -39,12 +39,12 @@ func NewCommandGroupBuilder(name string) CommandGroupBuilder {
 type commandGroupBuilder struct {
 	name        string
 	description string
-	parentNode  CommandNode
+	parentNode  CommandParent
 	branches    []CommandBranchBuilder
 	leaves      []CommandLeafBuilder
 }
 
-func (g *commandGroupBuilder) parent(node CommandNode) {
+func (g *commandGroupBuilder) parent(node CommandParent) {
 	g.parentNode = node
 }
 

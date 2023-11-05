@@ -372,6 +372,9 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 	return nil
 }
 
+// interpretShortPair tries to make sense of a pair where the first value is a
+// block of one or more short flags, and the second value is an argument value
+// that was directly attached using an `=` character.
 func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unmapped *[]string) error {
 	block := element.Data[0]
 

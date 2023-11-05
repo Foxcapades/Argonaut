@@ -31,7 +31,7 @@ type CommandBranchCallback = func(branch CommandBranch)
 type commandBranch struct {
 	name          string
 	desc          string
-	parent        CommandNode
+	parent        CommandParent
 	aliases       []string
 	flagGroups    []FlagGroup
 	commandGroups []CommandGroup
@@ -164,5 +164,9 @@ func (c commandBranch) AppendWarning(warning string) {
 }
 
 func (c commandBranch) onIncomplete() {
-	c.onIncompleteHandler(c)
+	if c.onIncompleteHandler != nil {
+		c.onIncompleteHandler(c)
+	} else {
+		c.parent.onIncomplete()
+	}
 }

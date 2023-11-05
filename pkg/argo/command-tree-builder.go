@@ -85,6 +85,9 @@ type CommandTreeBuilder interface {
 	//
 	// If this is unset, the default behavior is to print the help text for the
 	// furthest command node reached and exit with code 1.
+	//
+	// Child nodes will inherit this handler if they do not have their own custom
+	// handler set.
 	OnIncomplete(handler OnIncompleteHandler) CommandTreeBuilder
 
 	Build(warnings *WarningContext) (CommandTree, error)
@@ -266,7 +269,7 @@ func (t *commandTreeBuilder) Build(warnings *WarningContext) (CommandTree, error
 	tree.flagGroups = flagGroups
 	tree.commandGroups = commandGroups
 	tree.callback = t.callback
-	tree.onIncompleteHandler = util.IfElse(t.onIncompleteHandler == nil, onIncompleteCT, t.onIncompleteHandler)
+	tree.onIncompleteHandler = util.IfElse(t.onIncompleteHandler == nil, defaultOnIncompleteHandler, t.onIncompleteHandler)
 
 	return tree, nil
 }
@@ -289,9 +292,4 @@ func makeCommandTreeHelpFlag(short, long bool, tree CommandTree) FlagBuilder {
 	}
 
 	return out
-}
-
-func onIncompleteCT(tree CommandParent) {
-	util.Must(comTreeRenderer{}.RenderHelp(tree.(CommandTree), os.Stdout))
-	os.Exit(1)
 }
