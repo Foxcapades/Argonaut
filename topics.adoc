@@ -6,12 +6,15 @@
 [#singular-command]
 === Singular
 
-Singular commands (buildable using `cli.Command()`) are non-nested commands that
-may accept flags and/or arguments.
+A singular command, referred to in this document as just a command, defines an
+executable that has no subcommands and may take any number of flags and/or
+positional arguments.  Commands are buildable using the function
+`cli.Command()`.  Some examples of singular commands are `cat`, `cut`, `sed`,
+and `tar`.
 
-The following is an example command construction of the CLI API for the command
-`cat` which has a slightly complicated API due to some flags being shortcuts for
-combinations of other flags.
+As an example of command construction, the following is one way the CLI API for
+the command `cat` could be built using Argonaut.  `cat` has a slightly
+complicated API due to flags being shortcuts for other flag combinations.
 
 [source, go]
 ----
@@ -79,9 +82,9 @@ func main() {
 
 === Command Trees
 
-Command trees (buildable using `cli.Tree()`) represent a tree of subcommands
-consisting of branches and leaves which allow the creation of multiple
-"separate" commands under a single root application.
+Command trees represent a tree of subcommands consisting of branches and leaves
+which allow the creation of multiple "separate" commands under a single root
+executable.  Command trees are buildable using the `cli.Tree()` function.
 
 [source, go]
 ----
@@ -129,6 +132,40 @@ Flags
 Commands
   bar
 ----
+
+The following is an example of setting up a very simple command tree which has
+2 branches, and one leaf under each branch.  On execution, the example will
+print a message based on which command path is chosen.
+
+.Tree Structure
+[source]
+----
+app:
+  |- foo
+  |    |- bar
+  |- fizz
+       |- buzz
+----
+
+.Argonaut Code
+[source, go]
+----
+cli.Tree().
+    WithCallback(func(tree argo.CommandTree) { fmt.Print("hello") }).
+    WithBranch(cli.Branch("foo").
+        WithCallback(func(branch argo.CommandBranch) { fmt.Print(" to") }).
+        WithLeaf(cli.Leaf("bar").
+            WithCallback(func(leaf argo.CommandLeaf) { fmt.Println(" you") }))).
+    WithBranch(cli.Branch("fizz").
+        WithCallback(func(branch argo.CommandBranch) { fmt.Print(" you") }).
+        WithLeaf(cli.Leaf("buzz").
+            WithCallback(func(leaf argo.CommandLeaf) { fmt.Println(" goober") }).
+    MustParse(os.Args)
+----
+
+Because command tree node callbacks are called in the order they appear in the
+CLI call, the above example will print either "hello to you", or "hello you
+goober" depending on which command path is called.
 
 == Deserialization
 
