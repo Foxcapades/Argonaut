@@ -127,13 +127,6 @@ Passthroughs: apple, banana, canteloupe
 ----
 * And more!
 
-// == Binding
-//
-// == Unmarshalling
-//
-// === Supported Types
-//
-
 == Examples
 
 . https://github.com/Foxcapades/Argonaut/tree/master/examples/complex-type[Complex Types]
