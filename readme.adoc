@@ -1,5 +1,4 @@
 = Argonaut
-+:toc: preamble
 :repo: https://github.com/Foxcapades/Argonaut
 
 image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
@@ -128,128 +127,137 @@ Passthroughs: apple, banana, canteloupe
 ----
 * And more!
 
-== Supported Types
-
-=== Built-In
-
-By default, Argonaut can parse the following built-in Go types.
-
-==== Basic Types
-
-In following tables, all entries in this table will be referenced by `<basic>`.
-
-.Basic Types
-[cols="m,m,m,m,m", width="100%"]
-|===
-| int    | int8   | int16  | int32  | int64
-| uint   | uint8  | uint16 | uint32 | uint64
-| string | bool   | (byte) | (rune) |
-| time.Duration | time.Time | | |
-|===
-
-Currently `complex64` and `complex128` are not supported.
-
-==== Container Types
-
-.Slices
-[cols="m,m,m,m,m", width="100%"]
-|===
-| []<basic> | [][]byte | []*[]byte | []interface{} | []Unmarshaler
-|===
-
-.Maps
-[cols="m,m,m", width="100%"]
-|===
-| map[<basic>]<basic> | map[<basic>]Unmarshaler | map[<basic>][]byte
-| map[<basic>][]<basic> | map[<basic>][]Unmarshaler |
-|===
-
-Note that `map[<basic>][]byte` is separate from and appears before
-`map[<basic>][]<basic>`.  This is because byte slices are treated differently
-and are processed as raw input, whereas slices of other basic types will be
-parsed element by element.  Byte slice parsing takes priority over parsing
-slices of other types.
-
-=== Custom types
-
-Argonaut provides an API which can be used to allow parsing custom types or
-controlling the specifics of how a type get unmarshalled.  Any type implementing
-the `argo.Unmarshaler` interface may be handled by Argonaut.
-
-== Formats
-
-=== Number
-
-By default, numeric argument types can be handled in base 8, 10, and 16 using
-the formats or provided types below.
-
-==== Hexadecimal
-
-Argonaut will automatically parse values with the following formats as base16.
-
-These prefixes can be overridden or disabled entirely using the
-`argo.UnmarshalProps` type.
-
-----
-0xFF
-xFF
-0XFF
-XFF
-----
-
-Additionally, the `argo` package contains predefined types to force base16
-parsing without requiring a prefix.
-
-.Provided Hex Types
-[cols="m,m,m", width="100%"]
-|===
-| argo.Hex    -> int    | argo.Hex8   -> int8   | argo.Hex16  -> int16
-| argo.Hex32  -> int32  | argo.Hex64  -> int64  |
-| argo.UHex   -> uint   | argo.UHex8  -> uint8  | argo.UHex16 -> uint16
-| argo.UHex32 -> uint32 | argo.UHex64 -> uint64 |
-|===
-
-
-==== Octal
-
-Argonaut will automatically parse values with the following formats as base8.
-
-These prefixes can be overridden or disabled entirely using the
-`argo.UnmarshalProps` type.
-
-----
-077
-0o77
-0O77
-o77
-O77
-----
-
-Additionally, the `argo` package contains predefined types to force base8
-parsing without requiring a prefix.
-
-.Provided Octal Types
-[cols="m,m,m", width="100%"]
-|===
-| argo.Octal    -> int    | argo.Octal8   -> int8   | argo.Octal16  -> int16
-| argo.Octal32  -> int32  | argo.Octal64  -> int64  |
-| argo.UOctal   -> uint   | argo.UOctal8  -> uint8  | argo.UOctal16 -> uint16
-| argo.UOctal32 -> uint32 | argo.UOctal64 -> uint64 |
-|===
-
-
-=== Boolean
-
-Arguments of type `bool` can be represented by the following formats.
-
-[cols="h,m,m,m,m,m,m", width="100%"]
-|===
-| true  | true  | t | yes | y | 1 | on
-| false | false | f | no  | n | 0 | off
-|===
-
-A boolean argument attached to a flag can also be set to `true` simply by the
-existence of that flag in the CLI input.
+// == Binding
+//
+// == Unmarshalling
+//
+// === Supported Types
+//
+// ==== Built-In
+//
+// By default, Argonaut can parse the following built-in Go types.
+//
+// ===== Basic Types
+//
+// In following tables, all entries in this table will be referenced by `<basic>`.
+//
+// .Basic Types
+// [cols="m,m,m,m,m", width="100%"]
+// |===
+// | int    | int8   | int16  | int32  | int64
+// | uint   | uint8  | uint16 | uint32 | uint64
+// | string | bool   | (byte) | (rune) |
+// | time.Duration | time.Time | | |
+// |===
+//
+// Currently `complex64` and `complex128` are not supported.
+//
+// ===== Container Types
+//
+// .Slices
+// [cols="m,m,m,m,m", width="100%"]
+// |===
+// | []<basic> | [][]byte | []*[]byte | []interface{} | []Unmarshaler
+// |===
+//
+// .Maps
+// [cols="m,m,m", width="100%"]
+// |===
+// | map[<basic>]<basic> | map[<basic>]Unmarshaler | map[<basic>][]byte
+// | map[<basic>][]<basic> | map[<basic>][]Unmarshaler |
+// |===
+//
+// Note that `map[<basic>][]byte` is separate from and appears before
+// `map[<basic>][]<basic>`.  This is because byte slices are treated differently
+// and are processed as raw input, whereas slices of other basic types will be
+// parsed element by element.  Byte slice parsing takes priority over parsing
+// slices of other types.
+//
+// ==== Custom types
+//
+// Argonaut provides an API which can be used to allow parsing custom types or
+// controlling the specifics of how a type get unmarshalled.  Any type implementing
+// the `argo.Unmarshaler` interface may be handled by Argonaut.
+//
+// === Formats
+//
+// ==== Number
+//
+// By default, numeric argument types can be handled in base 8, 10, and 16 using
+// the formats or provided types below.
+//
+// ===== Hexadecimal
+//
+// Argonaut will automatically parse values with the following formats as base16.
+//
+// These prefixes can be overridden or disabled entirely using the
+// `argo.UnmarshalProps` type.
+//
+// ----
+// 0xFF
+// xFF
+// 0XFF
+// XFF
+// ----
+//
+// Additionally, the `argo` package contains predefined types to force base16
+// parsing without requiring a prefix.
+//
+// .Provided Hex Types
+// [cols="m,m,m", width="100%"]
+// |===
+// | argo.Hex    -> int    | argo.Hex8   -> int8   | argo.Hex16  -> int16
+// | argo.Hex32  -> int32  | argo.Hex64  -> int64  |
+// | argo.UHex   -> uint   | argo.UHex8  -> uint8  | argo.UHex16 -> uint16
+// | argo.UHex32 -> uint32 | argo.UHex64 -> uint64 |
+// |===
+//
+//
+// ===== Octal
+//
+// Argonaut will automatically parse values with the following formats as base8.
+//
+// These prefixes can be overridden or disabled entirely using the
+// `argo.UnmarshalProps` type.
+//
+// ----
+// 077
+// 0o77
+// 0O77
+// o77
+// O77
+// ----
+//
+// Additionally, the `argo` package contains predefined types to force base8
+// parsing without requiring a prefix.
+//
+// .Provided Octal Types
+// [cols="m,m,m", width="100%"]
+// |===
+// | argo.Octal    -> int    | argo.Octal8   -> int8   | argo.Octal16  -> int16
+// | argo.Octal32  -> int32  | argo.Octal64  -> int64  |
+// | argo.UOctal   -> uint   | argo.UOctal8  -> uint8  | argo.UOctal16 -> uint16
+// | argo.UOctal32 -> uint32 | argo.UOctal64 -> uint64 |
+// |===
+//
+// ==== Boolean
+//
+// Arguments of type `bool` can be represented by the following formats.
+//
+// [cols="h,m,m,m,m,m,m", width="100%"]
+// |===
+// | true  | true  | t | yes | y | 1 | on
+// | false | false | f | no  | n | 0 | off
+// |===
+//
+// A boolean argument attached to a flag can also be set to `true` simply by the
+// existence of that flag in the CLI input.
+//
+// ==== Time
+//
+// Time format is customizable via the `argo.UnmarshalProps` type, by default
+// Argonaut expects timestamps in RFC3339 format with or without fractional
+// seconds.
 
 == Examples
 
