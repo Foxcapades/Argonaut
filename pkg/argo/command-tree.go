@@ -134,8 +134,8 @@ func (t commandTree) FindLongFlag(name string) Flag {
 	return nil
 }
 
-func (t commandTree) onIncomplete() {
-	t.onIncompleteHandler(&t)
+func (t commandTree) onIncomplete(node CommandParent) {
+	t.onIncompleteHandler(node)
 }
 
 func (t *commandTree) Warnings() []string {

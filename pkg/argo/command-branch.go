@@ -163,10 +163,10 @@ func (c commandBranch) AppendWarning(warning string) {
 	c.warnings.appendWarning(warning)
 }
 
-func (c commandBranch) onIncomplete() {
+func (c commandBranch) onIncomplete(node CommandParent) {
 	if c.onIncompleteHandler != nil {
-		c.onIncompleteHandler(c)
+		c.onIncompleteHandler(node)
 	} else {
-		c.parent.onIncomplete()
+		c.parent.onIncomplete(node)
 	}
 }

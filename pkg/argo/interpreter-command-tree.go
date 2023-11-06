@@ -1,7 +1,11 @@
 package argo
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"sort"
+	"strings"
 
 	"github.com/Foxcapades/Argonaut/internal/chars"
 	"github.com/Foxcapades/Argonaut/internal/parse"
@@ -60,6 +64,7 @@ FOR:
 					return err
 				}
 			} else if node, ok := c.current.(CommandParent); ok {
+				// Lookup a child with the given input string
 				if child := node.FindChild(element.String()); child != nil {
 					c.current = child
 
@@ -68,10 +73,10 @@ FOR:
 					} else if leaf, ok := child.(CommandLeaf); ok {
 						c.leaf = leaf
 					}
-
 				} else {
-					// TODO: wrap this error in an "invalid subcommand" error or some such.
-					return fmt.Errorf("unrecognized subcommand %s", element.String())
+					// If node child could be found matching the input string, then print
+					// out a help message about the invalid subcommand.
+					return c.invalidSubCommand(element.String())
 				}
 			} else {
 				panic("illegal state: command node was neither a leaf or a parent")
@@ -109,8 +114,9 @@ FOR:
 	}
 
 	errs := newMultiError()
-	var onIncomplete func()
+	var onIncomplete func(parent CommandParent)
 
+	// If the last reached node was NOT a command leaf.
 	if node, ok := c.current.(CommandLeaf); !ok {
 		if parent, ok := c.current.(CommandParent); ok {
 			onIncomplete = parent.onIncomplete
@@ -152,7 +158,7 @@ FOR:
 	}
 
 	if onIncomplete != nil {
-		onIncomplete()
+		onIncomplete(c.current.(CommandParent))
 	}
 
 	if len(errs.Errors()) > 0 {
@@ -564,4 +570,82 @@ func (c *commandTreeInterpreter) interpretLongPair(element *parse.Element, unmap
 	}
 
 	return nil
+}
+
+func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
+	type pair struct {
+		depth int
+		child string
+	}
+
+	matches := make([]pair, 0, 8)
+
+	if parent, ok := c.current.(CommandParent); ok {
+		for _, group := range parent.CommandGroups() {
+			for _, child := range group.Branches() {
+				if idx := strings.Index(child.Name(), input); idx > -1 {
+					matches = append(matches, pair{idx, child.Name()})
+				} else {
+					for _, alias := range child.Aliases() {
+						if idx := strings.Index(alias, input); idx > -1 {
+							matches = append(matches, pair{idx, alias})
+						}
+					}
+				}
+			}
+
+			for _, child := range group.Leaves() {
+				if idx := strings.Index(child.Name(), input); idx > -1 {
+					matches = append(matches, pair{idx, child.Name()})
+				} else {
+					for _, alias := range child.Aliases() {
+						if idx := strings.Index(alias, input); idx > -1 {
+							matches = append(matches, pair{idx, alias})
+						}
+					}
+				}
+			}
+		}
+	}
+
+	sort.Slice(matches, func(i, j int) bool {
+		return matches[i].depth < matches[j].depth || matches[i].child < matches[j].child
+	})
+
+	buf := bufio.NewWriter(os.Stderr)
+
+	// TODO print command path and say something like "See <command path...> --help", but only if help is enabled.
+	util.MustReturn(buf.WriteString(fmt.Sprintf("%s: subcommand \"%s\" is unrecognized.", c.tree.Name(), input)))
+	t := 0
+	if c.current.FindShortFlag('h') != nil {
+		t = 1
+	} else if c.current.FindLongFlag("help") != nil {
+		t = 2
+	}
+
+	if t != 0 {
+		util.MustReturn(buf.WriteString(" See available subcommands by using "))
+		if t == 1 {
+			util.MustReturn(buf.WriteString("-h"))
+		} else {
+			util.MustReturn(buf.WriteString("--help"))
+		}
+	}
+
+	if len(matches) > 0 {
+		util.MustReturn(buf.WriteString("\n\nPerhaps you meant one of:\n"))
+		for i := range matches {
+			util.MustReturn(buf.WriteString("    "))
+			util.MustReturn(buf.WriteString(matches[i].child))
+			util.MustReturn(buf.WriteString("\n"))
+		}
+	} else {
+		util.MustReturn(buf.WriteString("\n"))
+	}
+
+	util.Must(buf.Flush())
+	os.Exit(1)
+
+	//goland:noinspection GoUnreachableCode
+	return fmt.Errorf("unrecognized subcommand \"%s\"", input)
 }
