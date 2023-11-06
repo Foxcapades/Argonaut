@@ -88,13 +88,9 @@ c = 4
 [source, go]
 ----
 cli.Flag().WithCallback(func(_ Flag){})
-
 cli.Command().WithCallback(func(_ Command){})
-
 cli.Tree().WithCallback(func(_ Tree){})
-
 cli.Branch().WithCallback(func(_ Branch){})
-
 cli.Leaf().WithCallback(func(_ Leaf){})
 ----
 * Customizable or overridable unmarshalling of almost any type.
@@ -130,6 +126,7 @@ cli.Argument().
 $ foo bar --fizz=buzz -- apple banana canteloupe
 Passthroughs: apple, banana, canteloupe
 ----
+* And more!
 
 == Supported Types
 
