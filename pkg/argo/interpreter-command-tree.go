@@ -633,7 +633,12 @@ func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
 	}
 
 	if len(matches) > 0 {
-		util.MustReturn(buf.WriteString("\n\nPerhaps you meant one of:\n"))
+		if len(matches) == 1 {
+			util.MustReturn(buf.WriteString("\n\nPerhaps you meant:\n"))
+		} else {
+			util.MustReturn(buf.WriteString("\n\nPerhaps you meant one of:\n"))
+		}
+
 		for i := range matches {
 			util.MustReturn(buf.WriteString("    "))
 			util.MustReturn(buf.WriteString(matches[i].child))
