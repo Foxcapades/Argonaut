@@ -106,12 +106,21 @@ func (r renderBase) renderArgumentName(a Argument, out *bufio.Writer, argIndex i
 	return nil
 }
 
+func flagArgShouldBeRendered(arg Argument) bool {
+	return arg.IsRequired() ||
+		!arg.HasBinding() ||
+		arg.BindingType().Kind() != reflect.Bool
+}
+
 func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error {
 	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
+	// If the flag has a long form name
 	if flag.HasLongForm() {
+
+		// AND a short form character
 		if flag.HasShortForm() {
 			if err := sb.WriteByte(chars.CharDash); err != nil {
 				return err
@@ -120,7 +129,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 				return err
 			}
 
-			if flag.HasArgument() && (flag.Argument().BindingType().Kind() != reflect.Bool || flag.Argument().IsRequired()) {
+			if flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
 				if err := sb.WriteByte(chars.CharSpace); err != nil {
 					return err
 				}
@@ -134,6 +143,8 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			}
 		}
 
+		// ELSE The flag does NOT have a short form character
+
 		if _, err := sb.WriteString(chars.StrDoubleDash); err != nil {
 			return err
 		}
@@ -141,7 +152,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			return err
 		}
 
-		if flag.HasArgument() && (flag.Argument().BindingType().Kind() != reflect.Bool || flag.Argument().IsRequired()) {
+		if flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
 			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
@@ -157,7 +168,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			return err
 		}
 
-		if flag.HasArgument() && (flag.Argument().BindingType().Kind() != reflect.Bool || flag.Argument().IsRequired()) {
+		if flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
 			if err := sb.WriteByte(chars.CharSpace); err != nil {
 				return err
 			}

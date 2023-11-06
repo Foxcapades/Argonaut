@@ -15,5 +15,5 @@ type CommandParent interface {
 	// A subcommand may match on either its name or one of its aliases.
 	FindChild(name string) CommandChild
 
-	onIncomplete()
+	onIncomplete(node CommandParent)
 }

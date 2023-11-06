@@ -42,7 +42,7 @@ type CommandBranchBuilder interface {
 	// Parent sets the parent CommandNode for the CommandBranch being built.
 	//
 	// Values set using this method before build time will be disregarded.
-	parent(node CommandNode)
+	parent(node CommandParent)
 
 	// WithDescription sets a description value for the CommandBranch being built.
 	//
@@ -108,7 +108,7 @@ type commandBranchBuilder struct {
 	comGroups    []CommandGroupBuilder
 	flagGroups   []FlagGroupBuilder
 	aliases      []string
-	parentNode   CommandNode
+	parentNode   CommandParent
 	callback     CommandBranchCallback
 
 	onIncompleteHandler OnIncompleteHandler
@@ -118,7 +118,7 @@ func (c commandBranchBuilder) getName() string {
 	return c.name
 }
 
-func (c *commandBranchBuilder) parent(node CommandNode) {
+func (c *commandBranchBuilder) parent(node CommandParent) {
 	c.parentNode = node
 }
 
@@ -309,12 +309,7 @@ func (c *commandBranchBuilder) Build(ctx *WarningContext) (CommandBranch, error)
 	out.parent = c.parentNode
 	out.aliases = c.aliases
 	out.callback = c.callback
-	out.onIncompleteHandler = util.IfElse(c.onIncompleteHandler != nil, c.onIncompleteHandler, onIncompleteCB)
+	out.onIncompleteHandler = util.IfElse(c.onIncompleteHandler != nil, c.onIncompleteHandler, nil)
 
 	return out, nil
-}
-
-func onIncompleteCB(parent CommandParent) {
-	util.Must(comBranchRenderer{}.RenderHelp(parent.(CommandBranch), os.Stdout))
-	os.Exit(1)
 }
