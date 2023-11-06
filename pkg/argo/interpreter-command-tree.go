@@ -614,8 +614,9 @@ func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
 
 	buf := bufio.NewWriter(os.Stderr)
 
-	// TODO print command path and say something like "See <command path...> --help", but only if help is enabled.
-	util.MustReturn(buf.WriteString(fmt.Sprintf("%s: subcommand \"%s\" is unrecognized.", c.tree.Name(), input)))
+	// TODO: Instead of using `tree.Name()` here print out the full path to the
+	//       current subcommand.  So like `app foo bar: Subcommand "f" is blah..."
+	util.MustReturn(buf.WriteString(fmt.Sprintf("%s: Subcommand \"%s\" is unrecognized.", c.tree.Name(), input)))
 	t := 0
 	if c.current.FindShortFlag('h') != nil {
 		t = 1
