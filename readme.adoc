@@ -1,7 +1,6 @@
 = Argonaut
-:source-highlighter: highlightjs
-:pygments-style: monokai
-:toc: preamble
++:toc: preamble
+:repo: https://github.com/Foxcapades/Argonaut
 
 image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
 image:https://goreportcard.com/badge/github.com/Foxcapades/Argonaut[link=https://goreportcard.com/report/github.com/Foxcapades/Argonaut]
@@ -13,8 +12,7 @@ image:https://img.shields.io/badge/go-docs-blue[Static Badge,link=https://pkg.go
 </p>
 ++++
 
-A builder style CLI creation kit with bindings and automatic deserialization of
-arbitrary command-line inputs.
+A builder style CLI creation kit packed with features.
 
 [source, go]
 ----
@@ -25,32 +23,29 @@ import (
 
 == Features
 
-* Builder-style construction of singular commands or command trees.
+* Builder-style API.
 +
 [source, go]
 ----
-    com := cli.Command().
-        WithFlag(cli.Flag().
-            WithLongForm("string-slice").
-            WithShortForm('s').
-            WithBinding(&conf.Strings, true)).
-        WithFlag(cli.Flag().
-            WithLongForm("int-bool-map").
-            WithShortForm('i').
-            WithBinding(&conf.IntToBool, true)).
-        WithFlag(cli.Flag().
-            WithLongForm("string-bytes").
-            WithShortForm('b').
-            WithBinding(&conf.StringToBytes, true)).
-        MustParse(os.Args)
+cli.Flag().
+    WithArgument(cli.Argument().
+        WithName("file").
+        Require())
 ----
-
-* Automatic help text generation.
+* Build singular command applications or command trees.
 +
-[source]
+[source, go]
+----
+cli.Command()
+// OR
+cli.Tree()
+----
+* Overridable automatic help text generation.
++
+[source, console]
 ----
 Usage:
-  main [options] <command>
+  my-app [options] <command>
     This is a simple command tree example.
 
 Flags
@@ -63,69 +58,77 @@ Commands
   foo     Aliases: fo
       this is the description for the foo branch
 ----
-
-* API that allows for unmarshalling of command line arguments into arbitrary
-  types, including custom types using the `argo.Unmarshaler` interface.
+* Bind command line arguments to variables of arbitrary types, including custom
+  types using the `argo.Unmarshaler` interface.
 +
 [source, go]
 ----
-type MyType struct {
-    Value int
-}
+foo := uint8(0)
 
-func (h *MyType) Unmarshal(value string) (err error) {
-    h.Value, err = strconv.ParseInt(value, 16, strconv.IntSize)
-    return
-}
-
-func main() {
-    var val MyType
-    var foo string
-    var bar []int
-
-    cli.Command().
-        WithFlag(cli.ShortFlag('f').WithBinding(&foo, true)).
-        WithFlag(cli.LongFlag("bar").WithBinding(&bar, true)).
-        WithArgument(cli.Argument().WithBinding(&val).Require()).
-        MustParse(os.Args)
-
-    fmt.Println(val)
-    fmt.Println(foo)
-    fmt.Println(bar)
-}
+cli.Argument().WithBinding(&foo)
 ----
+* Multi-use flags.
++
+[source, console]
+----
+$ foo --bar --bar --bar
+bar = 3
+----
+* Stackable short flags.
++
+[source, console]
+----
+$ app -abc=4
+a = true
+b = true
+c = 4
+----
+* Callback hooks for days.
++
+[source, go]
+----
+cli.Flag().WithCallback(func(_ Flag){})
 
+cli.Command().WithCallback(func(_ Command){})
+
+cli.Tree().WithCallback(func(_ Tree){})
+
+cli.Branch().WithCallback(func(_ Branch){})
+
+cli.Leaf().WithCallback(func(_ Leaf){})
+----
+* Customizable or overridable unmarshalling of almost any type.
++
+[source, go]
+----
+var options argo.UnmarshalProps
+...
+cli.Argument().WithUnmarshaler(argo.NewMagicUnmarshaler(options))
+----
 * Default values for flags and arguments.
 +
 [source, go]
 ----
-var arg int
-
-com := cli.Command().
-    WithArgument(cli.Argument().WithBinding(&arg).WithDefault(3)).
-    MustParse(os.Args)
+var foo int32
+cli.Argument().WithBinding(&foo).WithDefault(int32(666))
 ----
-
 * Input validation hooks.  Validation may be applied to inputs before and/or
-  after it has been parsed.
+  after they have been parsed.
 +
 [source, go]
 ----
+var bind uint8
 cli.Argument().
-    WithBinding(&myVar).
-    // Pre-parse validator
-    WithValidator(func(s string) error {
-        if len(s) < 5 len(s) > 10 {
-            return errors.New("input must be between 5 and 10 characters in length")
-        }
-        return nil
-    }).
-    // Post-parse validator
-    WithValidator(func(value uint32, raw string) error {
-        if value < 50_000 {
-            return errors.New("input must be greater than or equal to 50000")
-        }
-    })
+    WithBinding(&bind)
+    WithValidator(func(string) {}).
+    WithValidator(func(string, int8) {})
+----
+* Automatic capturing of "passthrough" flags and arguments.
++
+[source, console]
+----
+$ foo bar --fizz=buzz -- apple banana canteloupe
+Passthroughs: apple, banana, canteloupe
 ----
 
 == Supported Types
