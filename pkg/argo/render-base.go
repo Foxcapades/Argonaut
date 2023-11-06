@@ -152,7 +152,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			return err
 		}
 
-		if flag.HasArgument() && flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
+		if flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
 			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
@@ -168,7 +168,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			return err
 		}
 
-		if flag.HasArgument() && flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
+		if flag.HasArgument() && flagArgShouldBeRendered(flag.Argument()) {
 			if err := sb.WriteByte(chars.CharSpace); err != nil {
 				return err
 			}
