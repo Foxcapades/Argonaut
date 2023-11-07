@@ -17,7 +17,7 @@ const (
 
 type renderBase struct{}
 
-func (r renderBase) renderArgName(a Argument, argIndex int) string {
+func renderArgName(a Argument, argIndex int) string {
 	if a.HasName() {
 		return a.Name()
 	}
@@ -29,12 +29,12 @@ func (r renderBase) renderArgName(a Argument, argIndex int) string {
 	return "arg"
 }
 
-func (r renderBase) renderFlagArgument(arg Argument, padding uint8, out *bufio.Writer) error {
+func renderFlagArgument(arg Argument, padding uint8, out *bufio.Writer) error {
 	if _, err := out.WriteString(chars.SubLinePadding[padding]); err != nil {
 		return err
 	}
 
-	if err := r.renderArgumentName(arg, out, 0); err != nil {
+	if err := renderArgumentName(arg, out, 0); err != nil {
 		return err
 	}
 
@@ -52,11 +52,11 @@ func (r renderBase) renderFlagArgument(arg Argument, padding uint8, out *bufio.W
 	return nil
 }
 
-func (r renderBase) renderArgument(arg Argument, padding uint8, out *bufio.Writer, argIndex int) error {
+func renderArgument(arg Argument, padding uint8, out *bufio.Writer, argIndex int) error {
 	if _, err := out.WriteString(chars.HeaderPadding[padding]); err != nil {
 		return err
 	}
-	if err := r.renderArgumentName(arg, out, argIndex); err != nil {
+	if err := renderArgumentName(arg, out, argIndex); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (r renderBase) renderArgument(arg Argument, padding uint8, out *bufio.Write
 	return nil
 }
 
-func (r renderBase) renderArgumentName(a Argument, out *bufio.Writer, argIndex int) error {
+func renderArgumentName(a Argument, out *bufio.Writer, argIndex int) error {
 	if a.HasBinding() && a.BindingType().Kind() == reflect.Bool {
 		return nil
 	}
@@ -89,7 +89,7 @@ func (r renderBase) renderArgumentName(a Argument, out *bufio.Writer, argIndex i
 		}
 	}
 
-	if _, err := out.WriteString(r.renderArgName(a, argIndex)); err != nil {
+	if _, err := out.WriteString(renderArgName(a, argIndex)); err != nil {
 		return err
 	}
 
@@ -112,7 +112,7 @@ func flagArgShouldBeRendered(arg Argument) bool {
 		arg.BindingType().Kind() != reflect.Bool
 }
 
-func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error {
+func renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error {
 	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 				if err := sb.WriteByte(chars.CharSpace); err != nil {
 					return err
 				}
-				if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
+				if err := renderArgumentName(flag.Argument(), sb, 0); err != nil {
 					return err
 				}
 			}
@@ -142,8 +142,6 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 				return err
 			}
 		}
-
-		// ELSE The flag does NOT have a short form character
 
 		if _, err := sb.WriteString(chars.StrDoubleDash); err != nil {
 			return err
@@ -156,7 +154,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
+			if err := renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -172,7 +170,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 			if err := sb.WriteByte(chars.CharSpace); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
+			if err := renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -193,7 +191,7 @@ func (r renderBase) renderFlag(flag Flag, padding uint8, sb *bufio.Writer) error
 		if err := sb.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
-		if err := r.renderFlagArgument(flag.Argument(), padding+1, sb); err != nil {
+		if err := renderFlagArgument(flag.Argument(), padding+1, sb); err != nil {
 			return err
 		}
 	}
@@ -214,7 +212,7 @@ func (r renderBase) renderShortestFlagLine(flag Flag, sb *bufio.Writer) error {
 			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
+			if err := renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -230,7 +228,7 @@ func (r renderBase) renderShortestFlagLine(flag Flag, sb *bufio.Writer) error {
 			if err := sb.WriteByte(chars.CharEquals); err != nil {
 				return err
 			}
-			if err := r.renderArgumentName(flag.Argument(), sb, 0); err != nil {
+			if err := renderArgumentName(flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
@@ -243,7 +241,7 @@ const (
 	fgSingleName  = "Flags"
 )
 
-func (r renderBase) renderFlagGroups(groups []FlagGroup, padding uint8, out *bufio.Writer) error {
+func renderFlagGroups(groups []FlagGroup, padding uint8, out *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
 			if _, err := out.WriteString(chars.ParagraphBreak); err != nil {
@@ -251,7 +249,7 @@ func (r renderBase) renderFlagGroups(groups []FlagGroup, padding uint8, out *buf
 			}
 		}
 
-		if err := r.renderFlagGroup(group, padding, out, len(groups) > 1); err != nil {
+		if err := renderFlagGroup(group, padding, out, len(groups) > 1); err != nil {
 			return err
 		}
 	}
@@ -259,7 +257,7 @@ func (r renderBase) renderFlagGroups(groups []FlagGroup, padding uint8, out *buf
 	return nil
 }
 
-func (r renderBase) renderFlagGroup(
+func renderFlagGroup(
 	group FlagGroup,
 	padding uint8,
 	out *bufio.Writer,
@@ -313,7 +311,137 @@ func (r renderBase) renderFlagGroup(
 			return err
 		}
 
-		if err := r.renderFlag(flag, padding+1, out); err != nil {
+		if err := renderFlag(flag, padding+1, out); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type flagForms struct {
+	short bool
+	long  bool
+	flag  Flag
+}
+
+func flattenFlagInheritance(node CommandNode) []flagForms {
+	shorts := make(map[byte]bool, 16)
+	longs := make(map[string]bool, 16)
+	options := make([]flagForms, 0, 16)
+
+	current := node
+	for current != nil {
+		for _, group := range current.FlagGroups() {
+			for _, flag := range group.Flags() {
+				forms := flagForms{flag: flag}
+
+				if flag.HasLongForm() {
+					if _, ok := longs[flag.LongForm()]; !ok {
+						longs[flag.LongForm()] = true
+						forms.long = true
+					}
+				}
+
+				if flag.HasShortForm() {
+					if _, ok := shorts[flag.ShortForm()]; !ok {
+						shorts[flag.ShortForm()] = true
+						forms.short = true
+					}
+				}
+
+				if (forms.short || forms.long) && current != node {
+					options = append(options, forms)
+				}
+			}
+		}
+
+		current = current.Parent()
+	}
+
+	return options
+}
+
+func renderInheritedFlag(forms *flagForms, padding uint8, sb *bufio.Writer) error {
+	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
+		return err
+	}
+
+	// If the flag has a long form name
+	if forms.long {
+
+		// AND a short form character
+		if forms.short {
+			if err := sb.WriteByte(chars.CharDash); err != nil {
+				return err
+			}
+			if err := sb.WriteByte(forms.flag.ShortForm()); err != nil {
+				return err
+			}
+
+			if forms.flag.HasArgument() && flagArgShouldBeRendered(forms.flag.Argument()) {
+				if err := sb.WriteByte(chars.CharSpace); err != nil {
+					return err
+				}
+				if err := renderArgumentName(forms.flag.Argument(), sb, 0); err != nil {
+					return err
+				}
+			}
+
+			if _, err := sb.WriteString(chars.FlagDivider); err != nil {
+				return err
+			}
+		}
+
+		if _, err := sb.WriteString(chars.StrDoubleDash); err != nil {
+			return err
+		}
+		if _, err := sb.WriteString(forms.flag.LongForm()); err != nil {
+			return err
+		}
+
+		if forms.flag.HasArgument() && flagArgShouldBeRendered(forms.flag.Argument()) {
+			if err := sb.WriteByte(chars.CharEquals); err != nil {
+				return err
+			}
+			if err := renderArgumentName(forms.flag.Argument(), sb, 0); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := sb.WriteByte(chars.CharDash); err != nil {
+			return err
+		}
+		if err := sb.WriteByte(forms.flag.ShortForm()); err != nil {
+			return err
+		}
+
+		if forms.flag.HasArgument() && flagArgShouldBeRendered(forms.flag.Argument()) {
+			if err := sb.WriteByte(chars.CharSpace); err != nil {
+				return err
+			}
+			if err := renderArgumentName(forms.flag.Argument(), sb, 0); err != nil {
+				return err
+			}
+		}
+	}
+
+	if forms.flag.HasDescription() {
+		if err := sb.WriteByte(chars.CharLF); err != nil {
+			return err
+		}
+
+		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], chars.HelpTextMaxWidth, sb)
+		if err := formatter.Format(forms.flag.Description()); err != nil {
+			return err
+		}
+	}
+
+	if forms.flag.HasArgument() && forms.flag.Argument().HasDescription() {
+		if err := sb.WriteByte(chars.CharLF); err != nil {
+			return err
+		}
+		if err := renderFlagArgument(forms.flag.Argument(), padding+1, sb); err != nil {
 			return err
 		}
 	}

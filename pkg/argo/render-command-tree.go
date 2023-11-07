@@ -51,7 +51,7 @@ func (r comTreeRenderer) renderCommandTree(tree CommandTree, out *bufio.Writer) 
 		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
-		if err := r.renderFlagGroups(tree.FlagGroups(), 0, out); err != nil {
+		if err := renderFlagGroups(tree.FlagGroups(), 0, out); err != nil {
 			return err
 		}
 		if err := out.WriteByte(chars.CharLF); err != nil {

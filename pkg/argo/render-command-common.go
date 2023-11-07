@@ -89,7 +89,7 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
-		if err := r.renderFlagGroups(com.FlagGroups(), 0, out); err != nil {
+		if err := renderFlagGroups(com.FlagGroups(), 0, out); err != nil {
 			return err
 		}
 	}
@@ -117,11 +117,11 @@ func (r renderCommandBase) renderCommandBackHalf(com Command, out *bufio.Writer)
 				return err
 			}
 			if multiArgs {
-				if err := r.renderArgument(arg, 1, out, i+1); err != nil {
+				if err := renderArgument(arg, 1, out, i+1); err != nil {
 					return err
 				}
 			} else {
-				if err := r.renderArgument(arg, 1, out, 0); err != nil {
+				if err := renderArgument(arg, 1, out, 0); err != nil {
 					return err
 				}
 			}
@@ -170,11 +170,11 @@ func (r renderCommandBase) renderCommandUsageBackHalf(com Command, out *bufio.Wr
 				return err
 			}
 			if multiArgs {
-				if err := r.renderArgumentName(arg, out, i+1); err != nil {
+				if err := renderArgumentName(arg, out, i+1); err != nil {
 					return err
 				}
 			} else {
-				if err := r.renderArgumentName(arg, out, 0); err != nil {
+				if err := renderArgumentName(arg, out, 0); err != nil {
 					return err
 				}
 			}

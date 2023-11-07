@@ -85,9 +85,34 @@ func (r comBranchRenderer) renderCommandBranch(branch CommandBranch, out *bufio.
 		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
-		if err := r.renderFlagGroups(branch.FlagGroups(), 0, out); err != nil {
+		if err := renderFlagGroups(branch.FlagGroups(), 0, out); err != nil {
 			return err
 		}
+		if err := out.WriteByte(chars.CharLF); err != nil {
+			return err
+		}
+	}
+
+	inherited := flattenFlagInheritance(branch)
+	if len(inherited) > 0 {
+		if _, err := out.WriteString("\nInherited Flags"); err != nil {
+			return err
+		}
+
+		for i := range inherited {
+			if i > 0 && !inherited[i-1].flag.HasDescription() {
+				if err := out.WriteByte(chars.CharLF); err != nil {
+					return err
+				}
+			}
+			if err := out.WriteByte(chars.CharLF); err != nil {
+				return err
+			}
+			if err := renderInheritedFlag(&inherited[i], 1, out); err != nil {
+				return err
+			}
+		}
+
 		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
