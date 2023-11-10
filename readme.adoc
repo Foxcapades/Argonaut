@@ -1,17 +1,18 @@
 = Argonaut
 :repo: https://github.com/Foxcapades/Argonaut
 
-image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
-image:https://goreportcard.com/badge/github.com/Foxcapades/Argonaut[link=https://goreportcard.com/report/github.com/Foxcapades/Argonaut]
-image:https://img.shields.io/github/license/Foxcapades/Argonaut[GitHub]
-image:https://img.shields.io/badge/go-docs-blue[Static Badge,link=https://pkg.go.dev/github.com/Foxcapades/Argonaut]
 ++++
 <p align="center" role="Header">
   <img src="https://raw.githubusercontent.com/Foxcapades/Argonaut/master/meta/assets/argonaut.png"/>
 </p>
 ++++
 
-A builder style CLI creation kit packed with features.
+Argonaut is a builder-style CLI creation kit packed with features.
+
+image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
+image:https://goreportcard.com/badge/github.com/Foxcapades/Argonaut[link=https://goreportcard.com/report/github.com/Foxcapades/Argonaut]
+image:https://img.shields.io/github/license/Foxcapades/Argonaut[GitHub]
+image:https://img.shields.io/badge/go-docs-blue[Static Badge,link=https://pkg.go.dev/github.com/Foxcapades/Argonaut]
 
 [source, go]
 ----
@@ -57,8 +58,7 @@ Commands
   foo     Aliases: fo
       this is the description for the foo branch
 ----
-* Bind command line arguments to variables of arbitrary types, including custom
-  types using the `argo.Unmarshaler` interface.
+* Bind command line arguments to variables of arbitrary types.
 +
 [source, go]
 ----
@@ -82,15 +82,15 @@ a = true
 b = true
 c = 4
 ----
-* Callback hooks for days.
+* Callback hooks.
 +
 [source, go]
 ----
-cli.Flag().WithCallback(func(_ Flag){})
-cli.Command().WithCallback(func(_ Command){})
-cli.Tree().WithCallback(func(_ Tree){})
-cli.Branch().WithCallback(func(_ Branch){})
-cli.Leaf().WithCallback(func(_ Leaf){})
+cli.Flag().WithCallback(func(Flag){})
+cli.Command().WithCallback(func(Command){})
+cli.Tree().WithCallback(func(Tree){})
+cli.Branch().WithCallback(func(Branch){})
+cli.Leaf().WithCallback(func(Leaf){})
 ----
 * Customizable or overridable unmarshalling of almost any type.
 +
@@ -107,8 +107,7 @@ cli.Argument().WithUnmarshaler(argo.NewMagicUnmarshaler(options))
 var foo int32
 cli.Argument().WithBinding(&foo).WithDefault(int32(666))
 ----
-* Input validation hooks.  Validation may be applied to inputs before and/or
-  after they have been parsed.
+* Input validation hooks.
 +
 [source, go]
 ----
