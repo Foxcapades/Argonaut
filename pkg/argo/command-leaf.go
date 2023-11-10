@@ -1,15 +1,28 @@
 package argo
 
+// A CommandLeaf is the final node in a CommandTree branch.
+//
+// Command leaves may be children of either a CommandTree directly, or of a
+// CommandBranch.
 type CommandLeaf interface {
 	CommandNode
 	CommandChild
 	Command
 
+	// hasCallback indicates whether this CommandLeaf instance has a callback
+	// function attached to it.
 	hasCallback() bool
 
+	// executeCallback executes the callback function attached to this command
+	// leaf if it has one.
 	executeCallback()
 }
 
+// CommandLeafCallback defines the function type for a callback function that
+// may be attached to a CommandLeaf.
+//
+// A CommandLeaf's callback function will be called once if and when a
+// CommandLeaf is used in a CLI call.
 type CommandLeafCallback = func(leaf CommandLeaf)
 
 type commandLeaf struct {
