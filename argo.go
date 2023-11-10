@@ -18,7 +18,7 @@
 //
 // Here the command tree is constructed of 3 levels, the root of the tree
 // (docker), the intermediary branch (compose) and the leaf command (up).  The
-// branch is taking an argument (-f) which is itself taking an argument
+// branch is taking a flag (-f) which is itself taking an argument
 // (my-docker-compose.yml).  The leaf command (up) is accepting an optional
 // argument (my-service).
 //
