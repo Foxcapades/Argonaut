@@ -9,10 +9,12 @@
 
 Argonaut is a builder-style CLI creation kit packed with features.
 
+image:https://img.shields.io/github/license/Foxcapades/Argonaut[GitHub]
 image:https://img.shields.io/github/v/tag/Foxcapades/Argonaut?label=version[GitHub tag (latest SemVer), link=https://github.com/Foxcapades/Argonaut/releases/latest]
 image:https://goreportcard.com/badge/github.com/Foxcapades/Argonaut[link=https://goreportcard.com/report/github.com/Foxcapades/Argonaut]
-image:https://img.shields.io/github/license/Foxcapades/Argonaut[GitHub]
 image:https://img.shields.io/badge/go-docs-blue[Static Badge,link=https://pkg.go.dev/github.com/Foxcapades/Argonaut]
+image:https://img.shields.io/badge/wiki-docs-purple[Wiki,link=https://github.com/Foxcapades/Argonaut/wiki]
+
 
 [source, go]
 ----
