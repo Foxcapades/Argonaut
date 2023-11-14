@@ -325,14 +325,22 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 					return f.hit()
 
 				case parse.ElementTypePlainText:
-					return f.hitWithArg(nextElement.Data[0])
+					if err := f.hitWithArg(nextElement.String()); err != nil {
+						c.queue.Offer(nextElement)
+					}
+
+					return nil
 
 				case parse.ElementTypeShortBlockSolo:
 					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
 						c.queue.Offer(nextElement)
 						return f.hit()
 					} else {
-						return f.hitWithArg(nextElement.String())
+						if err := f.hitWithArg(nextElement.String()); err != nil {
+							c.queue.Offer(nextElement)
+						}
+
+						return nil
 					}
 
 				case parse.ElementTypeShortBlockPair:
@@ -340,7 +348,11 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 						c.queue.Offer(nextElement)
 						return f.hit()
 					} else {
-						return f.hitWithArg(nextElement.String())
+						if err := f.hitWithArg(nextElement.String()); err != nil {
+							c.queue.Offer(nextElement)
+						}
+
+						return nil
 					}
 
 				case parse.ElementTypeLongFlagPair:
@@ -348,7 +360,11 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 						c.queue.Offer(nextElement)
 						return f.hit()
 					} else {
-						return f.hitWithArg(nextElement.String())
+						if err := f.hitWithArg(nextElement.String()); err != nil {
+							c.queue.Offer(nextElement)
+						}
+
+						return nil
 					}
 
 				case parse.ElementTypeLongFlagSolo:
@@ -356,7 +372,11 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 						c.queue.Offer(nextElement)
 						return f.hit()
 					} else {
-						return f.hitWithArg(nextElement.String())
+						if err := f.hitWithArg(nextElement.String()); err != nil {
+							c.queue.Offer(nextElement)
+						}
+
+						return nil
 					}
 
 				default:
