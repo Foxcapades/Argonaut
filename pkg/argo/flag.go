@@ -127,6 +127,11 @@ func (f *flag) hit() error {
 	if f.HasArgument() && f.arg.IsRequired() {
 		return fmt.Errorf("flag %s requires an input", printFlagNames(f))
 	}
+
+	if hasBooleanArgument(f) {
+		return f.arg.setValue("true")
+	}
+
 	return nil
 }
 
