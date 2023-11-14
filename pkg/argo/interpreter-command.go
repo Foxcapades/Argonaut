@@ -255,7 +255,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 						c.elements.Offer(nextElement)
 					}
 
-					return false, nil
+					return false, f.hit()
 
 				case parse.ElementTypeShortBlockSolo:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
@@ -267,7 +267,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 						c.elements.Offer(nextElement)
 					}
 
-					return false, nil
+					return false, f.hit()
 
 				case parse.ElementTypeShortBlockPair:
 					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
@@ -279,7 +279,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 						c.elements.Offer(nextElement)
 					}
 
-					return false, nil
+					return false, f.hit()
 
 				case parse.ElementTypeLongFlagPair:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
@@ -291,7 +291,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 						c.elements.Offer(nextElement)
 					}
 
-					return false, nil
+					return false, f.hit()
 
 				case parse.ElementTypeLongFlagSolo:
 					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
@@ -303,7 +303,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 						c.elements.Offer(nextElement)
 					}
 
-					return false, nil
+					return false, f.hit()
 
 				default:
 					panic("illegal state")
@@ -441,7 +441,7 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 				c.elements.Offer(nextElement)
 			}
 
-			return false, nil
+			return false, f.hit()
 
 		case parse.ElementTypeLongFlagSolo:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
@@ -453,7 +453,7 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 				c.elements.Offer(nextElement)
 			}
 
-			return false, nil
+			return false, f.hit()
 
 		case parse.ElementTypeLongFlagPair:
 			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
@@ -465,7 +465,7 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 				c.elements.Offer(nextElement)
 			}
 
-			return false, nil
+			return false, f.hit()
 
 		case parse.ElementTypeShortBlockSolo:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
@@ -477,7 +477,7 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 				c.elements.Offer(nextElement)
 			}
 
-			return false, nil
+			return false, f.hit()
 
 		case parse.ElementTypeShortBlockPair:
 			if len(nextElement.Data[0]) > 0 && c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
@@ -489,7 +489,7 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 				c.elements.Offer(nextElement)
 			}
 
-			return false, nil
+			return false, f.hit()
 
 		default:
 			panic("illegal state")
