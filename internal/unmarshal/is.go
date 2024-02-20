@@ -104,7 +104,7 @@ func IsUnmarshalableValue(vt reflect.Type) bool {
 	rt := xreflect.RootType(vt)
 
 	// If it's a basic built-in type, or a slice of basic built-in type values.
-	if xreflect.IsBasicKind(rt.Kind()) || xreflect.IsBasicSlice(rt) {
+	if xreflect.IsBasic(rt) || xreflect.IsBasicSlice(rt) {
 		return true
 	}
 

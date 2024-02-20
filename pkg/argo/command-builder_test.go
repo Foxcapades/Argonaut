@@ -12,19 +12,19 @@ func TestCommandBuilder_Parse(t *testing.T) {
 		MustParse([]string{"hello", "--foo", "bar"})
 
 	if !com.HasUnmappedInputs() {
-		t.Fail()
+		t.Error("command has no unmapped inputs")
 	}
 
 	if len(com.UnmappedInputs()) != 2 {
-		t.Fail()
+		t.Error("expected command to have 2 unmapped inputs but had", len(com.UnmappedInputs()))
 	}
 
 	if com.UnmappedInputs()[0] != "--foo" {
-		t.Fail()
+		t.Error("expected command unmapped input 1 to be '--foo' but was", com.UnmappedInputs()[0])
 	}
 
 	if com.UnmappedInputs()[1] != "bar" {
-		t.Fail()
+		t.Error("expected command unmapped input 2 to be 'var' but was", com.UnmappedInputs()[1])
 	}
 }
 

@@ -3,7 +3,6 @@ package unmarshal
 import (
 	"fmt"
 	"reflect"
-	"time"
 
 	"github.com/Foxcapades/Argonaut/internal/xreflect"
 )
@@ -43,7 +42,7 @@ func ToUnmarshalable(
 
 	kind := v.Kind()
 
-	if xreflect.IsBasicKind(kind) {
+	if xreflect.IsBasic(v.Type()) {
 		return v, nil
 	}
 
@@ -57,10 +56,10 @@ func ToUnmarshalable(
 	if kind == reflect.Map {
 		return ToValidMap(v, ov, unmarshalerType)
 	}
-	if kind == reflect.Struct && ov.Type().AssignableTo(reflect.TypeOf((*time.Time)(nil))) {
+	if kind == reflect.Interface {
 		return v, nil
 	}
-	if kind == reflect.Interface {
+	if kind == reflect.Func {
 		return v, nil
 	}
 
@@ -92,7 +91,7 @@ func ToValidSlice(v, ov reflect.Value, ut reflect.Type) (out reflect.Value, err 
 func ToValidMap(v, ov reflect.Value, ut reflect.Type) (reflect.Value, error) {
 	vt := v.Type()
 
-	if !xreflect.IsBasicKind(vt.Key().Kind()) {
+	if !xreflect.IsBasic(vt.Key()) {
 		return reflect.Value{}, &InvalidTypeError{Value: ov}
 	}
 
@@ -106,12 +105,12 @@ func ToValidMap(v, ov reflect.Value, ut reflect.Type) (reflect.Value, error) {
 func ValidateContainerValue(t reflect.Type, ov reflect.Value, ut reflect.Type) error {
 	sk := t.Kind()
 
-	if xreflect.IsBasicKind(sk) {
+	if xreflect.IsBasic(t) {
 		return nil
 	}
 
 	if sk == reflect.Ptr {
-		if xreflect.IsBasicKind(t.Elem().Kind()) {
+		if xreflect.IsBasic(t.Elem()) {
 			return nil
 		}
 		if xreflect.IsByteSlice(t.Elem()) {

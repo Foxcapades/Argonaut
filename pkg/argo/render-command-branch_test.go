@@ -25,6 +25,10 @@ Boring Flags
 
   -e | --ergonomics
 
+Inherited Flags
+  -h | --help
+      Prints this help text.
+
 My Special Little Commands
     A category of commands that are
     special and

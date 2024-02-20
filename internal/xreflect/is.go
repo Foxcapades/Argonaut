@@ -2,6 +2,7 @@ package xreflect
 
 import (
 	"reflect"
+	"time"
 )
 
 var ErrorType = reflect.TypeOf((*error)(nil)).Elem()
@@ -50,10 +51,10 @@ func IsSlice(t reflect.Type) bool {
 }
 
 func IsBasic(t reflect.Type) bool {
-	return IsBasicKind(t.Kind())
+	return IsPrimitiveKind(t.Kind()) || IsTime(t)
 }
 
-func IsBasicKind(k reflect.Kind) bool {
+func IsPrimitiveKind(k reflect.Kind) bool {
 	return k == reflect.String || k == reflect.Bool || IsNumericKind(k)
 }
 
@@ -67,8 +68,7 @@ func IsByteSlice(t reflect.Type) bool {
 }
 
 func IsBasicSlice(t reflect.Type) bool {
-	return t.Kind() == reflect.Slice &&
-		IsBasicKind(t.Elem().Kind())
+	return t.Kind() == reflect.Slice && IsBasic(t.Elem())
 }
 
 func IsUnmarshalerSlice(t, ut reflect.Type) bool {
@@ -87,7 +87,7 @@ func IsBasicPointer(vt reflect.Type) bool {
 		return false
 	}
 
-	return IsBasicKind(RootType(vt).Kind())
+	return IsBasic(RootType(vt))
 }
 
 // IsBasicMap tests whether the given type represents a map with a key of a
@@ -98,13 +98,17 @@ func IsBasicMap(t reflect.Type) bool {
 		return false
 	}
 
-	if !IsBasicKind(t.Key().Kind()) {
+	if !IsBasic(t.Key()) {
 		return false
 	}
 
 	vt := t.Elem()
 
-	return IsBasicKind(vt.Kind()) || IsBasicSlice(vt) || IsBasicPointer(t)
+	return IsBasic(vt) || IsBasicSlice(vt) || IsBasicPointer(vt)
+}
+
+func IsTime(t reflect.Type) bool {
+	return t.Kind() == reflect.Struct && t.AssignableTo(reflect.TypeOf(time.Time{}))
 }
 
 func IsUnmarshalerMap(t, ut reflect.Type) bool {

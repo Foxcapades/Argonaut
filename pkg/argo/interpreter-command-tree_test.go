@@ -1,6 +1,9 @@
 package argo_test
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 
 	cli "github.com/Foxcapades/Argonaut"
@@ -12,7 +15,7 @@ func TestInvalidSubCommand(t *testing.T) {
 		Parse([]string{"command", "leaf2"})
 
 	if err == nil {
-		t.Fail()
+		t.Error(err)
 	}
 }
 
@@ -831,5 +834,71 @@ func TestRegression18Tree(t *testing.T) {
 		t.Error("expected flag argument to have been hit but it wasn't")
 	} else if flag.Argument().RawValue() != "true" {
 		t.Error("expected flag argument value to be \"true\" but it wasn't")
+	}
+}
+
+// https://github.com/Foxcapades/Argonaut/issues/58
+func TestRegression58Tree(t *testing.T) {
+	var removeNAValues bool
+	var inputsAreSorted bool
+	var outputFormat uint8
+	var printHeaders bool
+	var inputFile string
+
+	_, err := cli.Tree().
+		WithLeaf(cli.Leaf("foo").
+			WithFlag(cli.ComboFlag('r', "rm-na").
+				WithBinding(&removeNAValues, false)).
+			WithFlag(cli.ComboFlag('s', "sorted-inputs").
+				WithBindingAndDefault(&inputsAreSorted, false, true)).
+			WithFlag(cli.ComboFlag('f', "format").
+				WithBindingAndDefault(func(val string) (err error) {
+					switch strings.ToLower(val) {
+					case "tsv":
+						outputFormat = 1
+					case "csv":
+						outputFormat = 2
+					case "json":
+						outputFormat = 3
+					case "jsonl":
+						outputFormat = 4
+					default:
+						err = fmt.Errorf("unrecognized output format \"%s\"", val)
+					}
+
+					return
+				}, "tsv", true)).
+			WithFlag(cli.ComboFlag('t', "headers").
+				WithBinding(&printHeaders, false)).
+			WithArgument(cli.Argument().
+				WithName("file").
+				WithBinding(func(path []string) (err error) {
+					inputFile = path[0]
+					return
+				}))).
+		Parse([]string{"build/linux/find-bin-width", "foo", "-s", "-f", "tsv", "some-file"})
+
+	if err != nil {
+		t.Error("expected error to be nil, but was " + err.Error())
+	}
+
+	if removeNAValues {
+		t.Error("expected removeNaValues to be false")
+	}
+
+	if !inputsAreSorted {
+		t.Error("expected inputsAreSorted to be true")
+	}
+
+	if outputFormat != 1 {
+		t.Error("expected outputFormat to be 1 but was " + strconv.Itoa(int(outputFormat)))
+	}
+
+	if printHeaders {
+		t.Error("expected printHeaders to be false")
+	}
+
+	if inputFile != "some-file" {
+		t.Error("expected input file to be some-file, but was '" + inputFile + "'")
 	}
 }

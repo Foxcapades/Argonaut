@@ -206,13 +206,12 @@ func renderOutputCheck[T any](
 	err := renderer.RenderHelp(command, buf)
 
 	if err != nil {
-		t.Fail()
+		t.Error(err)
 	}
 
 	expected := fmt.Sprintf(pattern, commandName)
 
 	if buf.String() != expected {
 		t.Errorf("expected: '%s'\n\ngot: '%s'", expected, buf.String())
-		t.Fail()
 	}
 }

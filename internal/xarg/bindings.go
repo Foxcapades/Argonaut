@@ -65,7 +65,7 @@ func DetermineBindKind(bind any, ut reflect.Type) (kind BindKind, err error) {
 			return BindKindFuncPlain, nil
 		}
 
-		return BindKindInvalid, errors.New("binding is an invalid function type")
+		return BindKindInvalid, fmt.Errorf("binding is invalid function type %s", rt)
 
 	default:
 		return BindKindInvalid, fmt.Errorf("invalid binding kind: %s", rk)

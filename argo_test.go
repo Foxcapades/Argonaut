@@ -87,7 +87,7 @@ func TestFlag_withMapOfSliceOfUnmarshalable(t *testing.T) {
 		t.Error("expected map to contain input map key")
 	} else {
 		if len(vals) != 3 {
-			t.Errorf("expected values map to have a length of 3 but was %d", len(values))
+			t.Errorf("expected values map to have a length of 3 but was %d", len(vals))
 		}
 
 		if val := vals[0]; !ok {

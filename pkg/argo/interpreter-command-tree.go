@@ -2,8 +2,8 @@ package argo
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 
@@ -267,9 +267,19 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 					return f.hit()
 				}
 
-				// If we're here then we have a next element, and we're going to
+				// If we're here then we have a next element, and we're going to try and
 				// sacrifice it to the flag gods.
-				return f.hitWithArg(nextElement.String())
+				if err := f.hitWithArg(nextElement.String()); err != nil {
+					c.queue.Offer(nextElement)
+
+					if hasBooleanArgument(f) {
+						return f.hitWithArg("true")
+					}
+
+					return f.hit()
+				} else {
+					return nil
+				}
 			}
 
 			// So we have at least one more character in this block.  Eat that and
@@ -652,7 +662,8 @@ func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
 		return matches[i].depth < matches[j].depth || matches[i].child < matches[j].child
 	})
 
-	buf := bufio.NewWriter(os.Stderr)
+	msg := new(bytes.Buffer)
+	buf := bufio.NewWriter(msg)
 
 	// TODO: Instead of using `tree.Name()` here print out the full path to the
 	//       current subcommand.  So like `app foo bar: Subcommand "f" is blah..."
@@ -690,8 +701,7 @@ func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
 	}
 
 	util.Must(buf.Flush())
-	os.Exit(1)
 
 	//goland:noinspection GoUnreachableCode
-	return fmt.Errorf("unrecognized subcommand \"%s\"", input)
+	return fmt.Errorf(msg.String())
 }

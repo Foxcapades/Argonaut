@@ -54,19 +54,19 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	case reflect.String:
 		ptrVal.SetString(raw)
 	case reflect.Int:
-		return unmarshalInt(ptrVal, raw, strconv.IntSize, &v.props.Integers)
+		return unmarshalIntoInt(ptrVal, raw, strconv.IntSize, &v.props.Integers)
 	case reflect.Float32:
-		return unmarshalFloat(ptrVal, raw, 32)
+		return unmarshalIntoFloat(ptrVal, raw, 32)
 	case reflect.Int64:
 		return unmarshalInt64(ptrVal, raw, &v.props.Integers)
 	case reflect.Float64:
-		return unmarshalFloat(ptrVal, raw, 64)
+		return unmarshalIntoFloat(ptrVal, raw, 64)
 	case reflect.Uint64:
 		return unmarshalUInt(ptrVal, raw, 64, &v.props.Integers)
 	case reflect.Uint:
 		return unmarshalUInt(ptrVal, raw, strconv.IntSize, &v.props.Integers)
 	case reflect.Int32:
-		return unmarshalInt(ptrVal, raw, 32, &v.props.Integers)
+		return unmarshalIntoInt(ptrVal, raw, 32, &v.props.Integers)
 	case reflect.Uint32:
 		return unmarshalUInt(ptrVal, raw, 32, &v.props.Integers)
 	case reflect.Uint8:
@@ -76,20 +76,21 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 	case reflect.Map:
 		return v.unmarshalMap(ptrVal, raw)
 	case reflect.Int8:
-		return unmarshalInt(ptrVal, raw, 8, &v.props.Integers)
+		return unmarshalIntoInt(ptrVal, raw, 8, &v.props.Integers)
 	case reflect.Int16:
-		return unmarshalInt(ptrVal, raw, 16, &v.props.Integers)
+		return unmarshalIntoInt(ptrVal, raw, 16, &v.props.Integers)
 	case reflect.Uint16:
 		return unmarshalUInt(ptrVal, raw, 16, &v.props.Integers)
 	case reflect.Bool:
 		return unmarshalBool(ptrVal, raw)
 	case reflect.Interface:
 		ptrVal.Set(reflect.ValueOf(raw))
+	case reflect.Func:
+		return v.unmarshalConsumerFunc(ptrVal, ptrDef, raw)
 	case reflect.Struct:
 		if ptrDef.AssignableTo(reflect.TypeOf(time.Time{})) {
 			return v.unmarshalTime(ptrVal, raw)
 		}
-
 		fallthrough
 
 	default:
@@ -193,7 +194,7 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 	}
 
 	//
-	if xreflect.IsBasicKind(vt.Kind()) {
+	if xreflect.IsBasic(vt) {
 		vv := reflect.New(vt).Interface()
 		if err := v.Unmarshal(raw, vv); err != nil {
 			return reflect.Value{}, err
@@ -212,7 +213,7 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 			return reflect.ValueOf(&tmp), nil
 		}
 
-		if xreflect.IsBasicKind(vp.Kind()) {
+		if xreflect.IsBasic(vp) {
 			vv := reflect.New(vp).Interface()
 			if err := v.Unmarshal(raw, vv); err != nil {
 				return reflect.Value{}, err
@@ -236,7 +237,7 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 	panic("invalid state: the given type cannot be unmarshalled")
 }
 
-func unmarshalInt(v reflect.Value, raw string, size int, props *UnmarshalIntegerProps) error {
+func unmarshalIntoInt(v reflect.Value, raw string, size int, props *UnmarshalIntegerProps) error {
 	if tmp, e := parseInt(raw, size, props); e != nil {
 		return formatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
 	} else {
@@ -273,7 +274,7 @@ func unmarshalUInt(v reflect.Value, raw string, size int, props *UnmarshalIntege
 	return nil
 }
 
-func unmarshalFloat(v reflect.Value, raw string, size int) error {
+func unmarshalIntoFloat(v reflect.Value, raw string, size int) error {
 	if tmp, e := strconv.ParseFloat(raw, size); e != nil {
 		return formatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
 	} else {
@@ -288,5 +289,29 @@ func unmarshalBool(v reflect.Value, raw string) error {
 	} else {
 		v.SetBool(tmp)
 	}
+	return nil
+}
+
+func (v *valueUnmarshaler) unmarshalConsumerFunc(fn reflect.Value, t reflect.Type, raw string) error {
+	// At this point we should be safe in assuming that the function will be in
+	// one of the forms:
+	// 1. func(unmarshalableValue) error
+	// 2. func(unmarshalableValue)
+
+	arg := reflect.New(t.In(0))
+
+	if err := v.Unmarshal(raw, arg.Interface()); err != nil {
+		return err
+	}
+
+	if t.NumOut() == 1 {
+		out := fn.Call([]reflect.Value{arg.Elem()})
+		if !out[0].IsNil() {
+			return out[0].Interface().(error)
+		}
+	} else {
+		fn.Call([]reflect.Value{arg.Elem()})
+	}
+
 	return nil
 }

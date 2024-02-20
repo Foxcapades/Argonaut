@@ -1,6 +1,9 @@
 package argo_test
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 
 	cli "github.com/Foxcapades/Argonaut"
@@ -403,5 +406,70 @@ func TestRegression18Command(t *testing.T) {
 		} else if com.PassthroughInputs()[0] != "flumps" {
 			t.Error("expected flag passthrough argument to match input value but it didn't")
 		}
+	}
+}
+
+// https://github.com/Foxcapades/Argonaut/issues/58
+func TestRegression58Command(t *testing.T) {
+	var removeNAValues bool
+	var inputsAreSorted bool
+	var outputFormat uint8
+	var printHeaders bool
+	var inputFile string
+
+	_, err := cli.Command().
+		WithFlag(cli.ComboFlag('r', "rm-na").
+			WithBinding(&removeNAValues, false)).
+		WithFlag(cli.ComboFlag('s', "sorted-inputs").
+			WithBindingAndDefault(&inputsAreSorted, false, true)).
+		WithFlag(cli.ComboFlag('f', "format").
+			WithBindingAndDefault(func(val string) (err error) {
+				switch strings.ToLower(val) {
+				case "tsv":
+					outputFormat = 1
+				case "csv":
+					outputFormat = 2
+				case "json":
+					outputFormat = 3
+				case "jsonl":
+					outputFormat = 4
+				default:
+					err = fmt.Errorf("unrecognized output format \"%s\"", val)
+				}
+
+				return
+			}, "tsv", true)).
+		WithFlag(cli.ComboFlag('t', "headers").
+			WithBinding(&printHeaders, false)).
+		WithArgument(cli.Argument().
+			WithName("file").
+			WithBinding(func(path []string) (err error) {
+				inputFile = path[0]
+				return
+			})).
+		Parse([]string{"build/linux/find-bin-width", "-s", "-f", "tsv", "some-file"})
+
+	if err != nil {
+		t.Error("expected error to be nil, but was " + err.Error())
+	}
+
+	if removeNAValues {
+		t.Error("expected removeNaValues to be false")
+	}
+
+	if !inputsAreSorted {
+		t.Error("expected inputsAreSorted to be true")
+	}
+
+	if outputFormat != 1 {
+		t.Error("expected outputFormat to be 1 but was " + strconv.Itoa(int(outputFormat)))
+	}
+
+	if printHeaders {
+		t.Error("expected printHeaders to be false")
+	}
+
+	if inputFile != "some-file" {
+		t.Error("expected input file to be some-file, but was '" + inputFile + "'")
 	}
 }

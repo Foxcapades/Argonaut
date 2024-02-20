@@ -193,8 +193,20 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 					return true, f.hit()
 				}
 
-				// If we're here then we have a next element, and we're going to
+				// If we're here then we have a next element, and we're going to try and
 				// sacrifice it to the flag gods.
+				if err := f.hitWithArg(nextElement.String()); err != nil {
+					c.elements.Offer(nextElement)
+
+					if hasBooleanArgument(f) {
+						return false, f.hitWithArg("true")
+					}
+
+					return false, f.hit()
+				} else {
+					return false, nil
+				}
+
 				return false, f.hitWithArg(nextElement.String())
 			}
 
