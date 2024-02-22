@@ -186,10 +186,16 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 				// If the next element is literally the end of the cli args, then we
 				// obviously can't set an argument on this flag.  Tough luck, dude.
 				if nextElement.Type == parse.ElementTypeEnd {
+					if hasBooleanArgument(f) {
+						return false, f.hitWithArg("true")
+					}
 					return false, f.hit()
 				}
 
 				if nextElement.Type == parse.ElementTypeBoundary {
+					if hasBooleanArgument(f) {
+						return true, f.hitWithArg("true")
+					}
 					return true, f.hit()
 				}
 
