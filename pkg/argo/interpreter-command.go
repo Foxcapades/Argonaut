@@ -222,6 +222,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 					if err := f.hitWithArg("true"); err != nil {
 						return false, err
 					}
+					remainder = remainder[1:]
 					continue
 				}
 			}

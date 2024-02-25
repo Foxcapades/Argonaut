@@ -241,6 +241,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 		if f == nil {
 			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
 			*unmapped = append(*unmapped, chars.StrDash+remainder[0:1])
+			remainder = remainder[1:]
 			continue
 		}
 
@@ -294,6 +295,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 					if err := f.hitWithArg("true"); err != nil {
 						return err
 					}
+					remainder = remainder[1:]
 					continue
 				}
 			}
@@ -323,6 +325,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 					}
 
 					// skip on to the next flag
+					remainder = remainder[1:]
 					continue
 				} else
 
