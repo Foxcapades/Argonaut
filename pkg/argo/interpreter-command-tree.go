@@ -288,6 +288,16 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 				}
 			}
 
+			if hasBooleanArgument(f) {
+				possibleNextFlag := c.current.FindShortFlag(remainder[1])
+				if possibleNextFlag != nil {
+					if err := f.hitWithArg("true"); err != nil {
+						return err
+					}
+					continue
+				}
+			}
+
 			// So we have at least one more character in this block.  Eat that and
 			// anything else as the flag argument.
 			return f.hitWithArg(remainder[1:])

@@ -216,6 +216,16 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 				return false, f.hitWithArg(nextElement.String())
 			}
 
+			if hasBooleanArgument(f) {
+				possibleNextFlag := c.command.FindShortFlag(remainder[1])
+				if possibleNextFlag != nil {
+					if err := f.hitWithArg("true"); err != nil {
+						return false, err
+					}
+					continue
+				}
+			}
+
 			// So we have at least one more character in this block.  Eat that and
 			// anything else as the flag argument.
 			return false, f.hitWithArg(remainder[1:])
