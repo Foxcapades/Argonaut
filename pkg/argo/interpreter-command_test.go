@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	cli "github.com/Foxcapades/Argonaut"
+	"github.com/Foxcapades/Argonaut/pkg/argo"
 )
 
 // Unknown short solo flag.
@@ -471,5 +472,24 @@ func TestRegression58Command(t *testing.T) {
 
 	if inputFile != "some-file" {
 		t.Error("expected input file to be some-file, but was '" + inputFile + "'")
+	}
+}
+
+// https://github.com/Foxcapades/Argonaut/issues/62
+func TestRegression62Command(t *testing.T) {
+	var value argo.Hex8
+
+	_, err := cli.Command().
+		WithFlag(cli.ComboFlag('i', "interactive").
+			WithDescription("Interactive mode: auto (0), none (1), minimal (2), full (3).  Defaults to auto").
+			WithBindingAndDefault(&value, argo.Hex8(23), true)).
+		Parse([]string{"something", "gen-meta"})
+
+	if err != nil {
+		t.Error("expected err to be nil but was", err)
+	}
+
+	if value != 23 {
+		t.Error("expected value to be 23 but was", value)
 	}
 }

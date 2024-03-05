@@ -234,7 +234,12 @@ func (a *argument) setToDefault() error {
 		return a.unmarshal.Unmarshal(strVal, a.bindVal)
 	}
 
-	a.rootBind.Set(a.rootDef)
+	if a.rootBind.Kind() == reflect.Ptr {
+		a.rootBind.Elem().Set(a.rootDef)
+	} else {
+		a.rootBind.Set(a.rootDef)
+	}
+
 	return nil
 }
 
