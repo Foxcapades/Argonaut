@@ -276,17 +276,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 
 				// If we're here then we have a next element, and we're going to try and
 				// sacrifice it to the flag gods.
-				if err := f.hitWithArg(nextElement.String()); err != nil {
-					c.queue.Offer(nextElement)
-
-					if hasBooleanArgument(f) {
-						return f.hitWithArg("true")
-					}
-
-					return f.hit()
-				} else {
-					return nil
-				}
+				return f.hitWithArg(nextElement.String())
 			}
 
 			if hasBooleanArgument(f) {
