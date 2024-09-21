@@ -217,8 +217,21 @@ func (b *flagBuilder) Build(ctx *WarningContext) (Flag, error) {
 	if b.arg != nil {
 		var err error
 		arg, err = b.arg.Build(ctx)
+
 		if err != nil {
-			errs.AppendError(err)
+			var e MultiError
+			if errors.As(err, &e) {
+				var be ArgumentBindingError
+				for _, err := range e.Errors() {
+					if errors.As(err, &be) {
+						errs.AppendError(newFlagBindingError(be, b.arg, b))
+					} else {
+						errs.AppendError(err)
+					}
+				}
+			} else {
+				errs.AppendError(err)
+			}
 		}
 	}
 

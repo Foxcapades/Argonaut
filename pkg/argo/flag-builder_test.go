@@ -45,10 +45,12 @@ func TestFlagBuilder_Build04(t *testing.T) {
 // busted-ass argument
 func TestFlagBuilder_Build05(t *testing.T) {
 	_, err := cli.Flag().
+		WithLongForm("test").
 		WithBindingAndDefault(3, 4, true).
 		Build(nil)
 
 	if err == nil {
 		t.Error("expected err to not have been nil, but it was")
 	}
+	t.Log(err)
 }

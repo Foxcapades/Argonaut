@@ -253,7 +253,7 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 		kind, err := xarg.DetermineBindKind(a.bind, unmarshalerType)
 		a.bindKind = kind
 		if err != nil {
-			errs.AppendError(err)
+			errs.AppendError(newArgumentBindingError(err, a))
 		} else {
 			a.rootBind = unmarshal.GetRootValue(reflect.ValueOf(a.bind), unmarshalerType)
 		}
@@ -266,7 +266,7 @@ func (a *argumentBuilder) Build(warnings *WarningContext) (Argument, error) {
 			kind, err := xarg.DetermineDefaultKind(a.bind, a.def)
 			a.defaultKind = kind
 			if err != nil {
-				errs.AppendError(err)
+				errs.AppendError(newArgumentBindingError(err, a))
 			} else {
 				a.rootDef = reflect.ValueOf(a.def)
 			}

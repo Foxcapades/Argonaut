@@ -4,6 +4,51 @@ import (
 	"fmt"
 )
 
+type FlagBindingError interface {
+	error
+
+	ArgumentBuilder() ArgumentBuilder
+	FlagBuilder() FlagBuilder
+
+	Unwrap() error
+}
+
+func newFlagBindingError(root ArgumentBindingError, arg ArgumentBuilder, flag FlagBuilder) FlagBindingError {
+	return &flagBindingError{root.Unwrap(), arg, flag}
+}
+
+type flagBindingError struct {
+	root error
+	arg  ArgumentBuilder
+	flag FlagBuilder
+}
+
+func (f flagBindingError) Error() string {
+	if f.flag.hasLongForm() {
+		if f.flag.hasShortForm() {
+			return "FlagBindingError (--" + f.flag.getLongForm() + "|-" + string([]byte{f.flag.getShortForm()}) + "): " + f.root.Error()
+		} else {
+			return "FlagBindingError (--" + f.flag.getLongForm() + "): " + f.root.Error()
+		}
+	} else if f.flag.hasShortForm() {
+		return "FlagBindingError (-" + string([]byte{f.flag.getShortForm()}) + "): " + f.root.Error()
+	} else {
+		return "FlagBindingError: " + f.root.Error()
+	}
+}
+
+func (f flagBindingError) ArgumentBuilder() ArgumentBuilder {
+	return f.arg
+}
+
+func (f flagBindingError) FlagBuilder() FlagBuilder {
+	return f.flag
+}
+
+func (f flagBindingError) Unwrap() error {
+	return f.root
+}
+
 // ////////////////////////////////////////////////////////////////////////// //
 //                                                                            //
 //    Missing Flag Error                                                      //
