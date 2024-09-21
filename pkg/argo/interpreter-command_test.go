@@ -422,7 +422,7 @@ func TestRegression58Command(t *testing.T) {
 		WithFlag(cli.ComboFlag('r', "rm-na").
 			WithBinding(&removeNAValues, false)).
 		WithFlag(cli.ComboFlag('s', "sorted-inputs").
-			WithBindingAndDefault(&inputsAreSorted, false, true)).
+			WithBindingAndDefault(&inputsAreSorted, false, false)).
 		WithFlag(cli.ComboFlag('f', "format").
 			WithBindingAndDefault(func(val string) (err error) {
 				switch strings.ToLower(val) {

@@ -1,4 +1,5 @@
 = Argonaut Topics
+:icons: font
 :toc:
 
 == Deserialization
@@ -188,6 +189,15 @@ cli.Argument().WithValidator(func(raw string) error {
     }
 })
 ----
+
+[WARNING]
+--
+Complex types with multiple mechanisms for providing values should be taken into
+consideration when writing pre-parse validators.
+
+For example, by default, a flag argument of type `[]string` may be provided as
+any combination of separate flags or comma-separated value strings.
+--
 
 === Post-Parse Argument Validation
 
