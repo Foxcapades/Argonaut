@@ -174,27 +174,32 @@ func (this *DescriptionFormatter) BreakFormatTypeWord(last, current *segment) er
 			if _, err := this.writer.WriteString(last.Data); err != nil {
 				return err
 			}
+
 			if _, err := this.writer.WriteString(current.Data); err != nil {
 				return err
 			}
 
 			*last = *current
 			this.currentLineWidth += lastAndCurWidth
-		} else if this.currentLineWidth+len(last.Data) <= this.maxLineWidth/3*2 {
+
+			return nil
+		}
+
+		if this.currentLineWidth+len(last.Data) <= this.maxLineWidth/3*2 {
 			if _, err := this.writer.WriteString(last.Data); err != nil {
 				return err
 			}
 
 			*last = *current
 			return this.BreakFormatSplitWord(current.Data)
-		} else {
-			if err := this.breakLine(); err != nil {
-				return err
-			}
-
-			*last = *current
-			return this.BreakFormatSplitWord(current.Data)
 		}
+
+		if err := this.breakLine(); err != nil {
+			return err
+		}
+
+		*last = *current
+		return this.BreakFormatSplitWord(current.Data)
 
 	case segmentTypeLineBreak:
 		// If there were 2 or more line breaks, write out another one, but eat the
@@ -228,8 +233,6 @@ func (this *DescriptionFormatter) BreakFormatTypeWord(last, current *segment) er
 	default:
 		panic(fmt.Errorf("illegal state: unexpected segment type %s", last.Type))
 	}
-
-	return nil
 }
 
 func (this *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) error {
@@ -435,47 +438,63 @@ func (b *breakScanner) hasNext() bool {
 	return b.pos < len(b.text)
 }
 
-func (b *breakScanner) next() (seg segment) {
+func (b *breakScanner) next() segment {
+	// Record the current starting position in the source data.
 	start := b.pos
 
+	// If the current character is a breakable character...
 	if IsBreakChar(b.text[b.pos]) {
+		// move onto the next character
 		b.pos++
+
+		// while there are more characters available (may be false on first hit due
+		// to the b.pos++ above)...
 		for b.hasNext() {
+			// If the character is not a breakable character, halt the iteration
 			if !IsBreakChar(b.text[b.pos]) {
 				break
 			}
 
+			// if the character _is_ a breakable character, move forward another char
 			b.pos++
 		}
 
-		seg.Type = segmentTypeBreak
-		seg.Data = b.text[start:b.pos]
-	} else if b.text[b.pos] == CharCR {
-		if b.hasNext() && b.text[b.pos+1] == CharLF {
-			b.pos += 2
-		} else {
-			b.pos++
-		}
-		seg.Type = segmentTypeLineBreak
-		seg.Data = StrLF
-	} else if b.text[b.pos] == CharLF {
-		b.pos++
-		seg.Type = segmentTypeLineBreak
-		seg.Data = StrLF
-	} else {
-		b.pos++
-		if b.hasNext() {
-			for b.hasNext() {
-				if IsWhitespace(b.text[b.pos]) {
-					break
-				}
-				b.pos++
-			}
-		}
-
-		seg.Type = segmentTypeWord
-		seg.Data = b.text[start:b.pos]
+		// The segment type is break as it contains nothing but breakable
+		// characters.
+		return segment{segmentTypeBreak, b.text[start:b.pos]}
 	}
 
-	return
+	// If the next character is a CR...
+	if b.text[b.pos] == CharCR {
+		// and there is a following LF...
+		if b.hasNext() && b.text[b.pos+1] == CharLF {
+			// bump up the pos by 2
+			b.pos += 2
+		} else {
+			// bump up the pos
+			b.pos++
+		}
+
+		return segment{segmentTypeBreak, StrLF}
+	}
+
+	// If the next character is an LF
+	if b.text[b.pos] == CharLF {
+		b.pos++
+
+		return segment{segmentTypeLineBreak, StrLF}
+	}
+
+	b.pos++
+
+	if b.hasNext() {
+		for b.hasNext() {
+			if IsWhitespace(b.text[b.pos]) {
+				break
+			}
+			b.pos++
+		}
+	}
+
+	return segment{segmentTypeWord, b.text[start:b.pos]}
 }
