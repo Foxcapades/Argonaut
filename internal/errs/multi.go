@@ -44,7 +44,7 @@ func (m *multiError) Error() string {
 
 	sb := strings.Builder{}
 
-	sb.WriteString(argo.MultiErrorHeaderLine(len(messages), len(m.errors)))
+	sb.WriteString(argo.ErrMsgMultiErrorHeaderLine(len(messages), len(m.errors)))
 	sb.WriteString(fmt.Sprintln())
 
 	for i := range messages {

@@ -1,7 +1,7 @@
 package component
 
 import (
-	"github.com/foxcapades/argonaut/internal/arg"
+	"github.com/foxcapades/argonaut/internal/argument"
 	"github.com/foxcapades/argonaut/internal/flag"
 )
 
@@ -18,7 +18,7 @@ type Facade interface {
 
 	ShortFlag(name byte) (flag.Flag, bool)
 
-	PositionalArguments() []arg.ArgumentSpec
+	PositionalArguments() []argument.Spec
 
 	AppendUnknown(value string)
 

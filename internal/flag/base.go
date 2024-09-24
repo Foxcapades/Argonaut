@@ -1,13 +1,13 @@
 package flag
 
-import "github.com/foxcapades/argonaut/internal/arg"
+import "github.com/foxcapades/argonaut/internal/argument"
 
 type Base interface {
 	IsRequired() bool
 
 	HasArgument() bool
 
-	Argument() arg.IArgument
+	Argument() argument.IArgument
 
 	WasUsed() bool
 

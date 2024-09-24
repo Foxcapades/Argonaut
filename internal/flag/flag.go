@@ -1,7 +1,7 @@
 package flag
 
 import (
-	"github.com/foxcapades/argonaut/internal/arg"
+	"github.com/foxcapades/argonaut/internal/argument"
 	"github.com/foxcapades/argonaut/pkg/argo"
 )
 
@@ -10,7 +10,7 @@ type Flag struct {
 	isRequired  bool
 	hits        uint16
 
-	argument arg.ArgumentSpec
+	argument argument.Spec
 
 	activeCallbacks []argo.FlagCallback // how to ref argo without reffing argo here?
 	lazyCallbacks   []argo.FlagCallback
@@ -44,7 +44,7 @@ func (f Flag) Argument() argo.Argument {
 
 // IArgument returns the internal form of the argument contained by this Flag
 // instance.
-func (f Flag) IArgument() arg.ArgumentSpec {
+func (f Flag) IArgument() argument.Spec {
 	return f.argument
 }
 

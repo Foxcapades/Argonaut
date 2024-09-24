@@ -10,4 +10,6 @@ type Config struct {
 	LongFlagValueSeparator byte
 
 	EndOfOptionsMarker string
+
+	DefaultUnmarshaler MagicUnmarshaler
 }
