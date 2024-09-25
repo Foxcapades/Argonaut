@@ -1,5 +1,13 @@
 package argo
 
-import "github.com/foxcapades/argonaut/internal/flag"
+type Flag interface {
+	IsRequired() bool
 
-type Flag = flag.Base
+	HasExplicitArgument() bool
+
+	Argument() Argument
+
+	WasUsed() bool
+
+	UsageCount() int
+}

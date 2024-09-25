@@ -12,11 +12,15 @@ import (
 )
 
 type SpecBuilder[T any] struct {
-	hasName        bool
+	hasName bool
+
 	hasDescription bool
-	hasSummary     bool
-	required       bool
-	hasDefault     uint8 // 0 = no, 1 = raw, 2 = typed
+
+	hasSummary bool
+
+	required bool
+
+	hasDefault uint8 // 0 = no, 1 = raw, 2 = typed
 
 	name string
 
@@ -130,11 +134,11 @@ func (a SpecBuilder[T]) Build(config argo.Config) (argo.ArgumentSpec, error) {
 		return nil, errors.New(argo.ErrMsgArgumentDefaultAndRequired)
 	}
 
-	spec := Spec[T]{
-		isRequired:     a.required,
-		preValidators:  a.preValidators,
-		postValidators: a.postValidators,
-	}
+	spec := new(Spec[T])
+
+	spec.isRequired = a.required
+	spec.preValidators = a.preValidators
+	spec.postValidators = a.postValidators
 
 	switch len(a.consumers) {
 	case 0:
@@ -171,10 +175,10 @@ func (a SpecBuilder[T]) Build(config argo.Config) (argo.ArgumentSpec, error) {
 		if a.hasSummary {
 			spec.summary = a.summary
 		} else {
-			idx := xstr.IndexOfAnyWithin(a.description, "\r\n", 255)
+			idx := xstr.IndexOfAnyWithin(a.description, "\r\n", 128)
 
 			if idx == -1 {
-				spec.summary = xstr.Truncate(a.description, 255)
+				spec.summary = xstr.Truncate(a.description, 128)
 			} else {
 				spec.summary = a.description[:idx] + "..."
 			}
@@ -183,4 +187,6 @@ func (a SpecBuilder[T]) Build(config argo.Config) (argo.ArgumentSpec, error) {
 		spec.summary = a.summary
 		spec.description = a.summary
 	}
+
+	return spec, nil
 }

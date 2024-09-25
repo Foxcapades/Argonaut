@@ -10,7 +10,8 @@ type magicWrapper[T any] struct {
 	magic argo.MagicUnmarshaler
 }
 
-func (m magicWrapper[T]) Deserialize(raw string) (out T, err error) {
+func (m magicWrapper[T]) Deserialize(raw string, prev *T) (out T, err error) {
+	// TODO: how does this work with slices and such???
 	err = m.magic.Unmarshal(raw, &out)
 	return
 }

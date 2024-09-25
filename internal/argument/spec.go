@@ -31,13 +31,17 @@ type Spec[T any] struct {
 	parsedValue T
 }
 
-func (a Spec[T]) IsRequired() bool {
-	return a.isRequired
-}
+func (a Spec[T]) Name() string { return a.name }
 
-func (a Spec[T]) HasValue() bool {
-	return a.parseState == 2
-}
+func (a Spec[T]) Summary() string { return a.summary }
+
+func (a Spec[T]) Description() string { return a.description }
+
+func (a Spec[T]) HasHelpText() bool { return len(a.summary) > 0 }
+
+func (a Spec[T]) IsRequired() bool { return a.isRequired }
+
+func (a Spec[T]) HasValue() bool { return a.parseState == 2 }
 
 func (a Spec[T]) Value() any {
 	if a.parseState == 2 {
@@ -67,7 +71,19 @@ func (a Spec[T]) PreValidate(input string) error {
 
 func (a *Spec[T]) ProcessInput(value string) error {
 	errors := errs.NewMultiError()
-	parsed, err := a.deserializer.Deserialize(value)
+
+	// If we've previously encountered an error trying to parse values for this
+	// argument, then bail here.
+	if a.parseState == 1 {
+		return nil
+	}
+
+	var prev *T
+	if a.parseState == 2 {
+		prev = &a.parsedValue
+	}
+
+	parsed, err := a.deserializer.Deserialize(value, prev)
 	a.parseState = 1
 
 	if err != nil {
