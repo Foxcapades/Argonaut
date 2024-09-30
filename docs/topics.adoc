@@ -1,0 +1,12 @@
+= Argonaut Topics
+
+== Flags
+
+* TODO: default flag groups
+* TODO: overriding parent command flags in subcommands
+
+== Commands
+
+=== Command Trees
+
+* TODO: callback execution order

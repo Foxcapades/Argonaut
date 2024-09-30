@@ -5,5 +5,7 @@ type Config struct {
 
 	EndOfOptionsMarker string
 
+	Unmarshalling UnmarshallingConfig
+
 	DefaultUnmarshaler MagicUnmarshaler
 }

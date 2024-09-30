@@ -1,6 +1,7 @@
-package errs
+package xerr
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,8 +11,13 @@ import (
 type MultiError interface {
 	argo.MultiError
 
+	AppendMsg(msg string)
+
 	Append(e error)
+
 	AppendIfNotNil(e error)
+
+	Errors() []error
 }
 
 func NewMultiError() MultiError {
@@ -56,6 +62,10 @@ func (m *multiError) Error() string {
 	return sb.String()
 }
 
+func (m *multiError) Errors() []error {
+	return m.errors
+}
+
 func (m *multiError) Size() int {
 	return len(m.errors)
 }
@@ -64,13 +74,22 @@ func (m *multiError) Get(idx int) error {
 	return m.errors[idx]
 }
 
+func (m *multiError) AppendMsg(msg string) {
+	m.errors = append(m.errors, errors.New(msg))
+}
+
 func (m *multiError) Append(e error) {
-	m.errors = append(m.errors, e)
+	//goland:noinspection GoTypeAssertionOnErrors
+	if c, o := e.(MultiError); o {
+		m.errors = append(m.errors, c.Errors()...)
+	} else {
+		m.errors = append(m.errors, e)
+	}
 }
 
 func (m *multiError) AppendIfNotNil(e error) {
 	if e != nil {
-		m.errors = append(m.errors, e)
+		m.Append(e)
 	}
 }
 

@@ -2,7 +2,7 @@ package argument
 
 import (
 	"github.com/foxcapades/argonaut/internal/cereal"
-	"github.com/foxcapades/argonaut/internal/errs"
+	"github.com/foxcapades/argonaut/internal/util/xerr"
 	"github.com/foxcapades/argonaut/pkg/argo"
 )
 
@@ -54,7 +54,7 @@ func (a Spec[T]) Value() any {
 func (a Spec[T]) PreValidate(input string) error {
 	var err error
 
-	errors := errs.NewMultiError()
+	errors := xerr.NewMultiError()
 
 	for i := range a.preValidators {
 		if err = a.preValidators[i].Validate(input, err); err != nil {
@@ -70,7 +70,7 @@ func (a Spec[T]) PreValidate(input string) error {
 }
 
 func (a *Spec[T]) ProcessInput(value string) error {
-	errors := errs.NewMultiError()
+	errors := xerr.NewMultiError()
 
 	// If we've previously encountered an error trying to parse values for this
 	// argument, then bail here.

@@ -2,9 +2,9 @@ package interpreter
 
 import (
 	"github.com/foxcapades/argonaut/internal/component"
-	"github.com/foxcapades/argonaut/internal/errs"
 	"github.com/foxcapades/argonaut/internal/token"
 	"github.com/foxcapades/argonaut/internal/util/coll"
+	"github.com/foxcapades/argonaut/internal/util/xerr"
 	"github.com/foxcapades/argonaut/pkg/argo"
 )
 
@@ -31,7 +31,7 @@ func Run(input []string, facade component.Facade, options *argo.Config) error {
 		stream: token.NewStream(input, options),
 	}
 
-	errors := errs.NewMultiError()
+	errors := xerr.NewMultiError()
 
 	for {
 		tkn := queue.PopFront()

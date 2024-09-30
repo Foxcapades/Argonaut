@@ -6,10 +6,14 @@ import (
 	"strings"
 
 	"github.com/foxcapades/argonaut/internal/cereal"
-	"github.com/foxcapades/argonaut/internal/errs"
+	"github.com/foxcapades/argonaut/internal/util/xerr"
 	"github.com/foxcapades/argonaut/internal/util/xstr"
 	"github.com/foxcapades/argonaut/pkg/argo"
 )
+
+func NewBuilder[T any]() *SpecBuilder[T] {
+	return new(SpecBuilder[T])
+}
 
 type SpecBuilder[T any] struct {
 	hasName bool
@@ -37,7 +41,7 @@ type SpecBuilder[T any] struct {
 
 	unmarshaler argo.ValueUnmarshaler[T]
 
-	errors errs.MultiError
+	errors xerr.MultiError
 }
 
 // region Configuration
@@ -101,7 +105,7 @@ func (a *SpecBuilder[T]) WithBinding(binding *T) argo.TypedArgumentSpecBuilder[T
 func (a *SpecBuilder[T]) WithDeepBinding(binding any) argo.TypedArgumentSpecBuilder[T] {
 	if con, err := NewMagicPointerConsumer[T](binding); err != nil {
 		if a.errors == nil {
-			a.errors = errs.NewMultiError()
+			a.errors = xerr.NewMultiError()
 		}
 
 		a.errors.Append(err)
@@ -157,7 +161,7 @@ func (a SpecBuilder[T]) Build(config argo.Config) (argo.ArgumentSpec, error) {
 
 	switch a.hasDefault {
 	case 1:
-		spec.defaultProvider = func() (T, error) { return spec.deserializer.Deserialize(a.defaultValue.(string)) }
+		spec.defaultProvider = func() (T, error) { return spec.deserializer.Deserialize(a.defaultValue.(string), nil) }
 	case 2:
 		spec.defaultProvider = func() (T, error) { return a.defaultValue.(func() T)(), nil }
 	}

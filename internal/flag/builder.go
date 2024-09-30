@@ -1,10 +1,16 @@
 package flag
 
 import (
-	"errors"
+	"strings"
 
+	"github.com/foxcapades/argonaut/internal/argument"
+	"github.com/foxcapades/argonaut/internal/util/xerr"
 	"github.com/foxcapades/argonaut/pkg/argo"
 )
+
+func NewBuilder() *SpecBuilder {
+	return new(SpecBuilder)
+}
 
 type SpecBuilder struct {
 	longForm    string
@@ -13,11 +19,11 @@ type SpecBuilder struct {
 	shortForm    byte
 	hasShortForm bool
 
-	summary     string
 	description string
 
 	isRequired bool
 
+	hasArg   bool
 	argument argo.ArgumentSpecBuilder
 
 	lazyFns      []argo.FlagCallback
@@ -25,7 +31,7 @@ type SpecBuilder struct {
 }
 
 func (s *SpecBuilder) WithLongForm(name string) argo.FlagSpecBuilder {
-	s.longForm = name
+	s.longForm = strings.TrimSpace(name)
 	s.hasLongForm = true
 	return s
 }
@@ -38,6 +44,7 @@ func (s *SpecBuilder) WithShortForm(name byte) argo.FlagSpecBuilder {
 
 func (s *SpecBuilder) WithArgument(arg argo.ArgumentSpecBuilder) argo.FlagSpecBuilder {
 	s.argument = arg
+	s.hasArg = true
 	return s
 }
 
@@ -48,11 +55,6 @@ func (s *SpecBuilder) WithLazyCallback(callback argo.FlagCallback) argo.FlagSpec
 
 func (s *SpecBuilder) WithImmediateCallback(callback argo.FlagCallback) argo.FlagSpecBuilder {
 	s.immediateFns = append(s.immediateFns, callback)
-	return s
-}
-
-func (s *SpecBuilder) WithSummary(summary string) argo.FlagSpecBuilder {
-	s.summary = summary
 	return s
 }
 
@@ -67,18 +69,42 @@ func (s *SpecBuilder) Require() argo.FlagSpecBuilder {
 }
 
 func (s *SpecBuilder) Build(config argo.Config) (argo.FlagSpec, error) {
+	errs := xerr.NewMultiError()
+
 	if !s.hasLongForm && !s.hasShortForm {
-		return nil, errors.New("flag configured with neither a long-form or short-form name")
+		errs.AppendMsg(argo.ErrMsgFlagHasNoNames)
 	}
 
-	spec := new(Spec)
+	if s.hasLongForm && !config.Flags.LongFormValidator(s.longForm, config) {
+		errs.AppendMsg(argo.ErrMsgInvalidLongFlagName(s.longForm, config))
+	}
 
-	spec.
+	if s.hasShortForm && !config.Flags.ShortFormValidator(s.shortForm, config) {
+		errs.AppendMsg(argo.ErrMsgInvalidShortFlagName(s.shortForm, config))
+	}
 
-		// Flag must have:
-		// * long and/or short form
-		//
+	var arg argo.ArgumentSpec
 
-		// TODO implement me
-		panic("implement me")
+	if s.hasArg {
+		if a, e := s.argument.Build(config); e == nil {
+			arg = a
+		} else {
+			errs.Append(e)
+		}
+	} else {
+		arg = new(argument.FallbackArgumentSpec)
+	}
+
+	if errs.IsEmpty() {
+		return &Spec{
+			shortForm:   s.shortForm,
+			isRequired:  s.isRequired,
+			hasArg:      s.hasArg,
+			longForm:    s.longForm,
+			description: s.description,
+			argument:    arg,
+		}, nil
+	}
+
+	return nil, errs
 }

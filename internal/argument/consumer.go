@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/foxcapades/argonaut/internal/errs"
+	"github.com/foxcapades/argonaut/internal/util/xerr"
 	"github.com/foxcapades/argonaut/internal/util/xreflect"
 	"github.com/foxcapades/argonaut/pkg/argo"
 )
@@ -63,7 +63,7 @@ type multiConsumer[T any] struct {
 }
 
 func (m multiConsumer[T]) Accept(value T) error {
-	errors := errs.NewMultiError()
+	errors := xerr.NewMultiError()
 
 	for i := range m.consumers {
 		errors.AppendIfNotNil(m.consumers[i].Accept(value))
