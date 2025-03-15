@@ -78,6 +78,8 @@ type CommandTreeBuilder interface {
 	// are primarily used for rendering help text.
 	WithFlagGroup(flagGroup FlagGroupBuilder) CommandTreeBuilder
 
+	WithTabCompletionHints(hints CommandCompletionHints) CommandTreeBuilder
+
 	// OnIncomplete sets the incomplete command handler.
 	//
 	// The incomplete command handler is called when a command tree is called, but

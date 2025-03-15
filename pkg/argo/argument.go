@@ -80,6 +80,9 @@ type Argument interface {
 	//
 	// If this argument has no binding, this method will return nil.
 	BindingType() reflect.Type
+
+	completionHints() ArgumentCompletionHints
+
 	setValue(rawValue string) error
 	setToDefault() error
 }

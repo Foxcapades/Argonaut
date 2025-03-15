@@ -16,7 +16,8 @@ import (
 //
 // For example, given the following command example, the tree is "foo", the
 // branch is "bar", and the leaf is "fizz":
-//     ./foo bar fizz
+//
+//	./foo bar fizz
 type CommandBranchBuilder interface {
 
 	// GetName returns the name assigned to this CommandBranchBuilder.
@@ -89,6 +90,8 @@ type CommandBranchBuilder interface {
 	// If this is unset, the default behavior is to print the help text for the
 	// furthest command node reached and exit with code 1.
 	OnIncomplete(handler OnIncompleteHandler) CommandBranchBuilder
+
+	WithTabCompletionHints(hints SubcommandCompletionHints) CommandBranchBuilder
 
 	Build(warnings *WarningContext) (CommandBranch, error)
 }

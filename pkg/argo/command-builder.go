@@ -12,18 +12,19 @@ import (
 // Command instance.
 //
 // Example Usage:
-//     cli.Command().
-//         WithDescription("This is my command that does something.").
-//         WithFlag(cli.Flag().
-//             WithShortForm('v').
-//             WithLongForm("verbose").
-//             WithDescription("Enable verbose logging.")
-//             WithBinding(&config.verbose)).
-//         WithArgument(cli.Argument().
-//             WithName("file").
-//             WithDescription("File path.").
-//             WithBinding(&config.file)).
-//         Build()
+//
+//	cli.Command().
+//	    WithDescription("This is my command that does something.").
+//	    WithFlag(cli.Flag().
+//	        WithShortForm('v').
+//	        WithLongForm("verbose").
+//	        WithDescription("Enable verbose logging.")
+//	        WithBinding(&config.verbose)).
+//	    WithArgument(cli.Argument().
+//	        WithName("file").
+//	        WithDescription("File path.").
+//	        WithBinding(&config.file)).
+//	    Build()
 type CommandBuilder interface {
 
 	// WithDescription sets the description value that will be used for the built
@@ -63,6 +64,9 @@ type CommandBuilder interface {
 	// WithCallback sets a callback function that will be executed immediately
 	// after CLI parsing has completed successfully.
 	WithCallback(cb CommandCallback) CommandBuilder
+
+	// WithTabCompletionHints provides
+	WithTabCompletionHints(hints CommandCompletionHints) CommandBuilder
 
 	Build(ctx *WarningContext) (Command, error)
 

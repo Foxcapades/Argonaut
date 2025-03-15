@@ -102,6 +102,8 @@ type Command interface {
 	AppendWarning(warning string)
 
 	executeCallback()
+
+	completionHints() CommandCompletionHints
 }
 
 type command struct {
@@ -113,37 +115,38 @@ type command struct {
 	unmapped      []string
 	passthrough   []string
 	callback      CommandCallback
+	completion    TabCompletionHints
 }
 
-func (c command) Name() string {
+func (c *command) Name() string {
 	return filepath.Base(os.Args[0])
 }
 
-func (c command) Description() string {
+func (c *command) Description() string {
 	return c.description
 }
 
-func (c command) HasDescription() bool {
+func (c *command) HasDescription() bool {
 	return len(c.description) > 0
 }
 
-func (c command) FlagGroups() []FlagGroup {
+func (c *command) FlagGroups() []FlagGroup {
 	return c.flagGroups
 }
 
-func (c command) HasFlagGroups() bool {
+func (c *command) HasFlagGroups() bool {
 	return len(c.flagGroups) > 0
 }
 
-func (c command) HasUnmappedLabel() bool {
+func (c *command) HasUnmappedLabel() bool {
 	return len(c.unmappedLabel) > 0
 }
 
-func (c command) GetUnmappedLabel() string {
+func (c *command) GetUnmappedLabel() string {
 	return c.unmappedLabel
 }
 
-func (c command) FindShortFlag(b byte) Flag {
+func (c *command) FindShortFlag(b byte) Flag {
 	for _, group := range c.flagGroups {
 		if flag := group.FindShortFlag(b); flag != nil {
 			return flag
@@ -153,7 +156,7 @@ func (c command) FindShortFlag(b byte) Flag {
 	return nil
 }
 
-func (c command) FindLongFlag(name string) Flag {
+func (c *command) FindLongFlag(name string) Flag {
 	for _, group := range c.flagGroups {
 		if flag := group.FindLongFlag(name); flag != nil {
 			return flag
@@ -163,11 +166,11 @@ func (c command) FindLongFlag(name string) Flag {
 	return nil
 }
 
-func (c command) Arguments() []Argument {
+func (c *command) Arguments() []Argument {
 	return c.arguments
 }
 
-func (c command) HasArguments() bool {
+func (c *command) HasArguments() bool {
 	return len(c.arguments) > 0
 }
 
@@ -182,11 +185,11 @@ func (c *command) appendArgument(rawArgument string) error {
 	return nil
 }
 
-func (c command) UnmappedInputs() []string {
+func (c *command) UnmappedInputs() []string {
 	return c.unmapped
 }
 
-func (c command) HasUnmappedInputs() bool {
+func (c *command) HasUnmappedInputs() bool {
 	return len(c.unmapped) > 0
 }
 
@@ -194,11 +197,11 @@ func (c *command) appendUnmapped(val string) {
 	c.unmapped = append(c.unmapped, val)
 }
 
-func (c command) PassthroughInputs() []string {
+func (c *command) PassthroughInputs() []string {
 	return c.passthrough
 }
 
-func (c command) HasPassthroughInputs() bool {
+func (c *command) HasPassthroughInputs() bool {
 	return len(c.passthrough) > 0
 }
 
@@ -212,10 +215,14 @@ func (c *command) appendPassthrough(val string) {
 	c.passthrough = append(c.passthrough, val)
 }
 
-func (c command) Warnings() []string {
+func (c *command) Warnings() []string {
 	return c.warnings.GetWarnings()
 }
 
-func (c command) AppendWarning(warning string) {
+func (c *command) AppendWarning(warning string) {
 	c.warnings.appendWarning(warning)
+}
+
+func (c *command) completionHints() TabCompletionHints {
+	return c.completion
 }

@@ -162,6 +162,8 @@ type ArgumentBuilder interface {
 	// Validators will be executed in the order they are appended.
 	WithValidator(validatorFn any) ArgumentBuilder
 
+	WithTabCompletionHints(hints ArgumentCompletionHints) ArgumentBuilder
+
 	// Build attempts to build an Argument instance out of the configuration given
 	// to this ArgumentBuilder instance.
 	//

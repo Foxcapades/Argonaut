@@ -65,6 +65,8 @@ type CommandLeafBuilder interface {
 	getAliases() []string
 	parent(node CommandNode)
 
+	WithTabCompletionHints(hints SubcommandCompletionHints) CommandLeafBuilder
+
 	Build(warnings *WarningContext) (CommandLeaf, error)
 }
 

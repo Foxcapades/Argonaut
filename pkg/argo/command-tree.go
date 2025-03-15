@@ -33,6 +33,8 @@ type CommandTree interface {
 	// SelectedCommand returns the leaf command that was selected in the CLI call.
 	SelectedCommand() CommandLeaf
 
+	completionHints() CommandCompletionHints
+
 	selectCommand(leaf CommandLeaf)
 
 	hasCallback() bool

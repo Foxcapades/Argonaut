@@ -94,6 +94,8 @@ type FlagBuilder interface {
 	//     WithArgument(cli.Argument().WithBinding(ptr).WithDefault(something).Require())
 	WithBindingAndDefault(pointer, def any, required bool) FlagBuilder
 
+	WithTabCompletionHints(hints FlagCompletionHints) FlagBuilder
+
 	setIsHelpFlag() FlagBuilder
 
 	// Require marks this Flag as being required.
