@@ -4,25 +4,27 @@ package argo
 // unmarshal the given raw string into a custom type.
 //
 // Example 1:
-//     cli.Argument()
-//         WithBinding(UnmarshalerFunc(func(raw string) error {
-//             // Do something with the raw string
-//             return nil
-//         })
+//
+//	cli.Argument()
+//	    WithBinding(UnmarshalerFunc(func(raw string) error {
+//	        // Do something with the raw string
+//	        return nil
+//	    })
 //
 // Example 2:
-//     type MyCustomType struct {
-//         Value string
-//     }
-//     func (t *MyCustomType) Unmarshal(raw string) error {
-//         t.Value = raw
-//         return nil
-//     }
 //
-//     var value MyCustomType
+//	type MyCustomType struct {
+//	    Value string
+//	}
+//	func (t *MyCustomType) Unmarshal(raw string) error {
+//	    t.Value = raw
+//	    return nil
+//	}
 //
-//     cli.Argument().
-//         WithBinding(&value)
+//	var value MyCustomType
+//
+//	cli.Argument().
+//	    WithBinding(&value)
 type Unmarshaler interface {
 
 	// Unmarshal is handed the raw string for its obviously nefarious purposes and
@@ -48,29 +50,31 @@ func (u UnmarshalerFunc) Unmarshal(raw string) error {
 // or unsafe pointers will still be required to fill the given pointer value.
 //
 // If you were reasonable, you could do something like this:
-//    ValueUnmarshalerFunc(func(raw string, val any) error {
-//        if parsed, err := strconv.Atoi(raw); err != nil {
-//            return err
-//        } else {
-//            rVal := reflect.ValueOf(val)
-//            if rVal.Kind() != reflect.Pointer {
-//                return errors.New("value must be a pointer")
-//            } else {
-//                rVal.Elem().Set(reflect.ValueOf(parsed))
-//                return nil
-//            }
-//        }
-//    })
+//
+//	ValueUnmarshalerFunc(func(raw string, val any) error {
+//	    if parsed, err := strconv.Atoi(raw); err != nil {
+//	        return err
+//	    } else {
+//	        rVal := reflect.ValueOf(val)
+//	        if rVal.Kind() != reflect.Pointer {
+//	            return errors.New("value must be a pointer")
+//	        } else {
+//	            rVal.Elem().Set(reflect.ValueOf(parsed))
+//	            return nil
+//	        }
+//	    }
+//	})
 //
 // And if you are half-baked, you could try this:
-//     ValueUnmarshalerFunc(func(raw string, val any) error {
-//         if parsed, err := strconv.Atoi(raw); err != nil {
-//             return err
-//         } else {
-//             **(**int)(unsafe.Add(unsafe.Pointer(&val), bits.UintSize/8)) = parsed
-//             return nil
-//         }
-//     })
+//
+//	ValueUnmarshalerFunc(func(raw string, val any) error {
+//	    if parsed, err := strconv.Atoi(raw); err != nil {
+//	        return err
+//	    } else {
+//	        **(**int)(unsafe.Add(unsafe.Pointer(&val), bits.UintSize/8)) = parsed
+//	        return nil
+//	    }
+//	})
 type ValueUnmarshaler interface {
 
 	// Unmarshal accepts a raw value and a pointer to an arbitrary type and is

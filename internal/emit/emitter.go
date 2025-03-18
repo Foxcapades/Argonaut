@@ -1,8 +1,8 @@
 package emit
 
 import (
-	"github.com/Foxcapades/Argonaut/internal/chars"
-	"github.com/Foxcapades/Argonaut/internal/util"
+	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 )
 
 type Event struct {
@@ -58,13 +58,13 @@ func equalsEvent() Event {
 }
 
 func NewEmitter(args []string) Emitter {
-	return Emitter{arguments: args, next: util.NewDeque[Event](6), argumentIndex: 1}
+	return Emitter{arguments: args, next: utils.NewDeque[Event](6), argumentIndex: 1}
 }
 
 type Emitter struct {
 	arguments     []string
 	argumentIndex int
-	next          util.Deque[Event]
+	next          utils.Deque[Event]
 }
 
 func (e *Emitter) Next() Event {

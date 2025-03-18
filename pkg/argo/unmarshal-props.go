@@ -135,24 +135,22 @@ type UnmarshalTimeProps struct {
 // DefaultUnmarshalProps returns an UnmarshalProps instance with the default
 // values configured.
 func DefaultUnmarshalProps() UnmarshalProps {
-	return defaultUnmarshalProps
-}
-
-var defaultUnmarshalProps = UnmarshalProps{
-	Integers: UnmarshalIntegerProps{
-		OctalLeaders: []string{"0o", "0O", "o", "O", "0"},
-		HexLeaders:   []string{"0x", "0X", "x", "X"},
-		DefaultBase:  10,
-	},
-	Maps: UnmarshalMapProps{
-		KeyValSeparatorChars: "=:",
-		EntrySeparatorChars:  ",; ",
-	},
-	Slices: UnmarshalSliceProps{
-		Scanner:         func(s string) Scanner[string] { return DelimitedSliceScanner(s, ",") },
-		ByteSliceParser: ByteSliceParserRaw,
-	},
-	Time: UnmarshalTimeProps{
-		DateFormats: []string{time.RFC3339, time.RFC3339Nano},
-	},
+	return UnmarshalProps{
+		Integers: UnmarshalIntegerProps{
+			OctalLeaders: []string{"0o", "0O", "o", "O", "0"},
+			HexLeaders:   []string{"0x", "0X", "x", "X"},
+			DefaultBase:  10,
+		},
+		Maps: UnmarshalMapProps{
+			KeyValSeparatorChars: "=:",
+			EntrySeparatorChars:  ",; ",
+		},
+		Slices: UnmarshalSliceProps{
+			Scanner:         func(s string) Scanner[string] { return DelimitedSliceScanner(s, ",") },
+			ByteSliceParser: ByteSliceParserRaw,
+		},
+		Time: UnmarshalTimeProps{
+			DateFormats: []string{time.RFC3339, time.RFC3339Nano},
+		},
+	}
 }

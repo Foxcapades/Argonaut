@@ -3,8 +3,8 @@ package parse
 import (
 	"strings"
 
-	"github.com/Foxcapades/Argonaut/internal/chars"
-	"github.com/Foxcapades/Argonaut/internal/emit"
+	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal_old/emit"
 )
 
 type state uint8

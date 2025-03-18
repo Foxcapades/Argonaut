@@ -1,0 +1,294 @@
+digraph {
+  graph[
+    fontname="FiraCode",
+    layout="dot",
+//    splines="curved",
+    nodesep="0.5",
+    ranksep="1",
+    rankdir="LR",
+  ]
+  node[fontname="FiraCode"]
+
+  // Interfaces
+  {
+    node[color="darkslateblue", fontcolor="darkslateblue", fillcolor="thistle1", style="filled"]
+
+    { // Builders
+      node[shape="plain"]
+      ArgumentBuilder[label=<
+        <table cellspacing="0" cellborder="1" border="1">
+          <tr><td port="head" sides="b">ArgumentBuilder</td></tr>
+          <tr><td port="build" border="0">Build()</td></tr>
+        </table>
+      >]
+
+      CommandBuilder[label=<
+        <table cellspacing="0" cellborder="1" border="1">
+          <tr><td port="head" sides="b">CommandBuilder</td></tr>
+          <tr><td port="arg" sides="b">WithArgument()</td></tr>
+          <tr><td port="flag" sides="b">WithFlag()</td></tr>
+          <tr><td port="fg" sides="b">WithFlagGroup()</td></tr>
+          <tr><td port="build" border="0">Build()</td></tr>
+        </table>
+      >]
+
+      FlagBuilder[label=<
+        <table cellspacing="0" cellborder="1" border="1">
+          <tr><td port="head" sides="b">FlagBuilder</td></tr>
+          <tr><td port="arg" sides="b">WithArgument()</td></tr>
+          <tr><td port="build" border="0">Build()</td></tr>
+        </table>
+      >]
+
+      FlagGroupBuilder[label=<
+        <table cellspacing="0" cellborder="1" border="1">
+          <tr><td port="head" sides="b">FlagGroupBuilder</td></tr>
+          <tr><td port="flag" sides="b">WithFlag()</td></tr>
+          <tr><td port="build" border="0">Build()</td></tr>
+        </table>
+      >]
+    }
+
+    { // Built Types
+      node[shape="rectangle"]
+
+      Argument
+      Command
+      Flag
+      FlagGroup
+    }
+  }
+
+  subgraph cluster_argo {
+    graph[label="argo"]
+    node[shape="component", color="darkslategray", fontcolor="darkslategray"]
+
+    ArgumentFn[label="Argument()"]
+    CommandFn[label="Command()"]
+    CommandBranchFn[label="Branch()"]
+    CommandLeafFn[label="Leaf()"]
+    CommandTreeFn[label="CommandTree()"]
+    FlagFn[label="Flag()"]
+    FlagGroupFn[label="FlagGroup()"]
+
+    {
+      graph[rank="same"]
+      node[style="invis"]
+      edge[style="invis"]
+
+      CommandFn -> fs1 -> fs11 -> ArgumentFn
+      CommandBranchFn -> fs2 -> fs21 -> CommandFn
+      CommandLeafFn -> fs3 -> CommandBranchFn
+      CommandTreeFn -> fs4 -> CommandLeafFn
+      FlagFn -> fs5 -> fs51 -> CommandTreeFn
+      FlagGroupFn -> fs6 -> FlagFn
+    }
+  }
+
+  //
+  //    Arguments
+  //
+  subgraph cluster_argument {
+    graph[label="argo/argument (cli_arg)"]
+
+    { // Constructors
+      node[shape="component", color="darkslategray", fontcolor="darkslategray"]
+      NewArgumentBuilder[label="NewArgumentBuilder()"]
+    }
+
+    { // Calls
+      edge[arrowhead="teetee", penwidth="1.5", color="dodgerblue4"]
+      ArgumentFn -> NewArgumentBuilder:w
+    }
+
+    { // Returns
+      edge[arrowsize="1.25", color="indigo"]
+
+      ArgumentFn -> ArgumentBuilder:head
+      NewArgumentBuilder -> ArgumentBuilder:head
+      ArgumentBuilder:build -> Argument
+    }
+  }
+
+  //
+  //    Flags
+  //
+  subgraph cluster_flag {
+    graph[label="argo/flag (cli_flag)"]
+
+
+
+    { // Returns
+      edge[arrowsize="1.25", color="indigo"]
+
+      FlagFn -> FlagBuilder
+      FlagGroupFn -> FlagGroupBuilder
+
+      FlagBuilder:build -> Flag
+      FlagGroupBuilder:build -> FlagGroup
+    }
+
+    { // Accepts Arguments
+      edge[color="", dir="back", arrowtail="curve", color="#497D74", style="dashed"]
+
+      FlagBuilder:arg:e -> ArgumentBuilder:head:w
+
+      FlagGroupBuilder:flag:e -> FlagBuilder:head
+    }
+  }
+
+  //
+  //    Simple Commands
+  //
+  subgraph cluster_command {
+    graph[label="argo/command/simple (cli_com)"]
+
+    { // Constructors
+      node[shape="component", color="darkslategray", fontcolor="darkslategray"]
+      NewCommandBuilder[label="NewCommandBuilder()"]
+    }
+
+    { // Calls
+      edge[arrowhead="teetee", penwidth="1.5", color="dodgerblue4"]
+      CommandFn -> NewCommandBuilder
+    }
+
+    { // Return Type
+      edge[arrowsize="1.25", color="indigo"]
+
+      CommandFn -> CommandBuilder:head
+      NewCommandBuilder -> CommandBuilder:head
+      CommandBuilder:build -> Command
+    }
+
+    { // Accepts Arguments
+      edge[color="", dir="back", arrowtail="curve", color="#497D74", style="dashed"]
+
+      CommandBuilder:flag:e -> FlagBuilder:head:w
+
+      CommandBuilder:fg:e -> FlagGroupBuilder:head:w
+
+      CommandBuilder:arg:e -> ArgumentBuilder:head:w
+    }
+  }
+
+  //
+  //    Command Trees
+  //
+  subgraph cluster_command_tree {
+    graph[label="argo/command/tree (cli_tree)"]
+
+    // Interfaces
+    {
+      node[color="darkslateblue", fontcolor="darkslateblue", fillcolor="thistle1", style="filled"]
+
+      // Builders
+      {
+        node[shape="plain"]
+        CommandBranchBuilder[label=<
+          <table cellspacing="0" cellborder="1" border="1">
+            <tr><td port="head" sides="b">CommandBranchBuilder</td></tr>
+            <tr><td port="flag" sides="b">WithFlag()</td></tr>
+            <tr><td port="fg" sides="b">WithFlagGroup()</td></tr>
+            <tr><td port="build" border="0">Build()</td></tr>
+          </table>
+        >]
+
+        CommandLeafBuilder[label=<
+          <table cellspacing="0" cellborder="1" border="1">
+            <tr><td port="head" sides="b">CommandLeafBuilder</td></tr>
+            <tr><td port="arg" sides="b">WithArgument()</td></tr>
+            <tr><td port="flag" sides="b">WithFlag()</td></tr>
+            <tr><td port="fg" sides="b">WithFlagGroup()</td></tr>
+            <tr><td port="build" border="0">Build()</td></tr>
+          </table>
+        >]
+
+        CommandTreeBuilder[label=<
+          <table cellspacing="0" cellborder="1" border="1">
+            <tr><td port="head" sides="b">CommandTreeBuilder</td></tr>
+            <tr><td port="flag" sides="b">WithFlag()</td></tr>
+            <tr><td port="fg" sides="b">WithFlagGroup()</td></tr>
+            <tr><td port="build" border="0">Build()</td></tr>
+          </table>
+        >]
+      }
+
+      // Built Types
+      {
+        node[shape="rectangle"]
+
+        CommandBranch
+        CommandLeaf
+        CommandTree
+      }
+    }
+
+    { // Constructors
+      node[shape="component", color="darkslategray", fontcolor="darkslategray"]
+      NewTreeBuilder[label="NewTreeBuilder()"]
+      NewBranchBuilder[label="NewBranchBuilder()"]
+      NewLeafBuilder[label="NewLeafBuilder()"]
+    }
+
+    { // Calls
+      edge[arrowhead="teetee", penwidth="1.5", color="dodgerblue4"]
+
+      CommandBranchFn:e -> NewBranchBuilder:w
+      CommandLeafFn:e -> NewLeafBuilder:w
+      CommandTreeFn:e -> NewTreeBuilder:w
+    }
+
+    { // Returns
+      edge[arrowsize="1.25", color="indigo"]
+
+      CommandBranchFn:e -> CommandBranchBuilder:head:w
+      NewBranchBuilder:e -> CommandBranchBuilder:head:w
+
+      CommandLeafFn:e -> CommandLeafBuilder:head:w
+      NewLeafBuilder:e -> CommandLeafBuilder:head:w
+
+      CommandTreeFn:e -> CommandTreeBuilder:head:w
+      NewTreeBuilder:e -> CommandTreeBuilder:head:w
+
+      CommandBranchBuilder:build:e -> CommandBranch:w
+      CommandLeafBuilder:build:e -> CommandLeaf:w
+      CommandTreeBuilder:build:e -> CommandTree:w
+    }
+
+    { // Accepts Arguments
+      edge[color="", dir="back", arrowtail="curve", color="#497D74", style="dashed"]
+
+      CommandLeafBuilder:flag:e -> FlagBuilder:head:w
+      CommandBranchBuilder:flag:e -> FlagBuilder:head:w
+      CommandTreeBuilder:flag:e -> FlagBuilder:head:w
+
+      CommandLeafBuilder:fg:e -> FlagGroupBuilder:head:w
+      CommandBranchBuilder:fg:e -> FlagGroupBuilder:head:w
+      CommandTreeBuilder:fg:e -> FlagGroupBuilder:head:w
+
+      CommandLeafBuilder:arg:e -> ArgumentBuilder:head:w
+    }
+  }
+
+//
+//  subgraph cluster_argument {
+//    graph[label="argo/command (cli)"]
+//
+//    { // Returns
+//      edge[arrowsize="1.25", color="indigo"]
+//
+//    }
+//
+//    { // Implements
+//      edge[color="steelblue4", dir="none", arrowsize="0.75", style="dashed"]
+//
+//    }
+//
+//    { // Constructs
+//      edge[color="violetred", arrowhead="icurve", style="dotted", penwidth="1.5"]
+//
+//    }
+//  }
+
+}

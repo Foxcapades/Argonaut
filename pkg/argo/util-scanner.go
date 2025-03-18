@@ -19,23 +19,24 @@ type Scanner[T any] interface {
 // it into substrings on every delimiter character.
 //
 // Examples:
-//     // Comma separated values:
-//     DelimitedSliceScanner("hello,world", ",")
-//     // Comma or semicolon separated values.
-//     DelimitedSliceScanner("goodbye,cruel;world", ",;")
+//
+//	// Comma separated values:
+//	DelimitedSliceScanner("hello,world", ",")
+//	// Comma or semicolon separated values.
+//	DelimitedSliceScanner("goodbye,cruel;world", ",;")
 //
 // Parameters:
-//   1. input      = Input string that will be scanned.
-//   2. delimiters = Set of delimiter characters.  If this string is empty, the
-//                   scanner will return the whole input string on the first
-//                   call to Next.
+//  1. input      = Input string that will be scanned.
+//  2. delimiters = Set of delimiter characters.  If this string is empty, the
+//     scanner will return the whole input string on the first
+//     call to Next.
 func DelimitedSliceScanner(input, delimiters string) Scanner[string] {
 	return &delimitedSliceScanner{input: input, delimiters: delimiters}
 }
 
 type delimitedSliceScanner struct{ input, delimiters string }
 
-func (d delimitedSliceScanner) HasNext() bool {
+func (d *delimitedSliceScanner) HasNext() bool {
 	return len(d.input) > 0
 }
 
@@ -56,7 +57,7 @@ func (d *delimitedSliceScanner) Next() string {
 	return out
 }
 
-func (d delimitedSliceScanner) findNextToken() int {
+func (d *delimitedSliceScanner) findNextToken() int {
 	for i := 0; i < len(d.input); i++ {
 		for j := 0; j < len(d.delimiters); j++ {
 			if d.input[i] == d.delimiters[j] {

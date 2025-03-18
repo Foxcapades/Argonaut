@@ -1,10 +1,5 @@
 package argo
 
-import (
-	"os"
-	"path/filepath"
-)
-
 type CommandCallback = func(command Command)
 
 // Command represents a singular, non-nested command which accepts flags and
@@ -14,23 +9,29 @@ type Command interface {
 	// Name returns the name of the command.
 	Name() string
 
+	//
+
+	// HasDescription indicates whether this command has a description value set.
+	HasDescription() bool
+
 	// Description returns the custom description for the command.
 	//
 	// Description values are used internally for rendering held text.
 	Description() string
 
-	// HasDescription indicates whether this command has a description value set.
-	HasDescription() bool
+	//
 
 	// FlagGroups returns the flag groups attached to this command.
 	//
 	// Flag groups are named categories of flags defined when building the
 	// command.
-	FlagGroups() []FlagGroup
+	FlagGroups(includeDefault bool) []FlagGroup
 
 	// HasFlagGroups indicates whether this command has any flag groups attached
 	// to it.
-	HasFlagGroups() bool
+	HasFlagGroups(includeDefault bool) bool
+
+	//
 
 	// FindShortFlag looks up a Flag instance by its short form.
 	//
@@ -44,9 +45,7 @@ type Command interface {
 	// nil.
 	FindLongFlag(name string) Flag
 
-	// Arguments returns the positional Argument instances attached to this
-	// Command.
-	Arguments() []Argument
+	//
 
 	// HasArguments indicates whether this Command has any positional arguments
 	// attached.
@@ -59,7 +58,15 @@ type Command interface {
 	// argument itself by using the Argument.WasHit method.
 	HasArguments() bool
 
-	appendArgument(rawArgument string) error
+	// Arguments returns the positional Argument instances attached to this
+	// Command.
+	Arguments() []Argument
+
+	//
+
+	// HasUnmappedInputs indicates whether the command has collected any inputs
+	// that were not mapped to any registered flag or argument.
+	HasUnmappedInputs() bool
 
 	// UnmappedInputs returns a collection of inputs that were passed to this
 	// command that do not match any registered flag or argument.
@@ -73,149 +80,136 @@ type Command interface {
 	// a command's unmapped inputs.
 	UnmappedInputs() []string
 
-	// HasUnmappedInputs indicates whether the command has collected any inputs
-	// that were not mapped to any registered flag or argument.
-	HasUnmappedInputs() bool
+	AppendUnmappedInput(val string)
 
-	appendUnmapped(val string)
-
-	// PassthroughInputs are command line values that were passed after an
-	// end-of-arguments boundary, "--".
-	PassthroughInputs() []string
-
-	// HasPassthroughInputs indicates whether this command has collected any
-	// passthrough input values.
-	HasPassthroughInputs() bool
-
-	appendPassthrough(val string)
-
-	// GetUnmappedLabel returns the label used when generating help text to
-	// indicate the shape or purpose of unmapped inputs.
-	GetUnmappedLabel() string
+	//
 
 	// HasUnmappedLabel indicates whether an unmapped label has been set on this
 	// command instance.
 	HasUnmappedLabel() bool
 
+	// UnmappedLabel returns the label used when generating help text to
+	// indicate the shape or purpose of unmapped inputs.
+	UnmappedLabel() string
+
+	//
+
+	HasCallback() bool
+
+	Callback() CommandCallback
+
+	//
+
+	// TODO: remove this
 	Warnings() []string
 
+	// TODO: remove this
 	AppendWarning(warning string)
-
-	executeCallback()
 }
 
-type command struct {
-	warnings      *WarningContext
-	description   string
-	unmappedLabel string
-	flagGroups    []FlagGroup
-	arguments     []Argument
-	unmapped      []string
-	passthrough   []string
-	callback      CommandCallback
-}
+//
 
-func (c command) Name() string {
-	return filepath.Base(os.Args[0])
-}
+// A CommandBuilder provides an API to configure the construction of a new
+// Command instance.
+//
+// Example Usage:
+//
+//	cli.Command().
+//	    WithDescription("This is my command that does something.").
+//	    WithFlag(cli.Flag().
+//	        WithShortForm('v').
+//	        WithLongForm("verbose").
+//	        WithDescription("Enable verbose logging.")
+//	        WithBinding(&config.verbose)).
+//	    WithArgument(cli.Argument().
+//	        WithName("file").
+//	        WithDescription("File path.").
+//	        WithBinding(&config.file)).
+//	    Build()
+type CommandBuilder interface {
 
-func (c command) Description() string {
-	return c.description
-}
+	// WithDescription sets the description value that will be used for the built
+	// Command instance.
+	//
+	// Command descriptions are used when rendering help text.
+	WithDescription(desc string) CommandBuilder
 
-func (c command) HasDescription() bool {
-	return len(c.description) > 0
-}
+	HasDescription() bool
 
-func (c command) FlagGroups() []FlagGroup {
-	return c.flagGroups
-}
+	Description() string
 
-func (c command) HasFlagGroups() bool {
-	return len(c.flagGroups) > 0
-}
+	//
 
-func (c command) HasUnmappedLabel() bool {
-	return len(c.unmappedLabel) > 0
-}
+	WithHelpDisabled() CommandBuilder
 
-func (c command) GetUnmappedLabel() string {
-	return c.unmappedLabel
-}
+	IsHelpDisabled() bool
 
-func (c command) FindShortFlag(b byte) Flag {
-	for _, group := range c.flagGroups {
-		if flag := group.FindShortFlag(b); flag != nil {
-			return flag
-		}
-	}
+	//
 
-	return nil
-}
+	// WithFlagGroup appends the given FlagGroupBuilder to this CommandBuilder
+	// instance.
+	WithFlagGroup(group FlagGroupBuilder) CommandBuilder
 
-func (c command) FindLongFlag(name string) Flag {
-	for _, group := range c.flagGroups {
-		if flag := group.FindLongFlag(name); flag != nil {
-			return flag
-		}
-	}
+	WithFlagGroups(groups ...FlagGroupBuilder) CommandBuilder
 
-	return nil
-}
+	// WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
+	// instance attached to this CommandBuilder.
+	WithFlag(flag FlagBuilder) CommandBuilder
 
-func (c command) Arguments() []Argument {
-	return c.arguments
-}
+	WithFlags(flags ...FlagBuilder) CommandBuilder
 
-func (c command) HasArguments() bool {
-	return len(c.arguments) > 0
-}
+	//
 
-func (c *command) appendArgument(rawArgument string) error {
-	for _, arg := range c.arguments {
-		if !arg.WasHit() {
-			return arg.setValue(rawArgument)
-		}
-	}
+	// WithArgument appends the given ArgumentBuilder to this CommandBuilder's
+	// list of positional arguments.
+	WithArgument(arg ArgumentBuilder) CommandBuilder
 
-	c.unmapped = append(c.unmapped, rawArgument)
-	return nil
-}
+	WithArguments(args ...ArgumentBuilder) CommandBuilder
 
-func (c command) UnmappedInputs() []string {
-	return c.unmapped
-}
+	HasArguments() bool
 
-func (c command) HasUnmappedInputs() bool {
-	return len(c.unmapped) > 0
-}
+	Arguments() []ArgumentBuilder
 
-func (c *command) appendUnmapped(val string) {
-	c.unmapped = append(c.unmapped, val)
-}
+	//
 
-func (c command) PassthroughInputs() []string {
-	return c.passthrough
-}
+	// WithUnmappedLabel sets the help-text label for unmapped arguments.
+	//
+	// This is useful when your command takes an arbitrary number of argument
+	// inputs, and you would like the help text to indicate as such.
+	//
+	// Example Config:
+	//     cli.Command().
+	//         WithUnmappedLabel("[FILE...]")
+	//
+	// Example Result:
+	//     Usage:
+	//       my-command [FILE...]
+	WithUnmappedLabel(label string) CommandBuilder
 
-func (c command) HasPassthroughInputs() bool {
-	return len(c.passthrough) > 0
-}
+	HasUnmappedLabel() bool
 
-func (c *command) executeCallback() {
-	if c.callback != nil {
-		c.callback(c)
-	}
-}
+	UnmappedLabel() string
 
-func (c *command) appendPassthrough(val string) {
-	c.passthrough = append(c.passthrough, val)
-}
+	//
 
-func (c command) Warnings() []string {
-	return c.warnings.GetWarnings()
-}
+	// WithCallback sets a callback function that will be executed immediately
+	// after CLI parsing has completed successfully.
+	WithCallback(cb CommandCallback) CommandBuilder
 
-func (c command) AppendWarning(warning string) {
-	c.warnings.appendWarning(warning)
+	HasCallback() bool
+
+	Callback() CommandCallback
+
+	//
+
+	Build(ctx *WarningContext) (Command, error)
+
+	// Parse reads the given arguments and attempts to populate the built Command
+	// instance based on the values parsed from the given inputs.
+	Parse(args []string) (Command, error)
+
+	// MustParse is the same as Parse, however if an error is encountered while
+	// building the Command or parsing the input arguments, this method will
+	// panic.
+	MustParse(args []string) Command
 }

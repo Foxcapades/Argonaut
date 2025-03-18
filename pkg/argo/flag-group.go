@@ -33,52 +33,32 @@ type FlagGroup interface {
 	// long flag name.  If one could not be found, this method returns nil.
 	FindLongFlag(name string) Flag
 
-	size() int
+	Size() int
 }
 
-type flagGroup struct {
-	warnings *WarningContext
-	name     string
-	desc     string
-	flags    []Flag
-}
+// A FlagGroupBuilder is used to build a group or category of flags that go
+// together.  This is primarily used for rendering help text.
+//
+// FlagGroups are not required but allow for organizing the help text when there
+// are many flags attached to a command.
+type FlagGroupBuilder interface {
+	Name() string
 
-func (f flagGroup) Name() string {
-	return f.name
-}
+	// WithDescription sets a description value on this FlagGroupBuilder.
+	WithDescription(desc string) FlagGroupBuilder
 
-func (f flagGroup) Description() string {
-	return f.desc
-}
+	HasDescription() bool
 
-func (f flagGroup) HasDescription() bool {
-	return len(f.desc) > 0
-}
+	Description() string
 
-func (f flagGroup) Flags() []Flag {
-	return f.flags
-}
+	// WithFlag appends the given FlagBuilder instance to this FlagGroupBuilder.
+	WithFlag(flag FlagBuilder) FlagGroupBuilder
 
-func (f flagGroup) FindShortFlag(c byte) Flag {
-	for _, flag := range f.flags {
-		if flag.HasShortForm() && flag.ShortForm() == c {
-			return flag
-		}
-	}
+	HasFlags() bool
 
-	return nil
-}
+	Flags() []FlagBuilder
 
-func (f flagGroup) FindLongFlag(name string) Flag {
-	for _, flag := range f.flags {
-		if flag.HasLongForm() && flag.LongForm() == name {
-			return flag
-		}
-	}
+	Size() int
 
-	return nil
-}
-
-func (f flagGroup) size() int {
-	return len(f.flags)
+	Build(warnings *WarningContext) (FlagGroup, error)
 }

@@ -3,7 +3,7 @@ package argo_test
 import (
 	"fmt"
 
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func ExampleDelimitedSliceScanner_commaSeparatedValues() {
