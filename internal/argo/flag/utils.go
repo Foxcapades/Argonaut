@@ -21,7 +21,7 @@ type Queue struct {
 	distinct map[utils.Pair[byte, string]]argo.Flag
 }
 
-func (q *Queue) append(f argo.Flag) {
+func (q *Queue) Append(f argo.Flag) {
 	var key = utils.Pair[byte, string]{L: f.ShortForm(), R: f.LongForm()}
 	if _, ok := q.distinct[key]; !ok {
 		q.distinct[key] = f
@@ -53,7 +53,7 @@ func PrintFlagNames(flag argo.Flag) string {
 	return fmt.Sprintf("-%c", flag.ShortForm())
 }
 
-func uniqueFlagNames(groups []argo.FlagGroupBuilder, errs argo.MultiError) {
+func UniqueFlagNames(groups []argo.FlagGroupBuilder, errs argo.MultiError) {
 	longs := make(map[string]uint8, len(groups))
 	shorts := make(map[byte]uint8, len(groups))
 

@@ -8,7 +8,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func uniqueCommandNames(branches []argo.BranchBuilder, leaves []argo.LeafBuilder, errs argo.MultiError) {
+func uniqueCommandNames(branches []argo.BranchCommandBuilder, leaves []argo.LeafCommandBuilder, errs argo.MultiError) {
 	names := make(map[string]uint8, 32)
 	uniqueNames(names, branches, leaves, errs)
 }
@@ -24,7 +24,7 @@ func massUniqueCommandNames(groups []argo.CommandGroupBuilder, errs argo.MultiEr
 func defaultOnIncompleteHandler(parent argo.ParentNode) {
 	if tree, ok := parent.(argo.CommandTree); ok {
 		utils.Must(comTreeRenderer{}.RenderHelp(tree, os.Stderr))
-	} else if branch, ok := parent.(argo.Branch); ok {
+	} else if branch, ok := parent.(argo.BranchCommand); ok {
 		utils.Must(comBranchRenderer{}.RenderHelp(branch, os.Stderr))
 	} else {
 		panic("illegal state: unrecognized command parent implementation")
@@ -35,8 +35,8 @@ func defaultOnIncompleteHandler(parent argo.ParentNode) {
 
 func uniqueNames(
 	names map[string]uint8,
-	branches []argo.BranchBuilder,
-	leaves []argo.LeafBuilder,
+	branches []argo.BranchCommandBuilder,
+	leaves []argo.LeafCommandBuilder,
 	errs argo.MultiError,
 ) {
 	for _, branch := range branches {

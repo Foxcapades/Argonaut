@@ -5,8 +5,6 @@ package argo
 type ParentNode[T any] interface {
 	Node[T]
 
-	HasSubcommands() bool
-
 	// CommandGroups returns the CommandGroup instances attached to this
 	// ParentNode node.
 	CommandGroups(includeDefault bool) []CommandGroup
@@ -33,14 +31,26 @@ type ParentNode[T any] interface {
 type ParentBuilder[T any] interface {
 	NodeBuilder[T]
 
-	WithBranch(branch BranchBuilder) T
-	WithBranches(branches ...BranchBuilder) T
+	WithBranch(branch BranchCommandBuilder) T
+	WithBranches(branches ...BranchCommandBuilder) T
 
-	WithLeaf(leaf LeafBuilder) T
-	WithLeaves(leaves LeafBuilder) T
+	WithLeaf(leaf LeafCommandBuilder) T
+	WithLeaves(leaves ...LeafCommandBuilder) T
+
+	// WithCommandGroup appends the given command group builder to be built with
+	// this command tree.
+	//
+	// Command groups are used for organizing subcommands into named groups that
+	// are primarily used for rendering help text.
+	WithCommandGroup(group CommandGroupBuilder) T
+
+	WithCommandGroups(groups ...CommandGroupBuilder) T
+
+	HasCommandGroups() bool
+
+	CommandGroups() []CommandGroupBuilder
 
 	HasSubcommands() bool
-	Subcommands() []ChildBuilder[any]
 
 	WithIncompleteHandler(handler IncompleteCommandHandler[T]) T
 	HasIncompleteHandler() bool

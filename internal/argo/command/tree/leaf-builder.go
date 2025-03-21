@@ -8,167 +8,60 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/chars"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func NewLeafBuilder(name string) argo.LeafBuilder {
-	return &leafBuilder{
-		name:       name,
-		flagGroups: []argo.FlagGroupBuilder{nil},
-	}
+func NewLeafBuilder(name string) argo.LeafCommandBuilder {
+	return &leafBuilder{childBuilder: newChildBuilder[argo.LeafCommandBuilder](name)}
 }
 
 type leafBuilder struct {
-	parentNode  argo.Node
-	disableHelp bool
-	name        string
-	description string
-	umapLabel   string
-	aliases     []string
-	arguments   []argo.ArgumentBuilder
-	flagGroups  []argo.FlagGroupBuilder
-	callback    argo.CommandLeafCallback
-}
+	childBuilder[argo.LeafCommandBuilder]
 
-// PUBLIC API //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//
-
-func (l *leafBuilder) Name() string {
-	return l.name
+	umapLabel string
+	arguments []argo.ArgumentBuilder
 }
 
 //
 
-func (l *leafBuilder) WithDescription(desc string) argo.LeafBuilder {
-	l.description = desc
-	return l
-}
-
-func (l *leafBuilder) HasDescription() bool {
-	return len(l.description) > 0
-}
-
-func (l *leafBuilder) Description() string {
-	return l.description
-}
-
-//
-
-func (l *leafBuilder) WithAlias(alias string) argo.LeafBuilder {
-	l.aliases = append(l.aliases, alias)
-	return l
-}
-
-func (l *leafBuilder) WithAliases(aliases ...string) argo.LeafBuilder {
-	l.aliases = append(l.aliases, aliases...)
-	return l
-}
-
-func (l *leafBuilder) HasAliases() bool {
-	return len(l.aliases) > 0
-}
-
-func (l *leafBuilder) Aliases() []string {
-	return l.aliases
-}
-
-//
-
-func (l *leafBuilder) WithFlagGroup(flagGroup argo.FlagGroupBuilder) argo.LeafBuilder {
-	l.flagGroups = append(l.flagGroups, flagGroup)
-	return l
-}
-
-func (l *leafBuilder) WithFlagGroups(flagGroups ...argo.FlagGroupBuilder) argo.LeafBuilder {
-	l.flagGroups = append(l.flagGroups, flagGroups...)
-	return l
-}
-
-func (l *leafBuilder) HasFlagGroups(includeDefault bool) bool {
-	var min int
-
-	if includeDefault && l.hasDefaultFlagGroup() {
-		min = 0
-	} else {
-		min = 1
-	}
-
-	return len(l.flagGroups) > min
-}
-
-func (l *leafBuilder) FlagGroups(includeDefault bool) []argo.FlagGroupBuilder {
-	if includeDefault && l.hasDefaultFlagGroup() {
-		return append([]argo.FlagGroupBuilder(nil), l.flagGroups...)
-	}
-
-	return append([]argo.FlagGroupBuilder(nil), l.flagGroups[1:]...)
-}
-
-func (l *leafBuilder) hasDefaultFlagGroup() bool {
-	return l.flagGroups[0] != nil
-}
-
-func (l *leafBuilder) WithFlag(flag argo.FlagBuilder) argo.LeafBuilder {
-	l.flagGroups[0].WithFlag(flag)
-	return l
-}
-
-func (l *leafBuilder) WithFlags(flags ...argo.FlagBuilder) argo.LeafBuilder {
-	for _, flag := range flags {
-		l.flagGroups[0].WithFlag(flag)
-	}
-	return l
-}
-
-func (l *leafBuilder) HasFlags() bool {
-	for _, group := range l.flagGroups {
-		if group != nil && group.Size() > 0 {
-			return true
-		}
-	}
-
-	return false
-}
-
-//
-
-func (l *leafBuilder) WithArgument(argument argo.ArgumentBuilder) argo.LeafBuilder {
+func (l *leafBuilder) WithArgument(argument argo.ArgumentBuilder) argo.LeafCommandBuilder {
 	l.arguments = append(l.arguments, argument)
 	return l
 }
 
-func (l *leafBuilder) WithUnmappedLabel(label string) argo.LeafBuilder {
+func (l *leafBuilder) WithArguments(arguments ...argo.ArgumentBuilder) argo.LeafCommandBuilder {
+	l.arguments = append(l.arguments, arguments...)
+	return l
+}
+
+func (l *leafBuilder) HasArguments() bool {
+	return len(l.arguments) > 0
+}
+
+func (l *leafBuilder) Arguments() []argo.ArgumentBuilder {
+	return l.arguments
+}
+
+//
+
+func (l *leafBuilder) WithUnmappedInputLabel(label string) argo.LeafCommandBuilder {
 	l.umapLabel = label
 	return l
 }
 
-func (l *leafBuilder) WithCallback(cb argo.CommandLeafCallback) argo.LeafBuilder {
-	l.callback = cb
-	return l
+func (l *leafBuilder) HasUnmappedInputLabel() bool {
+	return len(l.umapLabel) > 0
 }
 
-func (l *leafBuilder) WithHelpDisabled() argo.LeafBuilder {
-	l.disableHelp = true
-	return l
+func (l *leafBuilder) UnmappedInputLabel() string {
+	return l.umapLabel
 }
 
-// INTERNALS ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
 
-func (l *leafBuilder) getName() string {
-	return l.name
-}
-
-func (l *leafBuilder) parent(node argo.Node) {
-	l.parentNode = node
-}
-
-func (l *leafBuilder) getAliases() []string {
-	return l.aliases
-}
-
-func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) {
-	errs := argo.NewMultiError()
+func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.LeafCommand, error) {
+	errs := xerr.NewMultiError()
 
 	// Ensure the group name is not blank
 	if err := chars.ValidateCommandNodeName(l.name); err != nil {
@@ -182,7 +75,7 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 		}
 	}
 
-	if l.parentNode == nil {
+	if l.parent == nil {
 		panic("illegal state: attempted to build a command leaf with no parent set")
 	}
 
@@ -191,14 +84,14 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 
 	forceRequiredUntil := 0
 	for i, builder := range l.arguments {
-		if builder.isRequired() {
+		if builder.IsRequired() {
 			forceRequiredUntil = i
 		}
 	}
 
 	leaf.args = make([]argo.Argument, 0, len(l.arguments))
 	for i, builder := range l.arguments {
-		if i < forceRequiredUntil && !builder.isRequired() {
+		if i < forceRequiredUntil && !builder.IsRequired() {
 			builder.Require()
 			ctx.AppendWarning(fmt.Sprintf("argument %d was not marked as required, but preceded required argument %d", i+1, forceRequiredUntil+1))
 		}
@@ -210,13 +103,13 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 	}
 
 	uniqueFlagNames(l.flagGroups, errs)
-	leaf.flags = make([]argo.FlagGroup, 0, len(l.flagGroups))
+	leaf.flagGroups = make([]argo.FlagGroup, 0, len(l.flagGroups))
 	for _, builder := range l.flagGroups {
 		if builder.HasFlags() {
 			if fg, err := builder.Build(ctx); err != nil {
 				errs.AppendError(err)
 			} else {
-				leaf.flags = append(leaf.flags, fg)
+				leaf.flagGroups = append(leaf.flagGroups, fg)
 			}
 		}
 	}
@@ -225,7 +118,7 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 		useShortH := true
 		useLongH := true
 
-		for _, group := range leaf.flags {
+		for _, group := range leaf.flagGroups {
 			for _, flag := range group.Flags() {
 				if flag.ShortForm() == 'h' {
 					useShortH = false
@@ -237,7 +130,7 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 		}
 
 		if useShortH || useLongH {
-			if len(leaf.flags) == 0 || leaf.flags[0].Name() != chars.DefaultGroupName || leaf.flags[0].size() > 5 {
+			if len(leaf.flagGroups) == 0 || leaf.flagGroups[0].Name() != chars.DefaultGroupName || leaf.flagGroups[0].Size() > 5 {
 				group, err := flag.NewGroupBuilder("Help Flags").
 					WithFlag(makeLeafHelp(useShortH, useLongH, leaf)).
 					Build(ctx)
@@ -245,7 +138,7 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 				if err != nil {
 					errs.AppendError(err)
 				} else {
-					leaf.flags = append(leaf.flags, group)
+					leaf.flagGroups = append(leaf.flagGroups, group)
 				}
 			} else {
 				flag, err := makeLeafHelp(useShortH, useLongH, leaf).Build(ctx)
@@ -253,7 +146,7 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 				if err != nil {
 					errs.AppendError(err)
 				} else {
-					group := leaf.flags[0].(*flagGroup) // FIXME: don't assume internal access!!!
+					group := leaf.flagGroups[0].(*flagGroup) // FIXME: don't assume internal access!!!
 					group.flags = append(group.flags, flag)
 				}
 			}
@@ -265,16 +158,16 @@ func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.CommandLeaf, error) 
 	}
 
 	leaf.name = l.name
-	leaf.desc = l.description
+	leaf.description = l.description
 	leaf.aliases = l.aliases
 	leaf.parent = l.parentNode
 	leaf.callback = l.callback
-	leaf.uLabel = l.umapLabel
+	leaf.unmappedLabel = l.umapLabel
 
 	return leaf, nil
 }
 
-func makeLeafHelp(short, long bool, leaf argo.CommandLeaf) argo.FlagBuilder {
+func makeLeafHelp(short, long bool, leaf argo.LeafCommand) argo.FlagBuilder {
 	builder := flag.NewBuilder().
 		MarkAsHelpFlag().
 		WithCallback(func(flag argo.Flag) {

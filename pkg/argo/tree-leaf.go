@@ -1,18 +1,11 @@
 package argo
 
-// CommandLeafCallback defines the function type for a callback function that
-// may be attached to a CommandLeaf.
-//
-// A CommandLeaf's callback function will be called once if and when a
-// CommandLeaf is used in a CLI call.
-type CommandLeafCallback = func(leaf CommandLeaf)
-
-// A CommandLeaf is the final node in a CommandTree branch.
+// A LeafCommand is the final node in a CommandTree branch.
 //
 // Command leaves may be children of either a CommandTree directly, or of a
-// Branch.
-type CommandLeaf interface {
-	ChildNode[CommandLeaf]
+// BranchCommand.
+type LeafCommand interface {
+	ChildNode[LeafCommand]
 
 	// Arguments returns the positional Argument instances attached to this
 	// Command.
@@ -56,12 +49,12 @@ type CommandLeaf interface {
 	HasUnmappedLabel() bool
 }
 
-// LeafBuilder defines a builder type that is used to construct
-// CommandLeaf instances.
-type LeafBuilder interface {
-	ChildBuilder[LeafBuilder]
+// LeafCommandBuilder defines a builder type that is used to construct
+// LeafCommand instances.
+type LeafCommandBuilder interface {
+	ChildBuilder[LeafCommandBuilder]
 
-	// WithUnmappedLabel provides a label for unmapped inputs.
+	// WithUnmappedInputLabel provides a label for unmapped inputs.
 	//
 	// The unmapped label value is used when rendering the command usage line of
 	// the auto-generated help text.  If a command expects an unknown number of
@@ -69,22 +62,26 @@ type LeafBuilder interface {
 	// with a label.
 	//
 	// Example configuration:
-	//     cli.CommandLeaf("my-leaf").
-	//         WithUnmappedLabel("ITEMS...")
+	//     cli.LeafCommand("my-leaf").
+	//         WithUnmappedInputLabel("ITEMS...")
 	//
 	// Example usage line:
 	//     Usage:
 	//       my-leaf [ITEMS...]
-	WithUnmappedLabel(label string) LeafBuilder
+	WithUnmappedInputLabel(label string) LeafCommandBuilder
 
-	// WithArgument adds a positional argument to the CommandLeaf being built.
-	WithArgument(argument ArgumentBuilder) LeafBuilder
+	HasUnmappedInputLabel() bool
 
-	WithArguments(arguments ...ArgumentBuilder) LeafBuilder
+	UnmappedInputLabel() string
+
+	// WithArgument adds a positional argument to the LeafCommand being built.
+	WithArgument(argument ArgumentBuilder) LeafCommandBuilder
+
+	WithArguments(arguments ...ArgumentBuilder) LeafCommandBuilder
 
 	HasArguments() bool
 
 	Arguments() []ArgumentBuilder
 
-	Build(warnings *WarningContext) (CommandLeaf, error)
+	Build(warnings *WarningContext) (LeafCommand, error)
 }

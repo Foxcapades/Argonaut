@@ -1,7 +1,7 @@
 package argo
 
-// Branch represents a subcommand under a CommandTree that is an
-// intermediate node between the tree root and an executable CommandLeaf.
+// BranchCommand represents a subcommand under a CommandTree that is an
+// intermediate node between the tree root and an executable LeafCommand.
 //
 // CommandBranches enable the organization of subcommands into categories.
 //
@@ -17,26 +17,24 @@ package argo
 //	 |   |- ls
 //	 |   |- ...
 //	 |- ...
-type Branch interface {
-	ParentNode[Branch]
-	ChildNode[Branch]
+type BranchCommand interface {
+	ParentNode[BranchCommand]
+	ChildNode[BranchCommand]
 }
 
-type CommandBranchCallback = func(branch Branch)
-
-// A BranchBuilder instance may be used to configure a new Branch
+// A BranchCommandBuilder instance may be used to configure a new BranchCommand
 // instance to be built.
 //
 // CommandBranches are intermediate steps between the root of the CommandTree
-// and the CommandLeaf instances.
+// and the LeafCommand instances.
 //
 // For example, given the following command example, the tree is "foo", the
 // branch is "bar", and the leaf is "fizz":
 //
 //	./foo bar fizz
-type BranchBuilder interface {
-	ChildBuilder[BranchBuilder]
-	ParentBuilder[BranchBuilder]
+type BranchCommandBuilder interface {
+	ChildBuilder[BranchCommandBuilder]
+	ParentBuilder[BranchCommandBuilder]
 
-	Build(warnings *WarningContext) (Branch, error)
+	Build(warnings *WarningContext) (BranchCommand, error)
 }

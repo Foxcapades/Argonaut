@@ -7,11 +7,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/emit"
+	"github.com/foxcapades/argonaut/v3/internal/parse"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
-	"github.com/foxcapades/argonaut/v3/internal_old/emit"
-	"github.com/foxcapades/argonaut/v3/internal_old/parse"
+	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -27,12 +30,12 @@ func newCommandTreeInterpreter(args []string, command argo.CommandTree) commandT
 
 type commandTreeInterpreter struct {
 	parser   parse.Parser
-	current  argo.Node
+	current  argo.Node[any]
 	boundary bool
 
 	tree     argo.CommandTree
-	branches []argo.Branch
-	leaf     argo.CommandLeaf
+	branches []argo.BranchCommand
+	leaf     argo.LeafCommand
 	queue    utils.Deque[parse.Element]
 
 	flagHits flag.Queue
@@ -46,75 +49,59 @@ func (c *commandTreeInterpreter) next() parse.Element {
 	return c.queue.Poll()
 }
 
-type leafCatch struct {
-	leaf argo.CommandLeaf
+func (c *commandTreeInterpreter) haveLeaf() bool {
+	return c.leaf != nil
 }
 
 func (c *commandTreeInterpreter) Run() error {
+	var argumentStream argument.Appender
+	var err error
+
 	unmapped := make([]string, 0, 10)
 
 FOR:
 	for {
 		element := c.next()
 
-		// If we've hit the boundary marker, then everything else becomes a
-		// passthrough element.
+		// If we've hit the boundary marker, then everything else becomes either an
+		// argument or an unmapped input.
 		if c.boundary {
-
 			if element.Type == parse.ElementTypeEnd {
 				break
 			}
 
-			passthroughs = append(passthroughs, element.String())
+			if ok, err := argumentStream.Append(element.String()); err != nil {
+				return err
+			} else if !ok {
+				unmapped = append(unmapped, element.String())
+			}
+
 			continue
 		}
 
 		switch element.Type {
 		case parse.ElementTypePlainText:
-			// If we've hit the leaf node, then the plain text becomes an argument on
-			// that node.  If we haven't yet hit the leaf node, then we must treat the
-			// plaintext value as the name of the next node in the tree.  If no such
-			// node exists, that is an error.
-			if node, ok := c.current.(argo.CommandLeaf); ok {
-				if err := appendArgument(node, element.String()); err != nil {
-					return err
-				}
-			} else if node, ok := c.current.(argo.ParentNode); ok {
-				// Lookup a child with the given input string
-				if child := node.FindChild(element.String()); child != nil {
-					c.current = child
-
-					if branch, ok := child.(argo.Branch); ok {
-						c.branches = append(c.branches, branch)
-					} else if leaf, ok := child.(argo.CommandLeaf); ok {
-						c.leaf = leaf
-					}
-				} else {
-					// If node child could be found matching the input string, then print
-					// out a help message about the invalid subcommand.
-					return c.invalidSubCommand(element.String())
-				}
-			} else {
-				panic("illegal state: command node was neither a leaf or a parent")
+			if unmapped, err = c.handlePlainText(element, argumentStream, unmapped); err != nil {
+				return err
 			}
 
 		case parse.ElementTypeLongFlagPair:
-			if err := c.interpretLongPair(&element, &unmapped); err != nil {
+			if err = c.interpretLongPair(&element, &unmapped); err != nil {
 				return err
 			}
 
 		case parse.ElementTypeLongFlagSolo:
-			if err := c.interpretLongSolo(&element, &unmapped); err != nil {
+			if err = c.interpretLongSolo(&element, &unmapped); err != nil {
 				return err
 			}
 
 		case parse.ElementTypeShortBlockSolo:
-			if err := c.interpretShortSolo(&element, &unmapped); err != nil {
+			if err = c.interpretShortSolo(&element, &unmapped); err != nil {
 				return err
 			}
 
 		case parse.ElementTypeShortBlockPair:
-			if err := c.interpretShortPair(&element, &unmapped); err != nil {
+			if err = c.interpretShortPair(&element, &unmapped); err != nil {
 				return err
 			}
 
@@ -129,53 +116,33 @@ FOR:
 		}
 	}
 
-	errs := argo.NewMultiError()
-	var onIncomplete func(parent argo.ParentNode)
+	errs := xerr.NewMultiError()
+	var onIncomplete argo.IncompleteCommandHandler[any]
 
-	// If the last reached node was NOT a command leaf.
-	if node, ok := c.current.(argo.CommandLeaf); !ok {
-		if parent, ok := c.current.(argo.ParentNode); ok {
+	// If the last reached node was a command leaf.
+	if c.haveLeaf() {
+		// append unrecognized flags
+		for _, value := range unmapped {
+			c.leaf.AppendUnmappedInput(value)
+		}
+
+		common.CheckRequiredArguments(c.leaf.Arguments, errs)
+	} else {
+		if parent, ok := c.current.(argo.ParentNode[any]); ok {
 			onIncomplete = parent.IncompleteHandler()
 		} else {
 			errs.AppendError(fmt.Errorf("command leaf was not reached"))
 		}
-	} else {
-		for _, value := range unmapped {
-			node.AppendUnmappedInput(value)
-		}
-
-		for _, value := range passthroughs {
-			node.appendPassthrough(value)
-		}
-
-		c.checkRequiredArgsWereHit(node.Arguments(), errs)
 	}
 
-	c.checkRequiredFlagsWereHit(c.current, errs)
+	common.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
 
-	// Hunt the help flag down first and execute its callback.  It is likely to
-	// exit the application so we don't want to run any other callbacks first.
-	helpFlagIndex := 0
-	for flag := range c.flagHits.Iterator() {
-		if flag.IsHelpFlag() {
-			flag.Callback()(flag)
-			break
-		}
+	c.checkRequiredFlagsWereHit(errs)
 
-		helpFlagIndex++
-	}
-
-	currentFlagIndex := 0
-	for flag := range c.flagHits.Iterator() {
-		if currentFlagIndex != helpFlagIndex {
-			flag.Callback()(flag)
-		}
-
-		currentFlagIndex++
-	}
+	common.ExecuteFlagCallbacks(c.flagHits.Iterator())
 
 	if onIncomplete != nil {
-		onIncomplete(c.current.(argo.ParentNode))
+		onIncomplete(c.current.(argo.ParentNode[any]))
 	}
 
 	if len(errs.Errors()) > 0 {
@@ -188,57 +155,66 @@ FOR:
 
 	for _, b := range c.branches {
 		if b.HasCallback() {
-			b.executeCallback()
+			b.Callback()(b)
 		}
 	}
 
-	if c.leaf.hasCallback() {
-		c.leaf.executeCallback()
+	if c.leaf.HasCallback() {
+		c.leaf.Callback()(c.leaf)
 	}
-
-	c.tree.selectCommand(c.leaf)
 
 	return nil
 }
 
-func (c *commandTreeInterpreter) checkRequiredArgsWereHit(args []cli_arg.Argument, errs cli_err.MultiError) {
-	for i, arg := range args {
-		if arg.IsRequired() {
-			if !arg.WasHit() {
-				if arg.HasName() {
-					errs.AppendError(fmt.Errorf("argument %d (<%s>) is required", i+1, arg.Name()))
-				} else {
-					errs.AppendError(fmt.Errorf("argument %d is required", i+1))
-				}
-			}
-		} else if !arg.WasHit() && arg.HasDefault() {
-			if err := arg.setToDefault(); err != nil {
-				errs.AppendError(err)
-			}
+func (c *commandTreeInterpreter) checkRequiredFlagsWereHit(errs argo.MultiError) {
+	var current argo.Node[any] = c.leaf
+
+	for {
+		common.CheckRequiredFlags(current.FlagGroups, errs)
+
+		if par, ok := current.(argo.ChildNode[any]); ok {
+			current = par
+		} else {
+			break
 		}
 	}
 }
 
-func (c *commandTreeInterpreter) checkRequiredFlagsWereHit(current argo.Node, errs MultiError) {
-	for current != nil {
-		for _, group := range current.FlagGroups() {
-			for _, f := range group.Flags() {
-				if f.IsRequired() {
-					if !f.WasHit() {
-						errs.AppendError(fmt.Errorf("required flag %s was not used", printFlagNames(f)))
-					} else if f.RequiresArgument() && !f.Argument().WasHit() {
-						errs.AppendError(fmt.Errorf("flag %s requires an argument", printFlagNames(f)))
-					}
-				} else if !f.WasHit() && f.HasArgument() && f.Argument().HasDefault() {
-					if err := f.Argument().setToDefault(); err != nil {
-						errs.AppendError(err)
-					}
-				}
+func (c *commandTreeInterpreter) handlePlainText(element parse.Element, arguments argument.Appender, unmapped []string) ([]string, error) {
+	// If we've hit the leaf node, then the plain text becomes an argument on
+	// that node.  If we haven't yet hit the leaf node, then we must treat the
+	// plaintext value as the name of the next node in the tree.  If no such
+	// node exists, that is an error.
+	if _, ok := c.current.(argo.LeafCommand); ok {
+		if ok, err := arguments.Append(element.String()); err != nil {
+			return unmapped, err
+		} else if !ok {
+			return append(unmapped, element.String()), nil
+		}
+
+		// argument value was accepted
+		return unmapped, nil
+	}
+
+	if node, ok := c.current.(argo.ParentNode[any]); ok {
+		// Lookup a child with the given input string
+		if child := node.FindChild(element.String()); child != nil {
+			c.current = child
+			node.SelectChild(element.String())
+
+			if branch, ok := child.(argo.BranchCommand); ok {
+				c.branches = append(c.branches, branch)
+			} else if leaf, ok := child.(argo.LeafCommand); ok {
+				c.leaf = leaf
 			}
 		}
 
-		current = current.Parent()
+		// If node child could be found matching the input string, then print
+		// out a help message about the invalid subcommand.
+		return unmapped, c.invalidSubCommand(element.String())
 	}
+
+	panic("illegal state: command node was neither a leaf or a parent")
 }
 
 func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unmapped *[]string) error {
@@ -249,6 +225,7 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 		h := i+1 < len(element.Data[0])
 		// short flag byte
 		b := remainder[0]
+		remainder = remainder[1:]
 
 		// Look up the flag in the short flag map
 		f := c.current.FindShortFlag(b)
@@ -256,18 +233,24 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
-			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
-			*unmapped = append(*unmapped, chars.StrDash+remainder[0:1])
-			remainder = remainder[1:]
+			// c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
+			*unmapped = append(*unmapped, chars.StrDash+string(b))
 			continue
 		}
 
-		c.flagHits.append(f)
+		f.IncrementHitCount()
+		c.flagHits.Append(f)
+
+		if !f.HasArgument() {
+			continue
+		}
+
+		arg := f.Argument()
 
 		// If the flag we found requires an argument, eat the rest of the block and
 		// pass it to the flag.Hit method.  Since the block will have been consumed
 		// after this, return here.
-		if f.RequiresArgument() {
+		if arg.IsRequired() {
 
 			// If we don't have any more characters in this short block, then we have
 			// to consume the next element as the argument for this flag.
@@ -277,158 +260,110 @@ func (c *commandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 				// If the next element is literally the end of the cli args, then we
 				// obviously can't set an argument on this flag.  Tough luck, dude.
 				if nextElement.Type == parse.ElementTypeEnd {
-					if hasBooleanArgument(f) {
-						return f.hitWithArg("true")
+					if f.HasArgument() && argument.IsBoolean(arg) {
+						return arg.SetValue("true")
 					}
-					return f.hit()
+
+					return nil
 				}
 
 				if nextElement.Type == parse.ElementTypeBoundary {
 					c.boundary = true
-					if hasBooleanArgument(f) {
-						return f.hitWithArg("true")
+
+					if f.HasArgument() && argument.IsBoolean(arg) {
+						return arg.SetValue("true")
 					}
-					return f.hit()
+
+					return nil
 				}
 
 				// If we're here then we have a next element, and we're going to try and
 				// sacrifice it to the flag gods.
-				return f.hitWithArg(nextElement.String())
+				return arg.SetValue(nextElement.String())
 			}
 
-			if hasBooleanArgument(f) {
-				possibleNextFlag := c.current.FindShortFlag(remainder[1])
+			if argument.IsBoolean(arg) {
+				possibleNextFlag := c.current.FindShortFlag(remainder[0])
+
 				if possibleNextFlag != nil {
-					if err := f.hitWithArg("true"); err != nil {
+					if err := arg.SetValue("true"); err != nil {
 						return err
 					}
-					remainder = remainder[1:]
+
 					continue
 				}
 			}
 
 			// So we have at least one more character in this block.  Eat that and
 			// anything else as the flag argument.
-			return f.hitWithArg(remainder[1:])
+			return arg.SetValue(remainder)
 		}
 
-		// If the flag doesn't _require_ an argument, but may take an optional
-		// one...
-		if f.HasArgument() {
+		// If we have a next character in the block...
+		if h {
 
-			// If we have a next character in the block...
-			if h {
+			// grab the next character
+			n := remainder[0]
 
-				// grab the next character
-				n := remainder[1]
-
-				// test if the next character is a flag itself.  If it is, then we
-				// prioritize the flag over an optional argument.
-				if t := c.current.FindShortFlag(n); t != nil {
-
-					// hit the current flag with an empty value
-					if err := f.hit(); err != nil {
+			// test if the next character is a flag itself.  If it is, then we
+			// prioritize the flag over an optional argument.
+			if t := c.current.FindShortFlag(n); t != nil {
+				if argument.IsBoolean(arg) {
+					if err := arg.SetValue("true"); err != nil {
 						return err
 					}
-
-					// skip on to the next flag
-					remainder = remainder[1:]
-					continue
-				} else
-
-				// Since there is no flag matching the next character, then we have to
-				// assume that the remaining text is the argument for the flag
-				{
-					return f.hitWithArg(remainder[1:])
 				}
-			} else {
 
-				nextElement := c.next()
-
-				switch nextElement.Type {
-
-				case parse.ElementTypeEnd:
-					if hasBooleanArgument(f) {
-						return f.hitWithArg("true")
-					}
-					return f.hit()
-
-				case parse.ElementTypeBoundary:
-					if hasBooleanArgument(f) {
-						return f.hitWithArg("true")
-					}
-					c.boundary = true
-					return f.hit()
-
-				case parse.ElementTypePlainText:
-					if err := f.hitWithArg(nextElement.String()); err != nil {
-						c.queue.Offer(nextElement)
-					}
-
-					return f.hit()
-
-				case parse.ElementTypeShortBlockSolo:
-					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
-						c.queue.Offer(nextElement)
-						return f.hit()
-					} else {
-						if err := f.hitWithArg(nextElement.String()); err != nil {
-							c.queue.Offer(nextElement)
-						}
-
-						return f.hit()
-					}
-
-				case parse.ElementTypeShortBlockPair:
-					if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
-						c.queue.Offer(nextElement)
-						return f.hit()
-					} else {
-						if err := f.hitWithArg(nextElement.String()); err != nil {
-							c.queue.Offer(nextElement)
-						}
-
-						return f.hit()
-					}
-
-				case parse.ElementTypeLongFlagPair:
-					if c.current.FindLongFlag(nextElement.Data[0]) != nil {
-						c.queue.Offer(nextElement)
-						return f.hit()
-					} else {
-						if err := f.hitWithArg(nextElement.String()); err != nil {
-							c.queue.Offer(nextElement)
-						}
-
-						return f.hit()
-					}
-
-				case parse.ElementTypeLongFlagSolo:
-					if c.current.FindLongFlag(nextElement.Data[0]) != nil {
-						c.queue.Offer(nextElement)
-						return f.hit()
-					} else {
-						if err := f.hitWithArg(nextElement.String()); err != nil {
-							c.queue.Offer(nextElement)
-						}
-
-						return f.hit()
-					}
-
-				default:
-					panic("illegal state: unrecognized parser element type")
-
-				}
+				// skip on to the next flag
+				continue
 			}
+
+			// Since there is no flag matching the next character, then we have to
+			// assume that the remaining text is the argument for the flag
+			return arg.SetValue(remainder)
 		}
 
-		// The flag doesn't expect an argument, just hit it
-		if err := f.hit(); err != nil {
-			return err
+		nextElement := c.next()
+
+		switch nextElement.Type {
+
+		case parse.ElementTypeEnd:
+			if argument.IsBoolean(arg) {
+				return arg.SetValue("true")
+			}
+
+		case parse.ElementTypeBoundary:
+			c.boundary = true
+			if argument.IsBoolean(arg) {
+				return arg.SetValue("true")
+			}
+
+		case parse.ElementTypePlainText:
+			// Try and give the argument the next value, if the argument doesn't like
+			// it then put it back on the queue for the next parse iteration.
+			if err := arg.SetValue(nextElement.String()); err != nil {
+				c.queue.Offer(nextElement)
+			}
+
+		case parse.ElementTypeShortBlockSolo, parse.ElementTypeShortBlockPair:
+			if c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
+				c.queue.Offer(nextElement)
+			} else if err := arg.SetValue(nextElement.String()); err != nil {
+				c.queue.Offer(nextElement)
+			}
+
+		case parse.ElementTypeLongFlagPair, parse.ElementTypeLongFlagSolo:
+			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
+				c.queue.Offer(nextElement)
+			} else if err := arg.SetValue(nextElement.String()); err != nil {
+				c.queue.Offer(nextElement)
+			}
+
+		default:
+			panic("illegal state: unrecognized parser element type")
 		}
 
-		// if has next
-		remainder = remainder[1:]
+		break
 	}
 
 	return nil
@@ -441,7 +376,7 @@ func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 	block := element.Data[0]
 
 	if len(block) == 0 {
-		c.tree.AppendWarning("blank short flag name")
+		// c.tree.AppendWarning("blank short flag name")
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -450,8 +385,15 @@ func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 	// in a simple check.
 	if len(block) == 1 {
 		if f := c.current.FindShortFlag(block[0]); f != nil {
-			c.flagHits.append(f)
-			return f.hitWithArg(element.Data[1])
+			c.flagHits.Append(f)
+			f.IncrementHitCount()
+			if f.HasArgument() {
+				return f.Argument().SetValue(element.Data[1])
+			}
+
+			// TODO: warn or error for flag given an argument when it doesn't expect
+			//       one.
+			return nil
 		} else {
 			*unmapped = append(*unmapped, element.String())
 			return nil
@@ -460,65 +402,57 @@ func (c *commandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 
 	for i := 0; i < len(element.Data[0]); i++ {
 		// has next character
-		h := i+1 < len(element.Data[0])
+		hasNextChar := i+1 < len(element.Data[0])
 		// current character
 		b := block[0]
 
 		f := c.current.FindShortFlag(b)
 
 		if f == nil {
-			c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
+			// c.tree.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
 			*unmapped = append(*unmapped, chars.StrDash+block[0:1])
 			block = block[1:]
 			continue
 		}
 
-		c.flagHits.append(f)
+		c.flagHits.Append(f)
+		f.IncrementHitCount()
 
-		if f.RequiresArgument() {
-			if h {
-				return f.hitWithArg(block[1:] + "=" + element.Data[1])
+		if f.HasArgument() && f.Argument().IsRequired() {
+			if hasNextChar {
+				return f.Argument().SetValue(block[1:] + "=" + element.Data[1])
 			} else {
-				return f.hitWithArg(element.Data[1])
+				return f.Argument().SetValue(element.Data[1])
 			}
 		}
 
 		// If the current flag has, but does not require an argument...
 		if f.HasArgument() {
 			// and there is no next character in the flag name block...
-			if !h {
+			if !hasNextChar {
 				// Hit the current flag with the argument value and exit.
-				return f.hitWithArg(element.Data[1])
+				return f.Argument().SetValue(element.Data[1])
 			}
 
 			// If there _is_ a next character, and it happens to be a valid short
 			// flag itself, then hit the current flag and move on to the next
 			// character in the block.
 			if c.current.FindShortFlag(block[1]) != nil {
-				if err := f.hit(); err != nil {
-					return err
-				}
 				block = block[1:]
 				continue
 			}
 
 			// If the next character in the block does not match any known short flag,
 			// assume that the whole remaining value is part of the value.
-			return f.hitWithArg(block[1:] + "=" + element.Data[1])
+			return f.Argument().SetValue(block[1:] + "=" + element.Data[1])
 		}
 
 		// So the flag doesn't expect an argument at all.
 		// Well let's see what we have to say about that.  It may be, if this is the
 		// last character in the block, that it has to have one anyway.
-		if !h {
-			c.tree.AppendWarning(fmt.Sprintf("flag -%c received an argument it didn't expect", b))
-			return f.hitWithArg(element.Data[1])
-		}
-
-		// Well, now that's out of the way, we can move on to the next flag (after
-		// we mark this one as hit of course).
-		if err := f.hit(); err != nil {
-			return err
+		if !hasNextChar {
+			// TODO: c.tree.AppendWarning(fmt.Sprintf("flag -%c received an argument it didn't expect", b))
+			return f.Argument().SetValue(element.Data[1])
 		}
 
 		block = block[1:]
@@ -531,118 +465,87 @@ func (c *commandTreeInterpreter) interpretLongSolo(element *parse.Element, unmap
 	f := c.current.FindLongFlag(element.Data[0])
 
 	if f == nil {
-		c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
+		// TODO: c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
 
-	c.flagHits.append(f)
+	c.flagHits.Append(f)
+	f.IncrementHitCount()
 
-	if f.RequiresArgument() {
+	if !f.HasArgument() {
+		return nil
+	}
+
+	arg := f.Argument()
+
+	if arg.IsRequired() {
 		nextElement := c.next()
 
 		if nextElement.Type == parse.ElementTypeEnd {
-			return f.hit()
+			return nil
 		}
 
 		if nextElement.Type == parse.ElementTypeBoundary {
 			c.boundary = true
-			return f.hit()
+			return nil
 		}
 
-		return f.hitWithArg(nextElement.String())
+		return arg.SetValue(nextElement.String())
 	}
 
-	if f.HasArgument() {
-		nextElement := c.next()
+	nextElement := c.next()
 
-		switch nextElement.Type {
+	switch nextElement.Type {
 
-		case parse.ElementTypeEnd:
-			return f.hit()
+	case parse.ElementTypeEnd:
+		// do nothing
 
-		case parse.ElementTypeBoundary:
-			c.boundary = true
-			return f.hit()
+	case parse.ElementTypeBoundary:
+		c.boundary = true
 
-		case parse.ElementTypePlainText:
-			if err := f.hitWithArg(nextElement.String()); err != nil {
-				c.queue.Offer(nextElement)
-			}
-
-			return f.hit()
-
-		case parse.ElementTypeLongFlagSolo:
-			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
-				c.queue.Offer(nextElement)
-				return f.hit()
-			} else {
-				if err := f.hitWithArg(nextElement.String()); err != nil {
-					c.queue.Offer(nextElement)
-				}
-
-				return f.hit()
-			}
-
-		case parse.ElementTypeLongFlagPair:
-			if c.current.FindLongFlag(nextElement.Data[0]) != nil {
-				c.queue.Offer(nextElement)
-				return f.hit()
-			} else {
-				if err := f.hitWithArg(nextElement.String()); err != nil {
-					c.queue.Offer(nextElement)
-				}
-
-				return f.hit()
-			}
-
-		case parse.ElementTypeShortBlockSolo:
-			if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
-				c.queue.Offer(nextElement)
-				return f.hit()
-			} else {
-				if err := f.hitWithArg(nextElement.String()); err != nil {
-					c.queue.Offer(nextElement)
-				}
-
-				return f.hit()
-			}
-
-		case parse.ElementTypeShortBlockPair:
-			if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
-				c.queue.Offer(nextElement)
-				return f.hit()
-			} else {
-				if err := f.hitWithArg(nextElement.String()); err != nil {
-					c.queue.Offer(nextElement)
-				}
-
-				return f.hit()
-			}
-
-		default:
-			panic("illegal state: unrecognized parser element type")
+	case parse.ElementTypePlainText:
+		if err := arg.SetValue(nextElement.String()); err != nil {
+			c.queue.Offer(nextElement)
 		}
+
+	case parse.ElementTypeLongFlagSolo, parse.ElementTypeLongFlagPair:
+		if c.current.FindLongFlag(nextElement.Data[0]) != nil {
+			c.queue.Offer(nextElement)
+		} else if err := arg.SetValue(nextElement.String()); err != nil {
+			c.queue.Offer(nextElement)
+		}
+
+	case parse.ElementTypeShortBlockSolo, parse.ElementTypeShortBlockPair:
+		if len(nextElement.Data[0]) > 0 && c.current.FindShortFlag(nextElement.Data[0][0]) != nil {
+			c.queue.Offer(nextElement)
+		} else if err := arg.SetValue(nextElement.String()); err != nil {
+			c.queue.Offer(nextElement)
+		}
+
+	default:
+		panic("illegal state: unrecognized parser element type")
 	}
 
-	return f.hit()
+	return nil
 }
 
 func (c *commandTreeInterpreter) interpretLongPair(element *parse.Element, unmapped *[]string) error {
-	flag := c.current.FindLongFlag(element.Data[0])
+	targetFlag := c.current.FindLongFlag(element.Data[0])
 
-	if flag == nil {
-		c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
+	if targetFlag == nil {
+		// TODO: c.tree.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", element.Data[0]))
 		*unmapped = append(*unmapped, element.String())
-	} else {
-		c.flagHits.append(flag)
+		return nil
+	}
 
-		if flag.HasArgument() {
-			return flag.hitWithArg(element.Data[1])
-		} else {
-			c.tree.AppendWarning(fmt.Sprintf("flag --%s received an argument it didn't expect", element.Data[0]))
-			return flag.hit()
-		}
+	c.flagHits.Append(targetFlag)
+	targetFlag.IncrementHitCount()
+
+	if targetFlag.HasArgument() {
+		return targetFlag.Argument().SetValue(element.Data[1])
+	} else {
+		// TODO: c.tree.AppendWarning(fmt.Sprintf("flag --%s received an argument it didn't expect", element.Data[0]))
 	}
 
 	return nil
@@ -656,8 +559,8 @@ func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
 
 	matches := make([]pair, 0, 8)
 
-	if parent, ok := c.current.(argo.ParentNode); ok {
-		for _, group := range parent.CommandGroups() {
+	if parent, ok := c.current.(argo.ParentNode[any]); ok {
+		for _, group := range parent.CommandGroups(true) {
 			for _, child := range group.Branches() {
 				if idx := strings.Index(child.Name(), input); idx > -1 {
 					matches = append(matches, pair{idx, child.Name()})
@@ -730,16 +633,4 @@ func (c *commandTreeInterpreter) invalidSubCommand(input string) error {
 
 	//goland:noinspection GoUnreachableCode
 	return fmt.Errorf(msg.String())
-}
-
-func appendArgument(leaf argo.CommandLeaf, value string) error {
-	for _, arg := range leaf.Arguments() {
-		if !arg.WasHit() {
-			return arg.SetValue(value)
-		}
-	}
-
-	leaf.AppendUnmappedInput(value)
-
-	return nil
 }

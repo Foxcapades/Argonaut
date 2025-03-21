@@ -3,7 +3,7 @@ package argo
 import "reflect"
 
 // Argument represents a positional or flag argument that may be attached
-// directly to a Command or CommandLeaf, or may be attached to a Flag.
+// directly to a Command or LeafCommand, or may be attached to a Flag.
 type Argument interface {
 
 	// HasName tests whether this Argument has a custom name assigned.
@@ -86,7 +86,7 @@ type Argument interface {
 //
 
 // An ArgumentBuilder instance is used to construct a CLI argument that may be
-// attached to a Flag or CommandLeaf.
+// attached to a Flag or LeafCommand.
 type ArgumentBuilder interface {
 
 	// WithName sets the name for this argument.
@@ -258,12 +258,6 @@ type ArgumentBuilder interface {
 	HasValidators() bool
 
 	Validators() (pre []any, post []any)
-
-	// Build attempts to build an Argument instance out of the configuration given
-	// to this ArgumentBuilder instance.
-	//
-	// This function shouldn't need to be called in normal use of this library.
-	Build(ctx *WarningContext) (Argument, error)
 }
 
 type BindingType uint8

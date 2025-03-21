@@ -56,22 +56,22 @@ func Tree() argo.CommandTreeBuilder {
 	return tree.NewBuilder()
 }
 
-// Branch returns a new BranchBuilder instance which can be used to
+// Branch returns a new BranchCommandBuilder instance which can be used to
 // construct an Branch instance.
-func Branch(name string) argo.BranchBuilder {
+func Branch(name string) argo.BranchCommandBuilder {
 	return tree.NewBranchBuilder(name)
 }
 
-// Leaf returns a new LeafBuilder instance which can be used to construct
-// an CommandLeaf instance.
-func Leaf(name string) argo.LeafBuilder {
+// Leaf returns a new LeafCommandBuilder instance which can be used to construct
+// a LeafCommand instance.
+func Leaf(name string) argo.LeafCommandBuilder {
 	return tree.NewLeafBuilder(name)
 }
 
 // CommandGroup returns a new CommandGroupBuilder in stance which can be used to
 // construct a CommandGroup instance.
 func CommandGroup(name string) argo.CommandGroupBuilder {
-	return tree.NewCommandGroupBuilder(name)
+	return tree.NewGroupBuilder(name)
 }
 
 // FlagGroup returns a new FlagGroupBuilder instance which can be used to
@@ -120,4 +120,8 @@ func ComboFlag(short byte, long string) argo.FlagBuilder {
 // construct an Argument instance.
 func Argument() argo.ArgumentBuilder {
 	return argument.NewBuilder()
+}
+
+func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
+	return command.Build(builder)
 }

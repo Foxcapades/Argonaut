@@ -173,7 +173,7 @@ func ExampleCommand_complex() {
 func ExampleTree() {
 	cli.Tree().
 		WithLeaf(cli.Leaf("foo").
-			WithCallback(func(leaf argo.CommandLeaf) {
+			WithCallback(func(leaf argo.LeafCommand) {
 				fmt.Println(leaf.PassthroughInputs())
 			})).
 		MustParse([]string{"command", "foo", "--", "bar"})
@@ -184,11 +184,11 @@ func ExampleTree() {
 func ExampleBranch() {
 	cli.Tree().
 		WithBranch(cli.Branch("foo").
-			WithCallback(func(branch argo.Branch) {
+			WithCallback(func(branch argo.BranchCommand) {
 				fmt.Print("hello from ")
 			}).
 			WithLeaf(cli.Leaf("bar").
-				WithCallback(func(leaf argo.CommandLeaf) {
+				WithCallback(func(leaf argo.LeafCommand) {
 					fmt.Println("a branch!")
 				}))).
 		MustParse([]string{"command", "foo", "bar"})

@@ -255,7 +255,7 @@ func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
 // Conflicting branch and leaf names in a single command group
 func TestCommandTreeBuilder_Build01(t *testing.T) {
 	_, err := argo.Tree().
-		WithBranch(argo.Branch("something").WithLeaf(argo.Leaf("something-else"))).
+		WithBranch(argo.BranchCommand("something").WithLeaf(argo.Leaf("something-else"))).
 		WithLeaf(argo.Leaf("something")).
 		Build(nil)
 
@@ -268,7 +268,7 @@ func TestCommandTreeBuilder_Build01(t *testing.T) {
 func TestCommandTreeBuilder_Build02(t *testing.T) {
 	_, err := argo.Tree().
 		WithCommandGroup(argo.CommandGroup("foo").
-			WithBranch(argo.Branch("something").WithLeaf(argo.Leaf("something-else")))).
+			WithBranch(argo.BranchCommand("something").WithLeaf(argo.Leaf("something-else")))).
 		WithCommandGroup(argo.CommandGroup("bar").
 			WithLeaf(argo.Leaf("something"))).
 		Build(nil)

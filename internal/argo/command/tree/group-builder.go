@@ -7,7 +7,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func NewCommandGroupBuilder(name string) argo.CommandGroupBuilder {
+func NewGroupBuilder(name string) argo.CommandGroupBuilder {
 	return &commandGroupBuilder{name: name}
 }
 
@@ -15,8 +15,8 @@ type commandGroupBuilder struct {
 	name        string
 	description string
 	parentNode  argo.ParentNode
-	branches    []argo.BranchBuilder
-	leaves      []argo.LeafBuilder
+	branches    []argo.BranchCommandBuilder
+	leaves      []argo.LeafCommandBuilder
 }
 
 func (g *commandGroupBuilder) parent(node argo.ParentNode) {
@@ -28,21 +28,21 @@ func (g *commandGroupBuilder) WithDescription(description string) argo.CommandGr
 	return g
 }
 
-func (g *commandGroupBuilder) WithBranch(branch argo.BranchBuilder) argo.CommandGroupBuilder {
+func (g *commandGroupBuilder) WithBranch(branch argo.BranchCommandBuilder) argo.CommandGroupBuilder {
 	g.branches = append(g.branches, branch)
 	return g
 }
 
-func (g *commandGroupBuilder) getBranches() []argo.BranchBuilder {
+func (g *commandGroupBuilder) getBranches() []argo.BranchCommandBuilder {
 	return g.branches
 }
 
-func (g *commandGroupBuilder) WithLeaf(leaf argo.LeafBuilder) argo.CommandGroupBuilder {
+func (g *commandGroupBuilder) WithLeaf(leaf argo.LeafCommandBuilder) argo.CommandGroupBuilder {
 	g.leaves = append(g.leaves, leaf)
 	return g
 }
 
-func (g *commandGroupBuilder) getLeaves() []argo.LeafBuilder {
+func (g *commandGroupBuilder) getLeaves() []argo.LeafCommandBuilder {
 	return g.leaves
 }
 
@@ -67,7 +67,7 @@ func (g *commandGroupBuilder) Build(ctx *argo.WarningContext) (argo.CommandGroup
 	// Ensure the command names and aliases are unique across the group.
 	uniqueCommandNames(g.branches, g.leaves, errs)
 
-	branches := make([]argo.Branch, 0, len(g.branches))
+	branches := make([]argo.BranchCommand, 0, len(g.branches))
 	for _, builder := range g.branches {
 		builder.ParentNode(g.parentNode)
 		if branch, err := builder.Build(ctx); err != nil {
@@ -77,7 +77,7 @@ func (g *commandGroupBuilder) Build(ctx *argo.WarningContext) (argo.CommandGroup
 		}
 	}
 
-	leaves := make([]argo.CommandLeaf, 0, len(g.leaves))
+	leaves := make([]argo.LeafCommand, 0, len(g.leaves))
 	for _, builder := range g.leaves {
 		builder.ParentNode(g.parentNode)
 		if leaf, err := builder.Build(ctx); err != nil {

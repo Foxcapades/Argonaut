@@ -10,11 +10,11 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func NewBranchBuilder(name string) argo.BranchBuilder {
+func NewBranchBuilder(name string) argo.BranchCommandBuilder {
 	return &commandBranchBuilder{
 		name:       name,
 		flagGroups: []argo.FlagGroupBuilder{flag.NewGroupBuilder(chars.DefaultGroupName)},
-		comGroups:  []argo.CommandGroupBuilder{NewCommandGroupBuilder(chars.DefaultGroupName)},
+		comGroups:  []argo.CommandGroupBuilder{NewGroupBuilder(chars.DefaultGroupName)},
 	}
 }
 
@@ -39,7 +39,7 @@ func (c *commandBranchBuilder) parent(node argo.ParentNode) {
 	c.parentNode = node
 }
 
-func (c *commandBranchBuilder) WithAliases(aliases ...string) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithAliases(aliases ...string) argo.BranchCommandBuilder {
 	c.aliases = aliases
 	return c
 }
@@ -48,52 +48,52 @@ func (c *commandBranchBuilder) Aliases() []string {
 	return c.aliases
 }
 
-func (c *commandBranchBuilder) WithDescription(desc string) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithDescription(desc string) argo.BranchCommandBuilder {
 	c.desc = desc
 	return c
 }
 
-func (c *commandBranchBuilder) WithCallback(cb argo.CommandBranchCallback) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithCallback(cb argo.CommandBranchCallback) argo.BranchCommandBuilder {
 	c.callback = cb
 	return c
 }
 
-func (c *commandBranchBuilder) WithHelpDisabled() argo.BranchBuilder {
+func (c *commandBranchBuilder) WithHelpDisabled() argo.BranchCommandBuilder {
 	c.helpDisabled = true
 	return c
 }
 
-func (c *commandBranchBuilder) WithCommandGroup(group argo.CommandGroupBuilder) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithCommandGroup(group argo.CommandGroupBuilder) argo.BranchCommandBuilder {
 	c.comGroups = append(c.comGroups, group)
 	return c
 }
 
-func (c *commandBranchBuilder) WithBranch(branch argo.BranchBuilder) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithBranch(branch argo.BranchCommandBuilder) argo.BranchCommandBuilder {
 	c.comGroups[0].WithBranch(branch)
 	return c
 }
 
-func (c *commandBranchBuilder) WithLeaf(leaf argo.LeafBuilder) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithLeaf(leaf argo.LeafCommandBuilder) argo.BranchCommandBuilder {
 	c.comGroups[0].WithLeaf(leaf)
 	return c
 }
 
-func (c *commandBranchBuilder) WithFlag(flag argo.FlagBuilder) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithFlag(flag argo.FlagBuilder) argo.BranchCommandBuilder {
 	c.flagGroups[0].WithFlag(flag)
 	return c
 }
 
-func (c *commandBranchBuilder) WithFlagGroup(flagGroup argo.FlagGroupBuilder) argo.BranchBuilder {
+func (c *commandBranchBuilder) WithFlagGroup(flagGroup argo.FlagGroupBuilder) argo.BranchCommandBuilder {
 	c.flagGroups = append(c.flagGroups, flagGroup)
 	return c
 }
 
-func (c *commandBranchBuilder) OnIncomplete(handler argo.IncompleteCommandHandler) argo.BranchBuilder {
+func (c *commandBranchBuilder) OnIncomplete(handler argo.IncompleteCommandHandler) argo.BranchCommandBuilder {
 	c.onIncompleteHandler = handler
 	return c
 }
 
-func (c *commandBranchBuilder) Build(ctx *cli_err.WarningContext) (argo.Branch, error) {
+func (c *commandBranchBuilder) Build(ctx *cli_err.WarningContext) (argo.BranchCommand, error) {
 	errs := argo.NewMultiError()
 
 	// Ensure name is not blank

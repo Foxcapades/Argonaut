@@ -100,17 +100,11 @@ func (f *flag) IsHelpFlag() bool {
 
 //
 
-func (f *flag) AppendWarning(warning string) {
-	f.warnings.AppendWarning(warning)
-}
-
-//
-
 func (f *flag) String() string {
 	return PrintFlagNames(f)
 }
 
-func (f *flag) hit() error {
+func (f *flag) IncrementHitCount() {
 	f.hits++
 	if f.HasArgument() && f.arg.IsRequired() {
 		return fmt.Errorf("flag %s requires an input", PrintFlagNames(f))

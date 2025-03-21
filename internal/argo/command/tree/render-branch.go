@@ -1,16 +1,18 @@
-package render
+package tree
 
 import (
 	"bufio"
 	"io"
 	"slices"
 
-	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 // CommandBranchHelpRenderer returns a HelpRenderer instance that is suited to
 // rendering help text for CommandBranch instances.
-func CommandBranchHelpRenderer() HelpRenderer[CommandBranch] {
+func CommandBranchHelpRenderer() render.HelpRenderer[argo.BranchCommand] {
 	return comBranchRenderer{}
 }
 

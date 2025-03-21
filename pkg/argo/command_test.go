@@ -49,7 +49,7 @@ func TestCommandBuilder_WithArgument(t *testing.T) {
 func TestCommandBuilder_WithUnmappedLabel(t *testing.T) {
 	var foo []string
 	cli.Command().
-		WithUnmappedLabel("DUCKS...").
+		WithUnmappedInputLabel("DUCKS...").
 		WithFlag(cli.Flag().WithLongForm("value").WithBinding(&foo, true)).
 		MustParse([]string{
 			"hello",

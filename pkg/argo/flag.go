@@ -42,8 +42,7 @@ type Flag interface {
 	// call.
 	HitCount() int
 
-	// TODO: remove me?
-	AppendWarning(warning string)
+	IncrementHitCount()
 
 	IsHelpFlag() bool
 

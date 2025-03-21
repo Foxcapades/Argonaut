@@ -20,20 +20,20 @@ type CommandGroup interface {
 	// empty string.
 	Description() string
 
-	// Branches returns the Branch nodes attached to this CommandGroup.
-	Branches() []Branch
+	// Branches returns the BranchCommand nodes attached to this CommandGroup.
+	Branches() []BranchCommand
 
 	// HasBranches indicates whether this CommandGroup contains any branch nodes.
 	HasBranches() bool
 
-	// Leaves returns the CommandLeaf nodes attached to this CommandGroup.
-	Leaves() []CommandLeaf
+	// Leaves returns the LeafCommand nodes attached to this CommandGroup.
+	Leaves() []LeafCommand
 
 	// HasLeaves indicates whether this CommandGroup contains any leaf nodes.
 	HasLeaves() bool
 
-	// FindChild searches this CommandGroup instance for a Branch or
-	// CommandLeaf node that matches the given string.
+	// FindChild searches this CommandGroup instance for a BranchCommand or
+	// LeafCommand node that matches the given string.
 	//
 	// Commands may match on either their name or one of their aliases.
 	FindChild(name string) ChildNode[any]
@@ -41,6 +41,8 @@ type CommandGroup interface {
 
 // A CommandGroupBuilder is used to construct a CommandGroup instance.
 type CommandGroupBuilder interface {
+	Name() string
+
 	// WithDescription sets a description value for this CommandGroupBuilder.
 	//
 	// Descriptions are used when rendering help text.
@@ -51,18 +53,22 @@ type CommandGroupBuilder interface {
 	Description() string
 
 	// WithBranch appends the given branch builder to this command group builder.
-	WithBranch(branch BranchBuilder) CommandGroupBuilder
+	WithBranch(branch BranchCommandBuilder) CommandGroupBuilder
+
+	WithBranches(branches ...BranchCommandBuilder) CommandGroupBuilder
 
 	HasBranches() bool
 
-	Branches() []BranchBuilder
+	Branches() []BranchCommandBuilder
 
 	// WithLeaf appends the given leaf builder to this command group builder.
-	WithLeaf(leaf LeafBuilder) CommandGroupBuilder
+	WithLeaf(leaf LeafCommandBuilder) CommandGroupBuilder
+
+	WithLeaves(leaves ...LeafCommandBuilder) CommandGroupBuilder
 
 	HasLeaves() bool
 
-	Leaves() []LeafBuilder
+	Leaves() []LeafCommandBuilder
 
 	HasSubcommands() bool
 

@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/chars"
 	"github.com/foxcapades/argonaut/v3/internal/emit"
@@ -38,7 +39,7 @@ func (c *commandInterpreter) nextElement() parse.Element {
 }
 
 func (c *commandInterpreter) Run() error {
-	var err error
+	var argumentStream argument.Appender
 
 FOR:
 	for {
@@ -51,19 +52,26 @@ FOR:
 				break
 			}
 
-			c.command.appendPassthrough(element.String())
+			if ok, err := argumentStream.Append(element.String()); err != nil {
+				return err
+			} else if !ok {
+				c.command.AppendUnmappedInput(element.String())
+			}
+
 			continue
 		}
 
 		switch element.Type {
 
 		case parse.ElementTypePlainText:
-			if err = c.command.appendArgument(element.String()); err != nil {
+			if ok, err := argumentStream.Append(element.String()); err != nil {
 				return err
+			} else if !ok {
+				c.command.AppendUnmappedInput(element.String())
 			}
 
 		case parse.ElementTypeShortBlockSolo:
-			if c.boundary, err = c.interpretShortSolo(&element); err != nil {
+			if err := c.interpretShortSolo(&element); err != nil {
 				return err
 			}
 
@@ -160,7 +168,7 @@ FOR:
 	return nil
 }
 
-func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) {
+func (c *commandInterpreter) interpretShortSolo(e *parse.Element) error {
 	remainder := e.Data[0]
 
 	for i := 0; i < len(e.Data[0]); i++ {
@@ -168,6 +176,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 		h := i+1 < len(e.Data[0])
 		// short flag byte
 		b := remainder[0]
+		remainder = remainder[1:]
 
 		// Look up the flag in the short flag map
 		f := c.command.FindShortFlag(b)
@@ -175,18 +184,24 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
-			c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
-			c.command.AppendUnmappedInput(chars.StrDash + remainder[0:1])
-			remainder = remainder[1:]
+			// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
+			c.command.AppendUnmappedInput(chars.StrDash + string(b))
 			continue
 		}
 
-		c.flagHits.append(f)
+		c.flagHits.Append(f)
+		f.IncrementHitCount()
+
+		if !f.HasArgument() {
+			continue
+		}
+
+		arg := f.Argument()
 
 		// If the flag we found requires an argument, eat the rest of the block and
 		// pass it to the flag.Hit method.  Since the block will have been consumed
 		// after this, return here.
-		if f.RequiresArgument() {
+		if arg.IsRequired() {
 
 			// If we don't have any more characters in this short block, then we have
 			// to consume the next element as the argument for this flag.
@@ -196,159 +211,109 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) (bool, error) 
 				// If the next element is literally the end of the cli args, then we
 				// obviously can't set an argument on this flag.  Tough luck, dude.
 				if nextElement.Type == parse.ElementTypeEnd {
-					if hasBooleanArgument(f) {
-						return false, f.hitWithArg("true")
+					if argument.IsBoolean(arg) {
+						return arg.SetValue("true")
 					}
-					return false, f.hit()
+
+					return nil
 				}
 
 				if nextElement.Type == parse.ElementTypeBoundary {
-					if hasBooleanArgument(f) {
-						return true, f.hitWithArg("true")
+					c.boundary = true
+
+					if argument.IsBoolean(arg) {
+						return arg.SetValue("true")
 					}
-					return true, f.hit()
+
+					return nil
 				}
 
 				// If we're here then we have a next element, and we're going to try and
 				// sacrifice it to the flag gods.
-				return false, f.hitWithArg(nextElement.String())
+				return arg.SetValue(nextElement.String())
 			}
 
-			if hasBooleanArgument(f) {
-				possibleNextFlag := c.command.FindShortFlag(remainder[1])
+			if argument.IsBoolean(arg) {
+				possibleNextFlag := c.command.FindShortFlag(remainder[0])
+
 				if possibleNextFlag != nil {
-					if err := f.hitWithArg("true"); err != nil {
-						return false, err
+					if err := arg.SetValue("true"); err != nil {
+						return err
 					}
-					remainder = remainder[1:]
+
 					continue
 				}
 			}
 
 			// So we have at least one more character in this block.  Eat that and
 			// anything else as the flag argument.
-			return false, f.hitWithArg(remainder[1:])
+			return arg.SetValue(remainder)
 		}
 
-		// If the flag doesn't _require_ an argument, but may take an optional
-		// one...
-		if f.HasArgument() {
+		// If we have a next character in the block...
+		if h {
 
-			// If we have a next character in the block...
-			if h {
+			// grab the next character
+			n := remainder[0]
 
-				// grab the next character
-				n := remainder[1]
-
-				// test if the next character is a flag itself.  If it is, then we
-				// prioritize the flag over an optional argument.
-				if t := c.command.FindShortFlag(n); t != nil {
-					if err := f.hit(); err != nil {
-						return false, err
-					}
-					remainder = remainder[1:]
-					continue
-				} else
-
-				// Since there is no flag matching the next character, then we have to
-				// assume that the remaining text is the argument for the flag
-				{
-					return false, f.hitWithArg(remainder[1:])
-				}
-			} else {
-
-				nextElement := c.nextElement()
-
-				switch nextElement.Type {
-
-				case parse.ElementTypeEnd:
-					if hasBooleanArgument(f) {
-						return false, f.hitWithArg("true")
-					}
-					return false, f.hit()
-
-				case parse.ElementTypeBoundary:
-					if hasBooleanArgument(f) {
-						return true, f.hitWithArg("true")
-					}
-					return true, f.hit()
-
-				case parse.ElementTypePlainText:
-					// If the flag expects an argument, but the value following the flag
-					// cannot be parsed as the argument, then the argument value is not
-					// treated as the value to the flag and is instead treated as a
-					// positional argument value.
-					if err := f.hitWithArg(nextElement.Data[0]); err != nil {
-						c.elements.Offer(nextElement)
-					}
-
-					return false, f.hit()
-
-				case parse.ElementTypeShortBlockSolo:
-					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
-						c.elements.Offer(nextElement)
-						return false, f.hit()
-					}
-
-					if err := f.hitWithArg(nextElement.String()); err != nil {
-						c.elements.Offer(nextElement)
-					}
-
-					return false, f.hit()
-
-				case parse.ElementTypeShortBlockPair:
-					if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
-						c.elements.Offer(nextElement)
-						return false, f.hit()
-					}
-
-					if err := f.hitWithArg(nextElement.String()); err != nil {
-						c.elements.Offer(nextElement)
-					}
-
-					return false, f.hit()
-
-				case parse.ElementTypeLongFlagPair:
-					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
-						c.elements.Offer(nextElement)
-						return false, f.hit()
-					}
-
-					if err := f.hitWithArg(nextElement.String()); err != nil {
-						c.elements.Offer(nextElement)
-					}
-
-					return false, f.hit()
-
-				case parse.ElementTypeLongFlagSolo:
-					if c.command.FindLongFlag(nextElement.Data[0]) != nil {
-						c.elements.Offer(nextElement)
-						return false, f.hit()
-					}
-
-					if err := f.hitWithArg(nextElement.String()); err != nil {
-						c.elements.Offer(nextElement)
-					}
-
-					return false, f.hit()
-
-				default:
-					panic("illegal state")
-
-				}
+			// test if the next character is a flag itself.  If it is, then we
+			// prioritize the flag over an optional argument.
+			if t := c.command.FindShortFlag(n); t != nil {
+				continue
 			}
+
+			// Since there is no flag matching the next character, then we have to
+			// assume that the remaining text is the argument for the flag
+			return arg.SetValue(remainder)
 		}
 
-		// The flag doesn't expect an argument, just hit it
-		if err := f.hit(); err != nil {
-			return false, err
+		nextElement := c.nextElement()
+
+		switch nextElement.Type {
+
+		case parse.ElementTypeEnd:
+			if argument.IsBoolean(arg) {
+				return arg.SetValue("true")
+			}
+
+		case parse.ElementTypeBoundary:
+			c.boundary = true
+
+			if argument.IsBoolean(arg) {
+				return arg.SetValue("true")
+			}
+
+		case parse.ElementTypePlainText:
+			// If the flag expects an argument, but the value following the flag
+			// cannot be parsed as the argument, then the argument value is not
+			// treated as the value to the flag and is instead treated as a
+			// positional argument value.
+			if err := arg.SetValue(nextElement.Data[0]); err != nil {
+				c.elements.Offer(nextElement)
+			}
+
+		case parse.ElementTypeShortBlockSolo, parse.ElementTypeShortBlockPair:
+			if c.command.FindShortFlag(nextElement.Data[0][0]) != nil {
+				c.elements.Offer(nextElement)
+			} else if err := arg.SetValue(nextElement.String()); err != nil {
+				c.elements.Offer(nextElement)
+			}
+
+		case parse.ElementTypeLongFlagPair, parse.ElementTypeLongFlagSolo:
+			if c.command.FindLongFlag(nextElement.Data[0]) != nil {
+				c.elements.Offer(nextElement)
+			} else if err := arg.SetValue(nextElement.String()); err != nil {
+				c.elements.Offer(nextElement)
+			}
+
+		default:
+			panic("illegal state")
 		}
 
-		// if has next
-		remainder = remainder[1:]
+		break
 	}
 
-	return false, nil
+	return nil
 }
 
 func (c *commandInterpreter) interpretShortPair(e *parse.Element) (bool, error) {
@@ -431,12 +396,12 @@ func (c *commandInterpreter) interpretLongSolo(e *parse.Element) (bool, error) {
 	f := c.command.FindLongFlag(e.Data[0])
 
 	if f == nil {
-		c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
-		c.command.appendUnmapped(e.String())
+		// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
+		c.command.AppendUnmappedInput(e.String())
 		return false, nil
 	}
 
-	c.flagHits.append(f)
+	c.flagHits.Append(f)
 
 	if f.RequiresArgument() {
 		nextElement := c.parser.Next()
@@ -530,15 +495,15 @@ func (c *commandInterpreter) interpretLongPair(e *parse.Element) (bool, error) {
 	flag := c.command.FindLongFlag(e.Data[0])
 
 	if flag == nil {
-		c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
+		// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
 		c.command.AppendUnmappedInput(e.String())
 	} else {
-		c.flagHits.append(flag)
+		c.flagHits.Append(flag)
 
 		if flag.HasArgument() {
 			return false, flag.hitWithArg(e.Data[1])
 		}
-		c.command.AppendWarning(fmt.Sprintf("flag --%s received an argument it didn't expect", e.Data[0]))
+		// TODO: c.command.AppendWarning(fmt.Sprintf("flag --%s received an argument it didn't expect", e.Data[0]))
 		return false, flag.hit()
 	}
 

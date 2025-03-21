@@ -4,18 +4,19 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 // CommandHelpRenderer returns a HelpRenderer instance that is suited to
 // rendering help text for Command instances.
-func CommandHelpRenderer() HelpRenderer[Command] {
+func CommandHelpRenderer() HelpRenderer[argo.Command] {
 	return comRenderer{}
 }
 
 type comRenderer struct{ renderCommandBase }
 
-func (r comRenderer) RenderHelp(command Command, writer io.Writer) error {
+func (r comRenderer) RenderHelp(command argo.Command, writer io.Writer) error {
 	if buf, ok := writer.(*bufio.Writer); ok {
 		return r.renderCommand(command, buf)
 	} else {
@@ -26,7 +27,7 @@ func (r comRenderer) RenderHelp(command Command, writer io.Writer) error {
 	}
 }
 
-func (r comRenderer) renderCommand(com Command, out *bufio.Writer) error {
+func (r comRenderer) renderCommand(com argo.Command, out *bufio.Writer) error {
 	if err := r.renderCommandUsageBlock(com, out); err != nil {
 		return err
 	}
@@ -36,7 +37,7 @@ func (r comRenderer) renderCommand(com Command, out *bufio.Writer) error {
 	return r.renderCommandBackHalf(com, out)
 }
 
-func (r comRenderer) renderCommandUsageBlock(com Command, out *bufio.Writer) error {
+func (r comRenderer) renderCommandUsageBlock(com argo.Command, out *bufio.Writer) error {
 	if _, err := out.WriteString(comPrefix); err != nil {
 		return err
 	}

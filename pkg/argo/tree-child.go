@@ -67,15 +67,9 @@ type ChildBuilder[T any] interface {
 	// be nil.
 	Aliases() []string
 
-	// WithHelpDisabled disables the automatic "--help | -h" flag that would
-	// otherwise be attached to the subcommand.
-	WithHelpDisabled() T
-
-	// IsHelpDisabled indicates whether the automatic help flag has been marked as
-	// disabled.
-	IsHelpDisabled() bool
-
 	// ParentNode returns the tree command root or branch command parent of the
 	// target subcommand.
 	ParentNode() ParentBuilder[any]
+
+	SetParentNode(parent ParentBuilder[any]) T
 }

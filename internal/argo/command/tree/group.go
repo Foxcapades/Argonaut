@@ -2,11 +2,15 @@ package tree
 
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
+const (
+	DefaultCommandGroupName = "__DEFAULT_COMMAND_GROUP__"
+)
+
 type commandGroup struct {
 	name        string
 	description string
-	branches    []argo.Branch
-	leaves      []argo.CommandLeaf
+	branches    []argo.BranchCommand
+	leaves      []argo.LeafCommand
 }
 
 func (g commandGroup) Description() string {
@@ -21,7 +25,7 @@ func (g commandGroup) Name() string {
 	return g.name
 }
 
-func (g commandGroup) Branches() []argo.Branch {
+func (g commandGroup) Branches() []argo.BranchCommand {
 	return g.branches
 }
 
@@ -29,7 +33,7 @@ func (g commandGroup) HasBranches() bool {
 	return len(g.branches) > 0
 }
 
-func (g commandGroup) Leaves() []argo.CommandLeaf {
+func (g commandGroup) Leaves() []argo.LeafCommand {
 	return g.leaves
 }
 

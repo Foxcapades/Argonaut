@@ -43,11 +43,7 @@ type Node[T any] interface {
 
 	Callback() CommandNodeCallback[T]
 
-	// TODO: this should be tracked outside of the command types
-	Warnings() []string
-
-	// TODO: this should be tracked outside of the command types
-	AppendWarning(warning string)
+	IsHelpDisabled() bool
 }
 
 //
@@ -121,4 +117,10 @@ type NodeBuilder[T any] interface {
 	HasCallback() bool
 
 	Callback() CommandNodeCallback[T]
+
+	// WithHelpDisabled disables the automatic `-h` and `--help` flags for
+	// rendering help text.
+	WithHelpDisabled() T
+
+	IsHelpDisabled() bool
 }

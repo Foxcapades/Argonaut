@@ -54,6 +54,8 @@ type FlagGroupBuilder interface {
 	// WithFlag appends the given FlagBuilder instance to this FlagGroupBuilder.
 	WithFlag(flag FlagBuilder) FlagGroupBuilder
 
+	WithFlags(flag ...FlagBuilder) FlagGroupBuilder
+
 	HasFlags() bool
 
 	Flags() []FlagBuilder

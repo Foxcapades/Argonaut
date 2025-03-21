@@ -84,27 +84,19 @@ type Command interface {
 
 	//
 
-	// HasUnmappedLabel indicates whether an unmapped label has been set on this
+	// HasUnmappedInputLabel indicates whether an unmapped label has been set on this
 	// command instance.
-	HasUnmappedLabel() bool
+	HasUnmappedInputLabel() bool
 
-	// UnmappedLabel returns the label used when generating help text to
+	// UnmappedInputLabel returns the label used when generating help text to
 	// indicate the shape or purpose of unmapped inputs.
-	UnmappedLabel() string
+	UnmappedInputLabel() string
 
 	//
 
 	HasCallback() bool
 
 	Callback() CommandCallback
-
-	//
-
-	// TODO: remove this
-	Warnings() []string
-
-	// TODO: remove this
-	AppendWarning(warning string)
 }
 
 //
@@ -152,6 +144,10 @@ type CommandBuilder interface {
 
 	WithFlagGroups(groups ...FlagGroupBuilder) CommandBuilder
 
+	HasFlagGroups(includeDefault bool) bool
+
+	FlagGroups(includeDefault bool) []FlagGroupBuilder
+
 	// WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
 	// instance attached to this CommandBuilder.
 	WithFlag(flag FlagBuilder) CommandBuilder
@@ -172,23 +168,23 @@ type CommandBuilder interface {
 
 	//
 
-	// WithUnmappedLabel sets the help-text label for unmapped arguments.
+	// WithUnmappedInputLabel sets the help-text label for unmapped arguments.
 	//
 	// This is useful when your command takes an arbitrary number of argument
 	// inputs, and you would like the help text to indicate as such.
 	//
 	// Example Config:
 	//     cli.Command().
-	//         WithUnmappedLabel("[FILE...]")
+	//         WithUnmappedInputLabel("[FILE...]")
 	//
 	// Example Result:
 	//     Usage:
 	//       my-command [FILE...]
-	WithUnmappedLabel(label string) CommandBuilder
+	WithUnmappedInputLabel(label string) CommandBuilder
 
-	HasUnmappedLabel() bool
+	HasUnmappedInputLabel() bool
 
-	UnmappedLabel() string
+	UnmappedInputLabel() string
 
 	//
 
@@ -201,15 +197,15 @@ type CommandBuilder interface {
 	Callback() CommandCallback
 
 	//
-
-	Build(ctx *WarningContext) (Command, error)
-
-	// Parse reads the given arguments and attempts to populate the built Command
-	// instance based on the values parsed from the given inputs.
-	Parse(args []string) (Command, error)
-
-	// MustParse is the same as Parse, however if an error is encountered while
-	// building the Command or parsing the input arguments, this method will
-	// panic.
-	MustParse(args []string) Command
+	//
+	// Build(ctx *WarningContext) (Command, error)
+	//
+	// // Parse reads the given arguments and attempts to populate the built Command
+	// // instance based on the values parsed from the given inputs.
+	// Parse(args []string) (Command, error)
+	//
+	// // MustParse is the same as Parse, however if an error is encountered while
+	// // building the Command or parsing the input arguments, this method will
+	// // panic.
+	// MustParse(args []string) Command
 }
