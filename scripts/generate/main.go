@@ -11,12 +11,6 @@ import (
 )
 
 func main() {
-	if err := os.Mkdir("hello", 0755); err != nil {
-		if !errors.Is(err, fs.ErrExist) {
-			panic(err)
-		}
-	}
-
 	interfaces()
 	implementations()
 }
@@ -72,9 +66,7 @@ func buildFileLists(root string) ([]string, []string) {
 	impls := make([]string, 0, 10)
 
 	filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			panic(err)
-		}
+		try(err)
 
 		if d.IsDir() {
 			return nil
@@ -93,9 +85,7 @@ func buildFileLists(root string) ([]string, []string) {
 }
 
 func runTemplates(tpls, impls []string, t *template.Template) {
-	if _, err := t.ParseFiles(append(tpls, impls...)...); err != nil {
-		panic(err)
-	}
+	_ = tryGet(t.ParseFiles(append(tpls, impls...)...))
 
 	for _, impl := range impls {
 		executeTemplate(t, impl[10:])
@@ -103,19 +93,24 @@ func runTemplates(tpls, impls []string, t *template.Template) {
 }
 
 func executeTemplate(tpl *template.Template, path string) {
-	path = "hello/" + path
+	try(os.MkdirAll(filepath.Dir(path), 0755))
 
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		panic(err)
-	}
+	file := tryGet(os.OpenFile(strings.TrimSuffix(path, ".tpl"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644))
+	defer file.Close()
 
-	file, err := os.OpenFile(strings.TrimSuffix(path, ".tpl"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	try(tpl.ExecuteTemplate(file, filepath.Base(path), nil))
+}
+
+func try(err error) {
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
+}
 
-	if err = tpl.ExecuteTemplate(file, filepath.Base(path), nil); err != nil {
+func tryGet[T any](value T, err error) T {
+	if err != nil {
 		panic(err)
 	}
+
+	return value
 }
