@@ -52,7 +52,7 @@ type LeafCommand interface {
 // LeafCommandBuilder defines a builder type that is used to construct
 // LeafCommand instances.
 type LeafCommandBuilder interface {
-	ChildBuilder[LeafCommandBuilder]
+	ChildBuilder[LeafCommandBuilder, LeafCommand]
 
 	// WithUnmappedInputLabel provides a label for unmapped inputs.
 	//

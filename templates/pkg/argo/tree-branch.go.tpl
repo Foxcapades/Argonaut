@@ -1,3 +1,4 @@
+{{ $vars := (types "BranchCommand" "BranchCommandBuilder" "Branch") -}}
 package argo
 
 // BranchCommand represents a subcommand under a CommandTree that is an
@@ -18,8 +19,10 @@ package argo
 //	 |   |- ...
 //	 |- ...
 type BranchCommand interface {
-	ParentNode[BranchCommand]
-	ChildNode[BranchCommand]
+	ChildNode
+	ParentNode
+  {{ template "CommandCommon" $vars }}
+  {{- template "ParentNodeCommon" $vars }}
 }
 
 // A BranchCommandBuilder instance may be used to configure a new BranchCommand
@@ -33,8 +36,10 @@ type BranchCommand interface {
 //
 //	./foo bar fizz
 type BranchCommandBuilder interface {
-	ChildBuilder[BranchCommandBuilder, BranchCommand]
-	ParentBuilder[BranchCommandBuilder, BranchCommand]
-
-	Build(warnings *WarningContext) (BranchCommand, error)
+	ChildNodeBuilder
+	ParentNodeBuilder
+  {{ template "CommandBuilderCommon" $vars }}
+  {{- template "ParentNodeBuilderCommon" $vars }}
+  {{- template "ChildNodeBuilderCommon" $vars }}
 }
+

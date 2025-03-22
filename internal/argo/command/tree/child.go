@@ -1,9 +1,12 @@
 package tree
 
-import "github.com/foxcapades/argonaut/v3/pkg/argo"
+import (
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
+)
 
 type child[T any] struct {
-	node[T]
+	common.CommandBase[T]
 
 	name    string
 	parent  argo.ParentNode[any]

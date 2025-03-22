@@ -13,11 +13,13 @@ import (
 )
 
 func NewLeafBuilder(name string) argo.LeafCommandBuilder {
-	return &leafBuilder{childBuilder: newChildBuilder[argo.LeafCommandBuilder](name)}
+	out := new(leafBuilder)
+	out.childBuilder = newChildBuilder[argo.LeafCommandBuilder, argo.LeafCommand](name, out)
+	return out
 }
 
 type leafBuilder struct {
-	childBuilder[argo.LeafCommandBuilder]
+	childBuilder[argo.LeafCommandBuilder, argo.LeafCommand]
 
 	umapLabel string
 	arguments []argo.ArgumentBuilder

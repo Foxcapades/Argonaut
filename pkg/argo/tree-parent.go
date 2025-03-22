@@ -3,7 +3,7 @@ package argo
 // A ParentNode is a Node instance that may contain child Node
 // instances.
 type ParentNode[T any] interface {
-	Node[T]
+	CommandBase[T]
 
 	// CommandGroups returns the CommandGroup instances attached to this
 	// ParentNode node.
@@ -28,8 +28,8 @@ type ParentNode[T any] interface {
 	IncompleteHandler() IncompleteCommandHandler[T]
 }
 
-type ParentBuilder[T any] interface {
-	NodeBuilder[T]
+type ParentBuilder[T, O any] interface {
+	CommandBuilderBase[T, O]
 
 	WithBranch(branch BranchCommandBuilder) T
 	WithBranches(branches ...BranchCommandBuilder) T

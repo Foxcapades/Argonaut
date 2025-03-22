@@ -77,8 +77,8 @@ func (c *command) hasDefaultFlagGroup() bool {
 
 func (c *command) FindShortFlag(b byte) argo.Flag {
 	for _, group := range c.flagGroups {
-		if flag := group.FindShortFlag(b); flag != nil {
-			return flag
+		if shortFlag := group.FindShortFlag(b); shortFlag != nil {
+			return shortFlag
 		}
 	}
 
@@ -87,8 +87,8 @@ func (c *command) FindShortFlag(b byte) argo.Flag {
 
 func (c *command) FindLongFlag(name string) argo.Flag {
 	for _, group := range c.flagGroups {
-		if flag := group.FindLongFlag(name); flag != nil {
-			return flag
+		if longFlag := group.FindLongFlag(name); longFlag != nil {
+			return longFlag
 		}
 	}
 

@@ -29,12 +29,16 @@
 package cli
 
 import (
+	"reflect"
+
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
+
+// region Single Command
 
 // Command returns a new CommandBuilder instance which can be used to construct
 // a Command instance.
@@ -46,8 +50,20 @@ func Command() argo.CommandBuilder {
 	return command.NewBuilder()
 }
 
-// Tree returns a new CommandTreeBuilder instance which can be used to construct
-// a CommandTree instance.
+func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
+	return command.Build(builder)
+}
+
+func ParseCommandCLI(com argo.Command) (argo.ParseResult, error) {
+	return command.Parse(com)
+}
+
+// endregion Single Command
+
+// region Command Tree
+
+// Tree returns a new argo.CommandTreeBuilder instance which can be used to
+// construct an argo.CommandTree instance.
 //
 // A command tree is a tree of nested subcommands of arbitrary depth.  The tree
 // consists of branch and leaf nodes, with the leaf nodes being the selectable
@@ -57,7 +73,7 @@ func Tree() argo.CommandTreeBuilder {
 }
 
 // Branch returns a new BranchCommandBuilder instance which can be used to
-// construct an Branch instance.
+// construct a Branch instance.
 func Branch(name string) argo.BranchCommandBuilder {
 	return tree.NewBranchBuilder(name)
 }
@@ -73,6 +89,18 @@ func Leaf(name string) argo.LeafCommandBuilder {
 func CommandGroup(name string) argo.CommandGroupBuilder {
 	return tree.NewGroupBuilder(name)
 }
+
+func BuildTree(builder argo.CommandTreeBuilder) (argo.CommandTree, error) {
+	return tree.Build(builder)
+}
+
+func ParseTreeCLI(com argo.CommandTree) (argo.ParseResult, error) {
+	return tree.Parse(com)
+}
+
+// endregion Command Tree
+
+// region Flags
 
 // FlagGroup returns a new FlagGroupBuilder instance which can be used to
 // construct an FlagGroup instance.
@@ -116,12 +144,10 @@ func ComboFlag(short byte, long string) argo.FlagBuilder {
 	return flag.NewBuilder().WithShortForm(short).WithLongForm(long)
 }
 
+// endregion Flags
+
 // Argument returns a new ArgumentBuilder instance which can be used to
 // construct an Argument instance.
 func Argument() argo.ArgumentBuilder {
 	return argument.NewBuilder()
-}
-
-func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
-	return command.Build(builder)
 }

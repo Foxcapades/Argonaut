@@ -2,7 +2,7 @@ package argo
 
 // A ChildNode is a Node that is the child of another Node.
 type ChildNode[T any] interface {
-	Node[T]
+	CommandBase[T]
 
 	// Parent returns the parent Node for the current Node.
 	//
@@ -23,8 +23,8 @@ type ChildNode[T any] interface {
 	Matches(name string) bool
 }
 
-type ChildBuilder[T any] interface {
-	NodeBuilder[T]
+type ChildBuilder[T, O any] interface {
+	CommandBuilderBase[T, O]
 
 	// Name returns the name attached to the target subcommand.
 	Name() string
@@ -69,7 +69,7 @@ type ChildBuilder[T any] interface {
 
 	// ParentNode returns the tree command root or branch command parent of the
 	// target subcommand.
-	ParentNode() ParentBuilder[any]
+	ParentNode() ParentBuilder[any, any]
 
-	SetParentNode(parent ParentBuilder[any]) T
+	SetParentNode(parent ParentBuilder[any, any]) T
 }

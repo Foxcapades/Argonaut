@@ -28,8 +28,8 @@ func ExecuteFlagCallbacks(flags iter.Seq[argo.Flag]) {
 	}
 }
 
-func CheckRequiredArguments(fn func() []argo.Argument, errs argo.MultiError) {
-	for i, arg := range fn() {
+func CheckRequiredArguments(arguments []argo.Argument, errs argo.MultiError) {
+	for i, arg := range arguments {
 		if arg.IsRequired() {
 			log.DebugLn2("testing if required argument %d (<%s>) has received a value", i+1, arg.Name())
 
@@ -50,8 +50,8 @@ func CheckRequiredArguments(fn func() []argo.Argument, errs argo.MultiError) {
 	}
 }
 
-func CheckRequiredFlags(fn func() []argo.FlagGroup, errs argo.MultiError) {
-	for _, group := range fn() {
+func CheckRequiredFlags(flagGroups []argo.FlagGroup, errs argo.MultiError) {
+	for _, group := range flagGroups {
 		log.DebugLn1("testing if required flags were hit for flag group %s", group.Name)
 
 		for _, f := range group.Flags() {

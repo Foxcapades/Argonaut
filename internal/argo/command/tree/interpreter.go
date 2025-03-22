@@ -30,7 +30,7 @@ func newCommandTreeInterpreter(args []string, command argo.CommandTree) commandT
 
 type commandTreeInterpreter struct {
 	parser   parse.Parser
-	current  argo.Node[any]
+	current  argo.CommandBase[any]
 	boundary bool
 
 	tree     argo.CommandTree
@@ -126,7 +126,7 @@ FOR:
 			c.leaf.AppendUnmappedInput(value)
 		}
 
-		common.CheckRequiredArguments(c.leaf.Arguments, errs)
+		common.CheckRequiredArguments(c.leaf.Arguments(), errs)
 	} else {
 		if parent, ok := c.current.(argo.ParentNode[any]); ok {
 			onIncomplete = parent.IncompleteHandler()
@@ -167,10 +167,10 @@ FOR:
 }
 
 func (c *commandTreeInterpreter) checkRequiredFlagsWereHit(errs argo.MultiError) {
-	var current argo.Node[any] = c.leaf
+	var current argo.CommandBase[any] = c.leaf
 
 	for {
-		common.CheckRequiredFlags(current.FlagGroups, errs)
+		common.CheckRequiredFlags(current.FlagGroups(), errs)
 
 		if par, ok := current.(argo.ChildNode[any]); ok {
 			current = par

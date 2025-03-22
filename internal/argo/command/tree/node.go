@@ -6,7 +6,7 @@ type node[T any] struct {
 	disableHelp bool
 	description string
 	flagGroups  []argo.FlagGroup
-	callback    argo.CommandNodeCallback[T]
+	callback    argo.CommandCallback[T]
 }
 
 func (n node[T]) HasDescription() bool {
@@ -29,7 +29,7 @@ func (n node[T]) HasCallback() bool {
 	return n.callback != nil
 }
 
-func (n node[T]) Callback() argo.CommandNodeCallback[T] {
+func (n node[T]) Callback() argo.CommandCallback[T] {
 	return n.callback
 }
 

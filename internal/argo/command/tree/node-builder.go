@@ -1,55 +1,57 @@
 package tree
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func newNodeBuilder[T any](root T) nodeBuilder[T] {
-	return nodeBuilder[T]{root: root}
+func newNodeBuilder[T, O any](root T) nodeBuilder[T, O] {
+	return nodeBuilder[T, O]{root: root}
 }
 
-type nodeBuilder[T any] struct {
+type nodeBuilder[T, O any] struct {
 	root T
 
 	disableHelp bool
 	description string
 	flagGroups  []argo.FlagGroupBuilder
-	callback    argo.CommandNodeCallback[T]
+	callback    argo.CommandCallback[O]
 }
 
 //
 
-func (n *nodeBuilder[T]) WithDescription(description string) T {
+func (n *nodeBuilder[T, O]) WithDescription(description string) T {
 	n.description = description
 	return n.root
 }
 
-func (n *nodeBuilder[T]) HasDescription() bool {
+func (n *nodeBuilder[T, O]) HasDescription() bool {
 	return len(n.description) > 0
 }
 
-func (n *nodeBuilder[T]) Description() string {
+func (n *nodeBuilder[T, O]) Description() string {
 	return n.description
 }
 
 //
 
-func (n *nodeBuilder[T]) WithFlagGroup(flagGroup argo.FlagGroupBuilder) T {
+func (n *nodeBuilder[T, O]) WithFlagGroup(flagGroup argo.FlagGroupBuilder) T {
 	n.flagGroups = append(n.flagGroups, flagGroup)
 	return n.root
 }
 
-func (n *nodeBuilder[T]) WithFlagGroups(flagGroups ...argo.FlagGroupBuilder) T {
+func (n *nodeBuilder[T, O]) WithFlagGroups(flagGroups ...argo.FlagGroupBuilder) T {
 	n.flagGroups = append(n.flagGroups, flagGroups...)
 	return n.root
 }
 
-func (n *nodeBuilder[T]) HasFlagGroups(includeDefault bool) bool {
-	return len(n.flagGroups) > 1 || (includeDefault && n.hasDefaultFlagGroup())
+func (n *nodeBuilder[T, O]) HasFlagGroups(includeDefault bool) bool {
+	return (includeDefault && len(n.flagGroups) > 0) ||
+		(n.hasDefaultFlagGroup() && len(n.flagGroups) > 1) ||
+		len(n.flagGroups) > 0
 }
 
-func (n *nodeBuilder[T]) FlagGroups(includeDefault bool) []argo.FlagGroupBuilder {
+func (n *nodeBuilder[T, O]) FlagGroups(includeDefault bool) []argo.FlagGroupBuilder {
 	if includeDefault && n.hasDefaultFlagGroup() {
 		return n.flagGroups
 	}
@@ -57,31 +59,25 @@ func (n *nodeBuilder[T]) FlagGroups(includeDefault bool) []argo.FlagGroupBuilder
 	return n.flagGroups[1:]
 }
 
-func (n *nodeBuilder[T]) hasDefaultFlagGroup() bool {
+func (n *nodeBuilder[T, O]) hasDefaultFlagGroup() bool {
 	return n.flagGroups[0] != nil && n.flagGroups[0].Size() > 0
-}
-
-func (n *nodeBuilder[T]) initDefaultFlagGroup() {
-	if n.flagGroups[0] == nil {
-		n.flagGroups[0] = flag.NewGroupBuilder("Ungrouped") // TODO: make this configurable
-	}
 }
 
 //
 
-func (n *nodeBuilder[T]) WithFlag(flag argo.FlagBuilder) T {
-	n.initDefaultFlagGroup()
+func (n *nodeBuilder[T, O]) WithFlag(flag argo.FlagBuilder) T {
+	n.flagGroups = common.EnsureDefaultFlagGroup(n.flagGroups)
 	n.flagGroups[0].WithFlag(flag)
 	return n.root
 }
 
-func (n *nodeBuilder[T]) WithFlags(flags ...argo.FlagBuilder) T {
-	n.initDefaultFlagGroup()
+func (n *nodeBuilder[T, O]) WithFlags(flags ...argo.FlagBuilder) T {
+	n.flagGroups = common.EnsureDefaultFlagGroup(n.flagGroups)
 	n.flagGroups[0].WithFlags(flags...)
 	return n.root
 }
 
-func (n *nodeBuilder[T]) HasFlags() bool {
+func (n *nodeBuilder[T, O]) HasFlags() bool {
 	for _, group := range n.flagGroups {
 		if group != nil && group.HasFlags() {
 			return true
@@ -93,26 +89,26 @@ func (n *nodeBuilder[T]) HasFlags() bool {
 
 //
 
-func (n *nodeBuilder[T]) WithCallback(callback argo.CommandNodeCallback[T]) T {
+func (n *nodeBuilder[T, O]) WithCallback(callback argo.CommandCallback[O]) T {
 	n.callback = callback
 	return n.root
 }
 
-func (n *nodeBuilder[T]) HasCallback() bool {
+func (n *nodeBuilder[T, O]) HasCallback() bool {
 	return n.callback != nil
 }
 
-func (n *nodeBuilder[T]) Callback() argo.CommandNodeCallback[T] {
+func (n *nodeBuilder[T, O]) Callback() argo.CommandCallback[O] {
 	return n.callback
 }
 
 //
 
-func (n *nodeBuilder[T]) WithHelpDisabled() T {
+func (n *nodeBuilder[T, O]) WithHelpDisabled() T {
 	n.disableHelp = true
 	return n.root
 }
 
-func (n *nodeBuilder[T]) IsHelpDisabled() bool {
+func (n *nodeBuilder[T, O]) IsHelpDisabled() bool {
 	return n.disableHelp
 }

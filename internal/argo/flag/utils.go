@@ -37,9 +37,23 @@ func (q *Queue) Iterator() iter.Seq[argo.Flag] {
 	}
 }
 
+//
+
 func HasBooleanArgument(flag argo.Flag) bool {
 	return flag.HasArgument() && flag.Argument().HasBinding() && flag.Argument().BindingType().Kind() == reflect.Bool
 }
+
+//
+
+func NewDefaultGroupBuilder() argo.FlagGroupBuilder {
+	return NewGroupBuilder(DefaultFlagGroupName)
+}
+
+func IsDefaultGroup(group argo.FlagGroupBuilder) bool {
+	return group.Name() == DefaultFlagGroupName
+}
+
+//
 
 func PrintFlagNames(flag argo.Flag) string {
 	if flag.HasLongForm() {

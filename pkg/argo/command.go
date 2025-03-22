@@ -1,51 +1,9 @@
 package argo
 
-type CommandCallback = func(command Command)
-
 // Command represents a singular, non-nested command which accepts flags and
 // arguments.
 type Command interface {
-
-	// Name returns the name of the command.
-	Name() string
-
-	//
-
-	// HasDescription indicates whether this command has a description value set.
-	HasDescription() bool
-
-	// Description returns the custom description for the command.
-	//
-	// Description values are used internally for rendering held text.
-	Description() string
-
-	//
-
-	// FlagGroups returns the flag groups attached to this command.
-	//
-	// Flag groups are named categories of flags defined when building the
-	// command.
-	FlagGroups(includeDefault bool) []FlagGroup
-
-	// HasFlagGroups indicates whether this command has any flag groups attached
-	// to it.
-	HasFlagGroups(includeDefault bool) bool
-
-	//
-
-	// FindShortFlag looks up a Flag instance by its short form.
-	//
-	// If no such flag could be found on this command, this method will return
-	// nil.
-	FindShortFlag(c byte) Flag
-
-	// FindLongFlag looks up a Flag instance by its long form.
-	//
-	// If no such flag could be found on this command, this method will return
-	// nil.
-	FindLongFlag(name string) Flag
-
-	//
+	CommandBase[Command]
 
 	// HasArguments indicates whether this Command has any positional arguments
 	// attached.
@@ -91,12 +49,6 @@ type Command interface {
 	// UnmappedInputLabel returns the label used when generating help text to
 	// indicate the shape or purpose of unmapped inputs.
 	UnmappedInputLabel() string
-
-	//
-
-	HasCallback() bool
-
-	Callback() CommandCallback
 }
 
 //
@@ -119,42 +71,7 @@ type Command interface {
 //	        WithBinding(&config.file)).
 //	    Build()
 type CommandBuilder interface {
-
-	// WithDescription sets the description value that will be used for the built
-	// Command instance.
-	//
-	// Command descriptions are used when rendering help text.
-	WithDescription(desc string) CommandBuilder
-
-	HasDescription() bool
-
-	Description() string
-
-	//
-
-	WithHelpDisabled() CommandBuilder
-
-	IsHelpDisabled() bool
-
-	//
-
-	// WithFlagGroup appends the given FlagGroupBuilder to this CommandBuilder
-	// instance.
-	WithFlagGroup(group FlagGroupBuilder) CommandBuilder
-
-	WithFlagGroups(groups ...FlagGroupBuilder) CommandBuilder
-
-	HasFlagGroups(includeDefault bool) bool
-
-	FlagGroups(includeDefault bool) []FlagGroupBuilder
-
-	// WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
-	// instance attached to this CommandBuilder.
-	WithFlag(flag FlagBuilder) CommandBuilder
-
-	WithFlags(flags ...FlagBuilder) CommandBuilder
-
-	//
+	CommandBuilderBase[CommandBuilder, Command]
 
 	// WithArgument appends the given ArgumentBuilder to this CommandBuilder's
 	// list of positional arguments.
@@ -185,27 +102,4 @@ type CommandBuilder interface {
 	HasUnmappedInputLabel() bool
 
 	UnmappedInputLabel() string
-
-	//
-
-	// WithCallback sets a callback function that will be executed immediately
-	// after CLI parsing has completed successfully.
-	WithCallback(cb CommandCallback) CommandBuilder
-
-	HasCallback() bool
-
-	Callback() CommandCallback
-
-	//
-	//
-	// Build(ctx *WarningContext) (Command, error)
-	//
-	// // Parse reads the given arguments and attempts to populate the built Command
-	// // instance based on the values parsed from the given inputs.
-	// Parse(args []string) (Command, error)
-	//
-	// // MustParse is the same as Parse, however if an error is encountered while
-	// // building the Command or parsing the input arguments, this method will
-	// // panic.
-	// MustParse(args []string) Command
 }

@@ -1,4 +1,11 @@
+{{ $vars := (types "CommandTree" "CommandTreeBuilder" "Tree") -}}
 package argo
+
+type CommandCallback[T any] = func(com T)
+
+// IncompleteCommandHandler defines a function type that may be used as a callback
+// for when a command leaf is not reached when parsing a command tree structure.
+type IncompleteCommandHandler[T any] = func(command T)
 
 // CommandTree represents the root of a tree of subcommands.
 //
@@ -23,10 +30,11 @@ package argo
 //	 |   |- ...
 //	 |- ...
 type CommandTree interface {
-	ParentNode[CommandTree]
-
-	// SelectedCommand returns the leaf command that was selected in the CLI call.
-	SelectedCommand() LeafCommand
+	ParentNode
+	{{ template "CommandCommon" $vars }}
+  {{- template "ParentNodeCommon" $vars }}
+  // SelectedCommand returns the leaf command that was selected in the CLI call.
+  SelectedCommand() LeafCommand
 }
 
 // A CommandTreeBuilder is a builder type used to construct a CommandTree
@@ -49,5 +57,7 @@ type CommandTree interface {
 //	 |   |- ...
 //	 |- ...
 type CommandTreeBuilder interface {
-	ParentBuilder[CommandTreeBuilder, CommandTree]
+	ParentNodeBuilder
+	{{ template "CommandBuilderCommon" $vars }}
+  {{- template "ParentNodeBuilderCommon" $vars }}
 }
