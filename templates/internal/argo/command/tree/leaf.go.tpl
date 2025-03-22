@@ -1,14 +1,11 @@
 {{ $vars := (map "ImplType" "Leaf") -}}
 package tree
 
-import (
-  "github.com/foxcapades/argonaut/v3/internal/argo/command/common"
-  "github.com/foxcapades/argonaut/v3/pkg/argo"
-)
+import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
 type Leaf struct {
-  common.CommandBase[argo.LeafCommand]
-  {{ template "tree-child-impl-props" $vars }}
+  {{ template "CommandBaseProps" $vars }}
+  {{ template "ChildCommonProps" $vars }}
   unmappedLabel string
   args          []argo.Argument
   unmapped      []string
@@ -42,4 +39,6 @@ func (i *Leaf) GetUnmappedLabel() string {
   return i.unmappedLabel
 }
 
-{{ template "tree-child-impl-funcs" $vars }}
+{{ template "ChildCommonFuncs" $vars }}
+
+{{ template "CommandBaseFuncs" $vars }}

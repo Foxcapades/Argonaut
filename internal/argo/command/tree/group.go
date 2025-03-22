@@ -2,10 +2,6 @@ package tree
 
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
-const (
-	DefaultCommandGroupName = "__DEFAULT_COMMAND_GROUP__"
-)
-
 type commandGroup struct {
 	name        string
 	description string

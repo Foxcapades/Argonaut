@@ -17,12 +17,12 @@ func (c *CommandBase[T]) Description() string {
 	return c.description
 }
 
-func (c *CommandBase[T]) HasFlagGroups() bool {
-	return len(c.flagGroups) > 0
+func (c *CommandBase[T]) HasFlagGroups(includeDefault bool) bool {
+
 }
 
-func (c *CommandBase[T]) FlagGroups() []argo.FlagGroup {
-	return c.flagGroups
+func (c *CommandBase[T]) FlagGroups(includeDefault bool) []argo.FlagGroup {
+
 }
 
 func (c *CommandBase[T]) HasCallback() bool {

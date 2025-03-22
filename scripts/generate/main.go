@@ -15,13 +15,17 @@ func main() {
 	implementations()
 }
 
+type InterfaceFields struct {
+	OutputType, BuilderType, CLIFunc string
+}
+
 func interfaces() {
 	tpls, impls := buildFileLists("templates/pkg")
 
 	t := template.New("interfaces")
 	t.Funcs(map[string]any{
-		"types": func(out, build, cli string) ImplementationFields {
-			return ImplementationFields{out, build, cli}
+		"types": func(out, build, cli string) InterfaceFields {
+			return InterfaceFields{out, build, cli}
 		},
 	})
 
@@ -29,7 +33,7 @@ func interfaces() {
 }
 
 type ImplementationFields struct {
-	OutputType, BuilderType, CLIFunc string
+	BuilderType, ImplType, OutputType string
 }
 
 func implementations() {
@@ -37,6 +41,9 @@ func implementations() {
 
 	t := template.New("implementations")
 	t.Funcs(map[string]any{
+		"types": func(builder, impl, output string) ImplementationFields {
+			return ImplementationFields{builder, impl, output}
+		},
 		"map": func(pairs ...any) (map[string]any, error) {
 			if len(pairs)%2 != 0 {
 				return nil, errors.New("misaligned map")

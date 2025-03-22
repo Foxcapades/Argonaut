@@ -5,83 +5,215 @@ package argo
 // Command leaves may be children of either a CommandTree directly, or of a
 // BranchCommand.
 type LeafCommand interface {
-	ChildNode[LeafCommand]
+	ChildNode
+  
+  // Name returns the name of the command or subcommand.
+  Name() string
 
-	// Arguments returns the positional Argument instances attached to this
-	// Command.
-	Arguments() []Argument
+  // Description returns the description value assigned to this node.
+  //
+  // Description values are used when rendering help text.
+  Description() string
 
-	// HasArguments indicates whether this Command has any positional arguments
-	// attached.
-	//
-	// This method does not indicate whether those arguments were present on the
-	// command line, it simply indicates whether Argument instances were attached
-	// to the Command by the CommandBuilder.
-	//
-	// To determine whether an argument was present on the command line, test the
-	// argument itself by using the Argument.WasHit method.
-	HasArguments() bool
+  // HasDescription indicates whether this Node has a description value
+  // set.
+  HasDescription() bool
 
-	// UnmappedInputs returns a collection of inputs that were passed to this
-	// command that do not match any registered flag or argument.
-	//
-	// Unmapped inputs may be used to collect slices of positional arguments when
-	// singular arguments can't be used.  For these situations, consider using
-	// CommandBuilder.WithUnmappedLabel to set a help-text label indicating that
-	// the command expects an arbitrary number of positional arguments.
-	//
-	// Defined positional arguments will always be hit before a value is added to
-	// a command's unmapped inputs.
-	UnmappedInputs() []string
+  // FlagGroups returns the flag groups assigned to this Node.
+  //
+  // This method will only return flag groups that had flags assigned to them,
+  // the rest of the flag groups will have been filtered out when the node was
+  // built.
+  FlagGroups(includeDefault bool) []FlagGroup
 
-	// HasUnmappedInputs indicates whether the command has collected any inputs
-	// that were not mapped to any registered flag or argument.
-	HasUnmappedInputs() bool
+  // HasFlagGroups indicates whether this Node has at least one populated
+  // flag group.
+  HasFlagGroups(includeDefault bool) bool
 
-	AppendUnmappedInput(val string)
+  // FindShortFlag looks up a target Flag instance by its short-form character.
+  //
+  // If no such flag exists on this Node or any of its parents, this
+  // method will return nil.
+  FindShortFlag(c byte) Flag
 
-	// GetUnmappedLabel returns the label used when generating help text to
-	// indicate the shape or purpose of unmapped inputs.
-	GetUnmappedLabel() string
+  // FindLongFlag looks up a target Flag instance by its long-form name.
+  //
+  // If no such flag exists on this Node or any of its parents, this
+  // method will return nil.
+  FindLongFlag(name string) Flag
 
-	// HasUnmappedLabel indicates whether an unmapped label has been set on this
-	// command instance.
-	HasUnmappedLabel() bool
+  HasCallback() bool
+
+  Callback() CommandCallback[LeafCommand]
+
+  IsHelpDisabled() bool
+
+  // Arguments returns the positional Argument instances attached to this
+  // LeafCommand.
+  Arguments() []Argument
+
+  // HasArguments indicates whether this LeafCommand has any positional
+	// arguments attached.
+  //
+  // This method does not indicate whether those arguments were present on the
+  // command line, it simply indicates whether Argument instances were attached
+  // to the command by the builder.
+  //
+  // To determine whether an argument was present on the command line, test the
+  // argument itself by using the Argument.WasHit method.
+  HasArguments() bool
+
+  // UnmappedInputs returns a collection of inputs that were passed to this
+  // LeafCommand that do not match any registered flag or argument.
+  //
+  // Unmapped inputs may be used to collect slices of positional arguments when
+  // singular arguments can't be used.  For these situations, consider using
+  // LeafCommandBuilder.WithUnmappedLabel to set a help-text label indicating
+	// that the command expects an arbitrary number of positional arguments.
+  //
+  // Defined positional arguments will always be hit before a value is added to
+  // a command's unmapped inputs.
+  UnmappedInputs() []string
+
+  // HasUnmappedInputs indicates whether the command has collected any inputs
+  // that were not mapped to any registered flag or argument.
+  HasUnmappedInputs() bool
+
+  AppendUnmappedInput(val string)
+
+  // GetUnmappedLabel returns the label used when generating help text to
+  // indicate the shape or purpose of unmapped inputs.
+  GetUnmappedLabel() string
+
+  // HasUnmappedLabel indicates whether an unmapped label has been set on this
+  // command.
+  HasUnmappedLabel() bool
+
 }
 
 // LeafCommandBuilder defines a builder type that is used to construct
 // LeafCommand instances.
 type LeafCommandBuilder interface {
-	ChildBuilder[LeafCommandBuilder, LeafCommand]
+	ChildNodeBuilder
+	
+  // WithDescription sets the description value that will be used for the built
+  // cli command or subcommand.
+  //
+  // Descriptions are used when rendering help text.
+  WithDescription(desc string) LeafCommandBuilder
 
-	// WithUnmappedInputLabel provides a label for unmapped inputs.
+  HasDescription() bool
+
+  Description() string
+
+  // WithHelpDisabled disables the automatic `-h` and `--help` flags for
+  // rendering help text.
+  WithHelpDisabled() LeafCommandBuilder
+
+  IsHelpDisabled() bool
+
+  // WithFlagGroup appends the given FlagGroupBuilder to this CLI component
+  // builder.
+  WithFlagGroup(group FlagGroupBuilder) LeafCommandBuilder
+
+  WithFlagGroups(groups ...FlagGroupBuilder) LeafCommandBuilder
+
+  HasFlagGroups(includeDefault bool) bool
+
+  FlagGroups(includeDefault bool) []FlagGroupBuilder
+
+  // WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
+  // instance attached to this CLI component builder.
+  WithFlag(flag FlagBuilder) LeafCommandBuilder
+
+  WithFlags(flags ...FlagBuilder) LeafCommandBuilder
+
+  HasFlags() bool
+
+  WithCallback(callback CommandCallback[LeafCommand]) LeafCommandBuilder
+
+  HasCallback() bool
+
+  Callback() CommandCallback[LeafCommand]
+
+  // WithAlias assigns the given alias to the target command node.
+  //
+  // Command aliases must be unique per level in a command tree.  This means
+  // that for any given step in the tree, no alias may conflict with another
+  // branch or leaf subcommand's name or aliases.
+  //
+  // This also applies if a subcommand node is reused at multiple levels of the
+  // command tree.
+  //
+  // If a conflict is found between subcommand names and/or aliases, an error
+  // will be returned when attempting to build the command tree.
+  //
+  // Example:
+  //   cli.Leaf("list").WithAlias("ls")
+  WithAlias(alias string) LeafCommandBuilder
+
+  // WithAliases assigns the given aliases to the target command node.
+  //
+  // Command aliases must be unique per level in a command tree.  This means
+  // that for any given step in the tree, no alias may conflict with another
+  // branch or leaf subcommand's name or aliases.
+  //
+  // This also applies if a subcommand node is reused at multiple levels of the
+  // command tree.
+  //
+  // If a conflict is found between subcommand names and/or aliases, an error
+  // will be returned when attempting to build the command tree.
+  WithAliases(aliases ...string) LeafCommandBuilder
+
+	// SetParentNode is used by the builder process to link command tree nodes
+	// together.
 	//
-	// The unmapped label value is used when rendering the command usage line of
-	// the auto-generated help text.  If a command expects an unknown number of
-	// positional argument values, it is best to capture them as unmapped inputs
-	// with a label.
+	// Setting this value before it is passed to the parent command builder will
+	// have no effect as the value will be overwritten.
 	//
-	// Example configuration:
-	//     cli.LeafCommand("my-leaf").
-	//         WithUnmappedInputLabel("ITEMS...")
-	//
-	// Example usage line:
-	//     Usage:
-	//       my-leaf [ITEMS...]
-	WithUnmappedInputLabel(label string) LeafCommandBuilder
+	// Setting this value _after_ it is passed to the parent command builder will
+	// cause undefined behavior.
+  SetParentNode(parent ParentNodeBuilder) LeafCommandBuilder
 
-	HasUnmappedInputLabel() bool
+  // Arguments returns the positional Argument instances attached to this
+  // LeafCommand.
+  Arguments() []Argument
 
-	UnmappedInputLabel() string
+  // HasArguments indicates whether this LeafCommand has any positional
+	// arguments attached.
+  //
+  // This method does not indicate whether those arguments were present on the
+  // command line, it simply indicates whether Argument instances were attached
+  // to the command by the builder.
+  //
+  // To determine whether an argument was present on the command line, test the
+  // argument itself by using the Argument.WasHit method.
+  HasArguments() bool
 
-	// WithArgument adds a positional argument to the LeafCommand being built.
-	WithArgument(argument ArgumentBuilder) LeafCommandBuilder
+  // UnmappedInputs returns a collection of inputs that were passed to this
+  // LeafCommand that do not match any registered flag or argument.
+  //
+  // Unmapped inputs may be used to collect slices of positional arguments when
+  // singular arguments can't be used.  For these situations, consider using
+  // LeafCommandBuilder.WithUnmappedLabel to set a help-text label indicating
+	// that the command expects an arbitrary number of positional arguments.
+  //
+  // Defined positional arguments will always be hit before a value is added to
+  // a command's unmapped inputs.
+  UnmappedInputs() []string
 
-	WithArguments(arguments ...ArgumentBuilder) LeafCommandBuilder
+  // HasUnmappedInputs indicates whether the command has collected any inputs
+  // that were not mapped to any registered flag or argument.
+  HasUnmappedInputs() bool
 
-	HasArguments() bool
+  AppendUnmappedInput(val string)
 
-	Arguments() []ArgumentBuilder
+  // GetUnmappedLabel returns the label used when generating help text to
+  // indicate the shape or purpose of unmapped inputs.
+  GetUnmappedLabel() string
 
-	Build(warnings *WarningContext) (LeafCommand, error)
+  // HasUnmappedLabel indicates whether an unmapped label has been set on this
+  // command.
+  HasUnmappedLabel() bool
+
 }

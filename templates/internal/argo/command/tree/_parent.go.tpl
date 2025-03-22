@@ -5,16 +5,16 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-type parent[T any] struct {
+type ParentCommon struct {
 	common.CommandBase[{{ .OutputType }}]
-{{ define "tree-parent-impl-props" -}}
-	groups []argo.CommandGroup
-	selectedChild argo.ChildNode[any]
+{{ define "ParentCommonProps" -}}
+	commandGroups []argo.CommandGroup
+	selectedChild argo.ChildNode
 	incompleteFn argo.IncompleteCommandHandler[{{ .OutputType }}]
 {{- end }}
 }
 
-{{ define "tree-parent-impl-funcs" -}}
+{{ define "ParentCommonFuncs" -}}
 func (i *{{ .ImplType }}) HasCommandGroups(includeDefault bool) bool {
 	return len(i.groups) > 1 || (includeDefault && i.hasDefaultCommandGroup())
 }
@@ -35,7 +35,7 @@ func (i *{{ .ImplType }}) hasDefaultCommandGroup() bool {
 	return i.groups[0] != nil
 }
 
-func (i *{{ .ImplType }}) FindChild(name string) argo.ChildNode[any] {
+func (i *{{ .ImplType }}) FindChild(name string) argo.ChildNode {
 	for _, group := range i.groups {
 		if child := group.FindChild(name); child != nil {
 			return child
@@ -60,7 +60,7 @@ func (i *{{ .ImplType }}) SelectChild(name string) bool {
 	return false
 }
 
-func (i *{{ .ImplType }}) SelectedChild() argo.ChildNode[any] {
+func (i *{{ .ImplType }}) SelectedChild() argo.ChildNode {
 	return i.selectedChild
 }
 

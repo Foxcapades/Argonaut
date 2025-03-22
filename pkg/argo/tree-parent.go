@@ -1,58 +1,35 @@
 package argo
 
-// A ParentNode is a Node instance that may contain child Node
-// instances.
-type ParentNode[T any] interface {
-	CommandBase[T]
+type ParentNode interface {
+  // CommandGroups returns the CommandGroup instances attached to this
+  // ParentNode node.
+  CommandGroups(includeDefault bool) []CommandGroup
 
-	// CommandGroups returns the CommandGroup instances attached to this
-	// ParentNode node.
-	CommandGroups(includeDefault bool) []CommandGroup
+  HasCommandGroups(includeDefault bool) bool
 
-	HasCommandGroups(includeDefault bool) bool
+  HasSubcommands() bool
 
-	// FindChild searches this ParentNode's CommandGroup instances for a
-	// subcommand that matches the given string.
-	//
-	// A subcommand may match on either its name or one of its aliases.
-	FindChild(name string) ChildNode[any]
+  // FindChild searches this ParentNode's CommandGroup instances for a
+  // subcommand that matches the given string.
+  //
+  // A subcommand may match on either its name or one of its aliases.
+  FindChild(name string) ChildNode
 
-	HasSelectedChild() bool
+  HasSelectedChild() bool
 
-	SelectChild(name string) bool
+  SelectChild(name string) bool
 
-	SelectedChild() ChildNode[any]
+  SelectedChild() ChildNode
 
-	HasIncompleteHandler() bool
-
-	IncompleteHandler() IncompleteCommandHandler[T]
+  HasIncompleteHandler() bool
 }
 
-type ParentBuilder[T, O any] interface {
-	CommandBuilderBase[T, O]
+type ParentNodeBuilder interface {
+  HasCommandGroups(includeDefault bool) bool
 
-	WithBranch(branch BranchCommandBuilder) T
-	WithBranches(branches ...BranchCommandBuilder) T
+  CommandGroups(includeDefault bool) []CommandGroupBuilder
 
-	WithLeaf(leaf LeafCommandBuilder) T
-	WithLeaves(leaves ...LeafCommandBuilder) T
+  HasSubcommands() bool
 
-	// WithCommandGroup appends the given command group builder to be built with
-	// this command tree.
-	//
-	// Command groups are used for organizing subcommands into named groups that
-	// are primarily used for rendering help text.
-	WithCommandGroup(group CommandGroupBuilder) T
-
-	WithCommandGroups(groups ...CommandGroupBuilder) T
-
-	HasCommandGroups() bool
-
-	CommandGroups() []CommandGroupBuilder
-
-	HasSubcommands() bool
-
-	WithIncompleteHandler(handler IncompleteCommandHandler[T]) T
-	HasIncompleteHandler() bool
-	IncompleteHandler() IncompleteCommandHandler[T]
+  HasIncompleteHandler() bool
 }

@@ -3,55 +3,91 @@ package argo
 // Command represents a singular, non-nested command which accepts flags and
 // arguments.
 type Command interface {
-	CommandBase[Command]
+	
+  // Name returns the name of the command or subcommand.
+  Name() string
 
-	// HasArguments indicates whether this Command has any positional arguments
-	// attached.
-	//
-	// This method does not indicate whether those arguments were present on the
-	// command line, it simply indicates whether Argument instances were attached
-	// to the Command by the CommandBuilder.
-	//
-	// To determine whether an argument was present on the command line, test the
-	// argument itself by using the Argument.WasHit method.
-	HasArguments() bool
+  // Description returns the description value assigned to this node.
+  //
+  // Description values are used when rendering help text.
+  Description() string
 
-	// Arguments returns the positional Argument instances attached to this
-	// Command.
-	Arguments() []Argument
+  // HasDescription indicates whether this Node has a description value
+  // set.
+  HasDescription() bool
 
-	//
+  // FlagGroups returns the flag groups assigned to this Node.
+  //
+  // This method will only return flag groups that had flags assigned to them,
+  // the rest of the flag groups will have been filtered out when the node was
+  // built.
+  FlagGroups(includeDefault bool) []FlagGroup
 
-	// HasUnmappedInputs indicates whether the command has collected any inputs
-	// that were not mapped to any registered flag or argument.
-	HasUnmappedInputs() bool
+  // HasFlagGroups indicates whether this Node has at least one populated
+  // flag group.
+  HasFlagGroups(includeDefault bool) bool
 
-	// UnmappedInputs returns a collection of inputs that were passed to this
-	// command that do not match any registered flag or argument.
-	//
-	// Unmapped inputs may be used to collect slices of positional arguments when
-	// singular arguments can't be used.  For these situations, consider using
-	// CommandBuilder.WithUnmappedLabel to set a help-text label indicating that
-	// the command expects an arbitrary number of positional arguments.
-	//
-	// Defined positional arguments will always be hit before a value is added to
-	// a command's unmapped inputs.
-	UnmappedInputs() []string
+  // FindShortFlag looks up a target Flag instance by its short-form character.
+  //
+  // If no such flag exists on this Node or any of its parents, this
+  // method will return nil.
+  FindShortFlag(c byte) Flag
 
-	AppendUnmappedInput(val string)
+  // FindLongFlag looks up a target Flag instance by its long-form name.
+  //
+  // If no such flag exists on this Node or any of its parents, this
+  // method will return nil.
+  FindLongFlag(name string) Flag
 
-	//
+  HasCallback() bool
 
-	// HasUnmappedInputLabel indicates whether an unmapped label has been set on this
-	// command instance.
-	HasUnmappedInputLabel() bool
+  Callback() CommandCallback[Command]
 
-	// UnmappedInputLabel returns the label used when generating help text to
-	// indicate the shape or purpose of unmapped inputs.
-	UnmappedInputLabel() string
+  IsHelpDisabled() bool
+
+	
+  // Arguments returns the positional Argument instances attached to this
+  // Command.
+  Arguments() []Argument
+
+  // HasArguments indicates whether this Command has any positional
+	// arguments attached.
+  //
+  // This method does not indicate whether those arguments were present on the
+  // command line, it simply indicates whether Argument instances were attached
+  // to the command by the builder.
+  //
+  // To determine whether an argument was present on the command line, test the
+  // argument itself by using the Argument.WasHit method.
+  HasArguments() bool
+
+  // UnmappedInputs returns a collection of inputs that were passed to this
+  // Command that do not match any registered flag or argument.
+  //
+  // Unmapped inputs may be used to collect slices of positional arguments when
+  // singular arguments can't be used.  For these situations, consider using
+  // CommandBuilder.WithUnmappedLabel to set a help-text label indicating
+	// that the command expects an arbitrary number of positional arguments.
+  //
+  // Defined positional arguments will always be hit before a value is added to
+  // a command's unmapped inputs.
+  UnmappedInputs() []string
+
+  // HasUnmappedInputs indicates whether the command has collected any inputs
+  // that were not mapped to any registered flag or argument.
+  HasUnmappedInputs() bool
+
+  AppendUnmappedInput(val string)
+
+  // GetUnmappedLabel returns the label used when generating help text to
+  // indicate the shape or purpose of unmapped inputs.
+  GetUnmappedLabel() string
+
+  // HasUnmappedLabel indicates whether an unmapped label has been set on this
+  // command.
+  HasUnmappedLabel() bool
+
 }
-
-//
 
 // A CommandBuilder provides an API to configure the construction of a new
 // Command instance.
@@ -69,37 +105,75 @@ type Command interface {
 //	        WithName("file").
 //	        WithDescription("File path.").
 //	        WithBinding(&config.file)).
-//	    Build()
 type CommandBuilder interface {
-	CommandBuilderBase[CommandBuilder, Command]
+  
+  // WithDescription sets the description value that will be used for the built
+  // cli command or subcommand.
+  //
+  // Descriptions are used when rendering help text.
+  WithDescription(desc string) CommandBuilder
 
-	// WithArgument appends the given ArgumentBuilder to this CommandBuilder's
-	// list of positional arguments.
-	WithArgument(arg ArgumentBuilder) CommandBuilder
+  HasDescription() bool
 
-	WithArguments(args ...ArgumentBuilder) CommandBuilder
+  Description() string
 
-	HasArguments() bool
+  // WithHelpDisabled disables the automatic `-h` and `--help` flags for
+  // rendering help text.
+  WithHelpDisabled() CommandBuilder
 
-	Arguments() []ArgumentBuilder
+  IsHelpDisabled() bool
 
-	//
+  // WithFlagGroup appends the given FlagGroupBuilder to this CLI component
+  // builder.
+  WithFlagGroup(group FlagGroupBuilder) CommandBuilder
 
-	// WithUnmappedInputLabel sets the help-text label for unmapped arguments.
-	//
-	// This is useful when your command takes an arbitrary number of argument
-	// inputs, and you would like the help text to indicate as such.
-	//
-	// Example Config:
-	//     cli.Command().
-	//         WithUnmappedInputLabel("[FILE...]")
-	//
-	// Example Result:
-	//     Usage:
-	//       my-command [FILE...]
-	WithUnmappedInputLabel(label string) CommandBuilder
+  WithFlagGroups(groups ...FlagGroupBuilder) CommandBuilder
 
-	HasUnmappedInputLabel() bool
+  HasFlagGroups(includeDefault bool) bool
 
-	UnmappedInputLabel() string
+  FlagGroups(includeDefault bool) []FlagGroupBuilder
+
+  // WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
+  // instance attached to this CLI component builder.
+  WithFlag(flag FlagBuilder) CommandBuilder
+
+  WithFlags(flags ...FlagBuilder) CommandBuilder
+
+  HasFlags() bool
+
+  WithCallback(callback CommandCallback[Command]) CommandBuilder
+
+  HasCallback() bool
+
+  Callback() CommandCallback[Command]
+
+  
+  // WithArgument appends the given ArgumentBuilder to this CommandBuilder's
+  // list of positional arguments.
+  WithArgument(arg ArgumentBuilder) CommandBuilder
+
+  WithArguments(args ...ArgumentBuilder) CommandBuilder
+
+  HasArguments() bool
+
+  Arguments() []ArgumentBuilder
+
+  // WithUnmappedInputLabel sets the help-text label for unmapped arguments.
+  //
+  // This is useful when your command takes an arbitrary number of argument
+  // inputs, and you would like the help text to indicate as such.
+  //
+  // Example Config:
+  //     cli.Command().
+  //         WithUnmappedInputLabel("[FILE...]")
+  //
+  // Example Result:
+  //     Usage:
+  //       my-command [FILE...]
+  WithUnmappedInputLabel(label string) CommandBuilder
+
+  HasUnmappedInputLabel() bool
+
+  UnmappedInputLabel() string
+
 }

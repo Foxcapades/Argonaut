@@ -1,12 +1,6 @@
 {{ $vars := (types "CommandTree" "CommandTreeBuilder" "Tree") -}}
 package argo
 
-type CommandCallback[T any] = func(com T)
-
-// IncompleteCommandHandler defines a function type that may be used as a callback
-// for when a command leaf is not reached when parsing a command tree structure.
-type IncompleteCommandHandler[T any] = func(command T)
-
 // CommandTree represents the root of a tree of subcommands.
 //
 // The command tree consists of branch and leaf nodes.  The branch nodes can be

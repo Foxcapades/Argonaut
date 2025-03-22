@@ -1,7 +1,7 @@
+{{ $vars := (types "argo.BranchCommandBuilder" "CommandBranchBuilder" "argo.BranchCommand") }}
 package tree
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/chars"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
@@ -23,10 +23,7 @@ type CommandBranchBuilder struct {
 
 	onIncompleteHandler argo.IncompleteCommandHandler[argo.BranchCommand]
 
-	disableHelp bool
-	description string
-	flagGroups  []argo.FlagGroupBuilder
-	callback    argo.CommandCallback[argo.BranchCommand]
+	{{ template "CommandBuilderBaseProps" $vars }}
 }
 
 func (i *CommandBranchBuilder) Name() string {
@@ -135,87 +132,4 @@ func (i *CommandBranchBuilder) ParentNode() argo.ParentNodeBuilder {
 	return i.parent
 }
 
-func (i *CommandBranchBuilder) WithDescription(desc string) argo.BranchCommandBuilder {
-	i.description = desc
-	return i
-}
-
-func (i *CommandBranchBuilder) HasDescription() bool {
-	return len(i.description) > 0
-}
-
-func (i *CommandBranchBuilder) Description() string {
-	return i.description
-}
-
-func (i *CommandBranchBuilder) WithHelpDisabled() argo.BranchCommandBuilder {
-	i.disableHelp = true
-	return i
-}
-
-func (i *CommandBranchBuilder) IsHelpDisabled() bool {
-	return i.disableHelp
-}
-
-func (i *CommandBranchBuilder) WithFlagGroup(group argo.FlagGroupBuilder) argo.BranchCommandBuilder {
-	i.flagGroups = append(i.flagGroups, group)
-	return i
-}
-
-func (i *CommandBranchBuilder) WithFlagGroups(groups ...argo.FlagGroupBuilder) argo.BranchCommandBuilder {
-	i.flagGroups = append(i.flagGroups, groups...)
-	return i
-}
-
-func (i *CommandBranchBuilder) HasFlagGroups(includeDefault bool) bool {
-	return (includeDefault && len(i.flagGroups) > 0) ||
-		(i.hasDefaultFlagGroup() && len(i.flagGroups) > 1) ||
-		len(i.flagGroups) > 0
-}
-
-func (i *CommandBranchBuilder) FlagGroups(includeDefault bool) []argo.FlagGroupBuilder {
-	if !includeDefault && i.hasDefaultFlagGroup() {
-		return i.flagGroups[1:]
-	}
-
-	return i.flagGroups
-}
-
-func (i *CommandBranchBuilder) hasDefaultFlagGroup() bool {
-	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
-}
-
-func (i *CommandBranchBuilder) WithFlag(flag argo.FlagBuilder) argo.BranchCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
-	i.flagGroups[0].WithFlag(flag)
-	return i
-}
-
-func (i *CommandBranchBuilder) WithFlags(flags ...argo.FlagBuilder) argo.BranchCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
-	i.flagGroups[0].WithFlags(flags...)
-	return i
-}
-
-func (i *CommandBranchBuilder) HasFlags() bool {
-	for _, group := range i.flagGroups {
-		if group != nil && group.HasFlags() {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (i *CommandBranchBuilder) WithCallback(callback argo.CommandCallback[argo.BranchCommand]) argo.BranchCommandBuilder {
-	i.callback = callback
-	return i
-}
-
-func (i *CommandBranchBuilder) HasCallback() bool {
-	return i.callback != nil
-}
-
-func (i *CommandBranchBuilder) Callback() argo.CommandCallback[argo.BranchCommand] {
-	return i.callback
-}
+{{ template "CommandBuilderBaseFuncs" $vars }}

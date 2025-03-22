@@ -27,14 +27,7 @@ type ParentNodeBuilderCommon interface {
 
   WithCommandGroups(groups ...CommandGroupBuilder) {{ .BuilderType }}
 
-  HasCommandGroups() bool
-
-  CommandGroups() []CommandGroupBuilder
-
-  HasSubcommands() bool
-
   WithIncompleteHandler(handler IncompleteCommandHandler[{{ .OutputType }}]) {{ .BuilderType }}
-  HasIncompleteHandler() bool
   IncompleteHandler() IncompleteCommandHandler[{{ .OutputType }}]
   {{ end }}
 }

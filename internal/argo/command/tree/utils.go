@@ -8,6 +8,14 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
+func EnsureDefaultCommandGroup(groups []argo.CommandGroupBuilder) []argo.CommandGroupBuilder {
+	if len(groups) > 0 && groups[0].Name() != DefaultCommandGroupName {
+		return append(append(make([]argo.CommandGroupBuilder, 0, len(groups)+1), NewGroupBuilder(DefaultCommandGroupName)), groups...)
+	}
+
+	return groups
+}
+
 func uniqueCommandNames(branches []argo.BranchCommandBuilder, leaves []argo.LeafCommandBuilder, errs argo.MultiError) {
 	names := make(map[string]uint8, 32)
 	uniqueNames(names, branches, leaves, errs)

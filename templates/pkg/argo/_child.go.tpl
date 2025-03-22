@@ -6,7 +6,6 @@ import (
 
 type ChildNodeBuilderCommon interface {
 {{ define "ChildNodeBuilderCommon" }}
-
   // WithAlias assigns the given alias to the target command node.
   //
   // Command aliases must be unique per level in a command tree.  This means

@@ -36,7 +36,7 @@ type CommandGroup interface {
 	// LeafCommand node that matches the given string.
 	//
 	// Commands may match on either their name or one of their aliases.
-	FindChild(name string) ChildNode[any]
+	FindChild(name string) ChildNode
 }
 
 // A CommandGroupBuilder is used to construct a CommandGroup instance.

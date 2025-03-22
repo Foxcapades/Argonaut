@@ -2,6 +2,7 @@ package tree
 
 import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -60,7 +61,7 @@ func (n *nodeBuilder[T, O]) FlagGroups(includeDefault bool) []argo.FlagGroupBuil
 }
 
 func (n *nodeBuilder[T, O]) hasDefaultFlagGroup() bool {
-	return n.flagGroups[0] != nil && n.flagGroups[0].Size() > 0
+	return n.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(n.flagGroups[0])
 }
 
 //

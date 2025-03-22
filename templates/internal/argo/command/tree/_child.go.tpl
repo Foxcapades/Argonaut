@@ -5,21 +5,21 @@ import (
   "github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-type child struct {
+type ChildCommon struct {
   common.CommandBase[{{ .OutputType }}]
-  {{ define "tree-child-impl-props" -}}
+{{ define "ChildCommonProps" -}}
   name    string
-  parent  argo.ParentNode[any]
+  parent  argo.ParentNode
   aliases []string
-  {{- end }}
+{{- end }}
 }
 
-{{ define "tree-child-impl-funcs" -}}
+{{ define "ChildCommonFuncs" -}}
 func (i *{{ .ImplType }}) Name() string {
   return i.name
 }
 
-func (i *{{ .ImplType }}) Parent() argo.ParentNode[any] {
+func (i *{{ .ImplType }}) Parent() argo.ParentNode {
   return i.parent
 }
 
