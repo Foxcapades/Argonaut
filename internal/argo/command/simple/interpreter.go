@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
@@ -12,8 +14,8 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func newCommandInterpreter(args []string, command argo.Command) commandInterpreter {
-	return commandInterpreter{
+func NewInterpreter(args []string, command argo.Command) Interpreter {
+	return Interpreter{
 		parser:   parse.NewParser(emit.NewEmitter(args)),
 		command:  command,
 		elements: utils.NewDeque[parse.Element](2),
@@ -21,15 +23,16 @@ func newCommandInterpreter(args []string, command argo.Command) commandInterpret
 	}
 }
 
-type commandInterpreter struct {
-	parser   parse.Parser
-	command  argo.Command
-	flagHits flag.Queue
-	elements utils.Deque[parse.Element]
+type Interpreter struct {
 	boundary bool
+	parser   parse.Parser
+	flagHits flag.Queue
+	result   argo.ParseResult
+	command  argo.Command
+	elements utils.Deque[parse.Element]
 }
 
-func (c *commandInterpreter) nextElement() parse.Element {
+func (c *Interpreter) nextElement() parse.Element {
 	if c.elements.IsEmpty() {
 		c.elements.Offer(c.parser.Next())
 	}
@@ -37,7 +40,7 @@ func (c *commandInterpreter) nextElement() parse.Element {
 	return c.elements.Poll()
 }
 
-func (c *commandInterpreter) Run() error {
+func (c *Interpreter) Run() (argo.ParseResult, error) {
 	var argumentStream argument.Appender
 	var interpretFn func(*parse.Element) error
 
@@ -53,7 +56,7 @@ FOR:
 			}
 
 			if ok, err := argumentStream.Append(element.String()); err != nil {
-				return err
+				return common.AppendError(c.result, err)
 			} else if !ok {
 				c.command.AppendUnmappedInput(element.String())
 			}
@@ -65,7 +68,7 @@ FOR:
 
 		case parse.ElementTypePlainText:
 			if ok, err := argumentStream.Append(element.String()); err != nil {
-				return err
+				return common.AppendError(c.result, err)
 			} else if !ok {
 				c.command.AppendUnmappedInput(element.String())
 				continue
@@ -95,7 +98,7 @@ FOR:
 		}
 
 		if err := interpretFn(&element); err != nil {
-			return err
+			return common.AppendError(c.result, err)
 		}
 	}
 
@@ -107,15 +110,15 @@ FOR:
 	common.CheckRequiredArguments(c.command.Arguments(), errs)
 
 	if len(errs.Errors()) > 0 {
-		return errs
+		return common.AppendError(c.result, errs)
 	}
 
 	c.command.Callback()(c.command)
 
-	return nil
+	return c.result, nil
 }
 
-func (c *commandInterpreter) interpretShortSolo(e *parse.Element) error {
+func (c *Interpreter) interpretShortSolo(e *parse.Element) error {
 	remainder := e.Data[0]
 
 	for i := 0; i < len(e.Data[0]); i++ {
@@ -131,7 +134,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) error {
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
-			// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
+			common.AppendWarning(&c.result, fmt.Sprintf("unrecognized short flag -%c", b), argo.UnrecognizedFlag)
 			c.command.AppendUnmappedInput(chars.StrDash + string(b))
 			continue
 		}
@@ -263,7 +266,7 @@ func (c *commandInterpreter) interpretShortSolo(e *parse.Element) error {
 	return nil
 }
 
-func (c *commandInterpreter) interpretShortPair(cliElement *parse.Element) error {
+func (c *Interpreter) interpretShortPair(cliElement *parse.Element) error {
 	flagBlock := cliElement.Data[0]
 
 	if len(flagBlock) == 0 {
@@ -281,8 +284,7 @@ func (c *commandInterpreter) interpretShortPair(cliElement *parse.Element) error
 				return f.Argument().SetValue(cliElement.Data[1])
 			}
 
-			// TODO: There should be a warning or error for assigning a value to a CLI
-			//       flag that doesn't expect one.
+			common.AppendWarning(&c.result, fmt.Sprintf("targetFlag -%c received an argument it didn't expect", flagBlock[0]), argo.UnexpectedFlagArgument)
 			return nil
 		}
 
@@ -303,7 +305,7 @@ func (c *commandInterpreter) interpretShortPair(cliElement *parse.Element) error
 		targetFlag := c.command.FindShortFlag(currentChar)
 
 		if targetFlag == nil {
-			// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized short flag -%c", b))
+			common.AppendWarning(&c.result, fmt.Sprintf("unrecognized short flag -%c", currentChar), argo.UnrecognizedFlag)
 			c.command.AppendUnmappedInput(chars.StrDash + string(currentChar))
 			continue
 		}
@@ -312,8 +314,7 @@ func (c *commandInterpreter) interpretShortPair(cliElement *parse.Element) error
 		targetFlag.IncrementHitCount()
 
 		if !targetFlag.HasArgument() {
-			// TODO: There should be a warning or error for assigning a value to a CLI
-			//       flag that doesn't expect one.
+			common.AppendWarning(&c.result, fmt.Sprintf("targetFlag -%c received an argument it didn't expect", currentChar), argo.UnexpectedFlagArgument)
 			return nil
 		}
 
@@ -343,11 +344,11 @@ func (c *commandInterpreter) interpretShortPair(cliElement *parse.Element) error
 	panic("illegal state")
 }
 
-func (c *commandInterpreter) interpretLongSolo(cliElement *parse.Element) error {
+func (c *Interpreter) interpretLongSolo(cliElement *parse.Element) error {
 	targetFlag := c.command.FindLongFlag(cliElement.Data[0])
 
 	if targetFlag == nil {
-		// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized long flag --%s", e.Data[0]))
+		common.AppendWarning(&c.result, fmt.Sprintf("unrecognized long flag --%s", cliElement.Data[0]), argo.UnrecognizedFlag)
 		c.command.AppendUnmappedInput(cliElement.String())
 		return nil
 	}
@@ -416,11 +417,11 @@ func (c *commandInterpreter) interpretLongSolo(cliElement *parse.Element) error 
 	return nil
 }
 
-func (c *commandInterpreter) interpretLongPair(e *parse.Element) error {
+func (c *Interpreter) interpretLongPair(e *parse.Element) error {
 	targetFlag := c.command.FindLongFlag(e.Data[0])
 
 	if targetFlag == nil {
-		// TODO: c.command.AppendWarning(fmt.Sprintf("unrecognized long targetFlag --%s", e.Data[0]))
+		common.AppendWarning(&c.result, fmt.Sprintf("unrecognized long targetFlag --%s", e.Data[0]), argo.UnrecognizedFlag)
 		c.command.AppendUnmappedInput(e.String())
 	} else {
 		c.flagHits.Append(targetFlag)
@@ -430,7 +431,7 @@ func (c *commandInterpreter) interpretLongPair(e *parse.Element) error {
 			return targetFlag.Argument().SetValue(e.Data[1])
 		}
 
-		// TODO: c.command.AppendWarning(fmt.Sprintf("targetFlag --%s received an argument it didn't expect", e.Data[0]))
+		common.AppendWarning(&c.result, fmt.Sprintf("targetFlag --%s received an argument it didn't expect", e.Data[0]), argo.UnexpectedFlagArgument)
 	}
 
 	return nil

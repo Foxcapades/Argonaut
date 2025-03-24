@@ -7,14 +7,14 @@ type CommandEnd interface {
   Arguments() []Argument
 
   // HasArguments indicates whether this {{ .OutputType }} has any positional
-	// arguments attached.
+	// Arguments attached.
   //
-  // This method does not indicate whether those arguments were present on the
-  // command line, it simply indicates whether Argument instances were attached
-  // to the command by the builder.
+  // This method does not indicate whether those Arguments were present on the
+  // command line, it only indicates whether any Argument instances were
+  // attached to the command with the {{ .BuilderType }}.
   //
-  // To determine whether an argument was present on the command line, test the
-  // argument itself by using the Argument.WasHit method.
+  // To determine whether an Argument was present on the command line, test the
+  // Argument itself by using the Argument.WasHit method.
   HasArguments() bool
 
   // UnmappedInputs returns a collection of inputs that were passed to this
@@ -35,26 +35,32 @@ type CommandEnd interface {
 
   AppendUnmappedInput(val string)
 
-  // GetUnmappedLabel returns the label used when generating help text to
+  // UnmappedInputLabel returns the label used when generating help text to
   // indicate the shape or purpose of unmapped inputs.
-  GetUnmappedLabel() string
+  UnmappedInputLabel() string
 
-  // HasUnmappedLabel indicates whether an unmapped label has been set on this
+  // HasUnmappedInputLabel indicates whether an unmapped label has been set on this
   // command.
-  HasUnmappedLabel() bool
+  HasUnmappedInputLabel() bool
 {{ end }}
 }
 
 type CommandEndBuilder interface {
 {{ define "CommandEndBuilder" }}
-  // WithArgument appends the given ArgumentBuilder to this {{ .BuilderType }}'s
-  // list of positional arguments.
+  // WithArgument appends the given ArgumentBuilder instance to this
+  // {{ .BuilderType }}'s list of positional arguments.
   WithArgument(arg ArgumentBuilder) {{ .BuilderType }}
 
+  // WithArguments appends the given ArgumentBuilder instances to this
+  // {{ .BuilderType }}'s list of positional arguments.
   WithArguments(args ...ArgumentBuilder) {{ .BuilderType }}
 
+  // HasArguments indicates whether any positional arguments have been set on
+  // this {{ .BuilderType }} instance.
   HasArguments() bool
 
+  // Arguments returns a slice containing the ArgumentBuilders that have been
+  // set on this {{ .BuilderType }} instance.
   Arguments() []ArgumentBuilder
 
   // WithUnmappedInputLabel sets the help-text label for unmapped arguments.
@@ -71,8 +77,15 @@ type CommandEndBuilder interface {
   //       my-command [FILE...]
   WithUnmappedInputLabel(label string) {{ .BuilderType }}
 
+  // HasUnmappedInputLabel indicates whether an unmapped input label has been
+  // set on this {{ .BuilderType }} instance.
   HasUnmappedInputLabel() bool
 
+  // UnmappedInputLabel returns the unmapped input label set on this
+  // {{ .BuilderType }} instance.
+  //
+  // If no unmapped input label has been set, this method returns an empty
+  // string.
   UnmappedInputLabel() string
 {{ end }}
 }

@@ -1,11 +1,20 @@
-{{ $vars := (types "Command" "CommandBuilder" "Command") -}}
+{{ $vars := (types "Command" "CommandBuilder" "Command" false) -}}
 package argo
+
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
+{{ if false -}}
+import (
+	. "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+{{- end -}}
 
 // Command represents a singular, non-nested command which accepts flags and
 // arguments.
 type Command interface {
 	{{ template "CommandCommon" $vars }}
-	{{ template "CommandEnd" $vars }}
+	{{- template "CommandEnd" $vars }}
 }
 
 // A CommandBuilder provides an API to configure the construction of a new

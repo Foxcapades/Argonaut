@@ -9,6 +9,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
+// TODO: iterate backwards!!!
 func ExecuteHelpFlagCallbacks(flags iter.Seq[argo.Flag]) {
 	for flag := range flags {
 		if flag.IsHelpFlag() {

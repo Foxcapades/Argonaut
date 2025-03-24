@@ -1,5 +1,14 @@
 package argo
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
+{{ if false -}}
+import (
+  . "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+{{- end -}}
+
 type ChildNode interface {
   // Parent returns the parent Node for the current Node.
   //

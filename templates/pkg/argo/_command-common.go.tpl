@@ -23,11 +23,11 @@ type CommandCommon interface {
   // This method will only return flag groups that had flags assigned to them,
   // the rest of the flag groups will have been filtered out when the node was
   // built.
-  FlagGroups(includeDefault bool) []FlagGroup
+  FlagGroups() []FlagGroup
 
   // HasFlagGroups indicates whether this Node has at least one populated
   // flag group.
-  HasFlagGroups(includeDefault bool) bool
+  HasFlagGroups() bool
 
   // FindShortFlag looks up a target Flag instance by its short-form character.
   //
@@ -87,8 +87,8 @@ type CommandBuilderCommon interface {
 
   WithCallback(callback CommandCallback[{{ .OutputType }}]) {{ .BuilderType }}
 
-  HasCallback() bool
-
   Callback() CommandCallback[{{ .OutputType }}]
+
+  HasCallback() bool
 {{ end }}
 }

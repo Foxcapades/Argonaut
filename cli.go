@@ -29,12 +29,13 @@
 package cli
 
 import (
-	"reflect"
+	"os"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -51,11 +52,54 @@ func Command() argo.CommandBuilder {
 }
 
 func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
-	return command.Build(builder)
+	return BuildCommandCustom(builder, argo.DefaultOptions())
 }
 
-func ParseCommandCLI(com argo.Command) (argo.ParseResult, error) {
+func BuildCommandCustom(builder argo.CommandBuilder, options argo.Options) (argo.Command, error) {
+	argo.FixOptions(&options)
+	return command.Build(builder, options)
+}
+
+func MustBuildCommand(builder argo.CommandBuilder) argo.Command {
+	return utils.MustReturn(BuildCommand(builder))
+}
+
+// ParseCommand attempts to parse the CLI call inputs as options and arguments
+// to the given command type instance.
+//
+// This method returns two values, an argo.ParseResult struct containing any
+// warnings and possibly an error from the attempt to parse the result, and an
+// error value if an error occurred during the parse attempt.
+//
+// If the returned error value is not nil, it will also be set on the result
+// struct, enabling callers to ignore one of the outputs if desired and have
+// access to any error either way.
+//
+// Example 1:
+//
+//	// Use parse result
+//	result, _ := cli.ParseCommand(myCommand)
+//	if result.Error != nil {
+//	    panic(result.Error)
+//	}
+//
+//	for _, warning := result.Warnings {
+//	    _, _ = fmt.Fprintf(os.Stderr, "parse warning: %s", warning.Message)
+//	}
+//
+// Example 2:
+//
+//	// Disregard parse result
+//	_, err := cli.ParseCommand(myCommand)
+//	if err != nil {
+//	    panic(err)
+//	}
+func ParseCommand(com argo.Command) (argo.ParseResult, error) {
 	return command.Parse(com)
+}
+
+func MustParseCommand(com argo.Command) argo.ParseResult {
+	return utils.MustReturn(ParseCommand(com))
 }
 
 // endregion Single Command
@@ -63,12 +107,12 @@ func ParseCommandCLI(com argo.Command) (argo.ParseResult, error) {
 // region Command Tree
 
 // Tree returns a new argo.CommandTreeBuilder instance which can be used to
-// construct an argo.CommandTree instance.
+// construct an argo.TreeCommand instance.
 //
 // A command tree is a tree of nested subcommands of arbitrary depth.  The tree
 // consists of branch and leaf nodes, with the leaf nodes being the selectable
 // final commands.
-func Tree() argo.CommandTreeBuilder {
+func Tree() argo.TreeCommandBuilder {
 	return tree.NewBuilder()
 }
 
@@ -90,12 +134,12 @@ func CommandGroup(name string) argo.CommandGroupBuilder {
 	return tree.NewGroupBuilder(name)
 }
 
-func BuildTree(builder argo.CommandTreeBuilder) (argo.CommandTree, error) {
-	return tree.Build(builder)
+func BuildTree(builder argo.TreeCommandBuilder) (argo.TreeCommand, error) {
+	return tree.Build(builder, argo.DefaultOptions())
 }
 
-func ParseTreeCLI(com argo.CommandTree) (argo.ParseResult, error) {
-	return tree.Parse(com)
+func ParseTreeCLI(com argo.TreeCommand) (argo.ParseResult, error) {
+	return tree.Parse(com, os.Args)
 }
 
 // endregion Command Tree
@@ -113,7 +157,7 @@ func FlagGroup(name string) argo.FlagGroupBuilder {
 //
 // This function is a shortcut for:
 //
-//	cli.Flag().WithShortForm(...)
+//	cli.Render().WithShortForm(...)
 func ShortFlag(f byte) argo.FlagBuilder {
 	return flag.NewBuilder().WithShortForm(f)
 }
@@ -123,7 +167,7 @@ func ShortFlag(f byte) argo.FlagBuilder {
 //
 // This function is a shortcut for:
 //
-//	cli.Flag().WithLongForm(...)
+//	cli.Render().WithLongForm(...)
 func LongFlag(name string) argo.FlagBuilder {
 	return flag.NewBuilder().WithLongForm(name)
 }
@@ -139,7 +183,7 @@ func Flag() argo.FlagBuilder {
 //
 // This function is a shortcut for:
 //
-//	cli.Flag().WithShortForm(...).WithLongForm(...)
+//	cli.Render().WithShortForm(...).WithLongForm(...)
 func ComboFlag(short byte, long string) argo.FlagBuilder {
 	return flag.NewBuilder().WithShortForm(short).WithLongForm(long)
 }

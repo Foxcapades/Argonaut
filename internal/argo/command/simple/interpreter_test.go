@@ -13,20 +13,20 @@ import (
 
 // Unknown short solo flag.
 func TestCommandInterpreterShortSolo01(t *testing.T) {
-	com := cli.Command().MustParse([]string{"command", "-f"})
+	com := cli.Command().MustParse([]string{"Command", "-f"})
 
 	if !com.HasUnmappedInputs() {
-		t.Error("expected command to have unmapped inputs but it didn't")
+		t.Error("expected Command to have unmapped inputs but it didn't")
 	} else if len(com.UnmappedInputs()) != 1 {
-		t.Error("expected command to have exactly 1 unmapped input but it didn't")
+		t.Error("expected Command to have exactly 1 unmapped input but it didn't")
 	} else if com.UnmappedInputs()[0] != "-f" {
-		t.Error("expected command unmapped input to match input but it didn't")
+		t.Error("expected Command unmapped input to match input but it didn't")
 	}
 }
 
 // Known short solo flag.
 func TestCommandInterpreterShortSolo02(t *testing.T) {
-	com := cli.Command().WithFlag(cli.ShortFlag('f')).MustParse([]string{"command", "-f"})
+	com := cli.Command().WithFlag(cli.ShortFlag('f')).MustParse([]string{"Command", "-f"})
 	flag := com.FindShortFlag('f')
 
 	if !flag.WasHit() {
@@ -36,13 +36,13 @@ func TestCommandInterpreterShortSolo02(t *testing.T) {
 
 // Unknown short solo at the start of a block
 func TestCommandInterpreterShortSolo03(t *testing.T) {
-	com := cli.Command().WithFlag(cli.ShortFlag('b')).MustParse([]string{"command", "-ab"})
+	com := cli.Command().WithFlag(cli.ShortFlag('b')).MustParse([]string{"Command", "-ab"})
 	flag := com.FindShortFlag('b')
 
 	if !com.HasUnmappedInputs() {
-		t.Error("expected command to have unmapped inputs but it didn't")
+		t.Error("expected Command to have unmapped inputs but it didn't")
 	} else if len(com.UnmappedInputs()) != 1 {
-		t.Error("expected command to have exactly 1 unmapped input but it didn't")
+		t.Error("expected Command to have exactly 1 unmapped input but it didn't")
 	} else if com.UnmappedInputs()[0] != "-a" {
 		t.Error("expected unmapped input to match input value but it didn't")
 	}
@@ -54,13 +54,13 @@ func TestCommandInterpreterShortSolo03(t *testing.T) {
 
 // Unknown short solo in the middle of a block
 func TestCommandInterpreterShortSolo04(t *testing.T) {
-	com := cli.Command().WithFlag(cli.ShortFlag('a')).MustParse([]string{"command", "-ab"})
+	com := cli.Command().WithFlag(cli.ShortFlag('a')).MustParse([]string{"Command", "-ab"})
 	flag := com.FindShortFlag('a')
 
 	if !com.HasUnmappedInputs() {
-		t.Error("expected command to have unmapped inputs but it didn't")
+		t.Error("expected Command to have unmapped inputs but it didn't")
 	} else if len(com.UnmappedInputs()) != 1 {
-		t.Error("expected command to have exactly 1 unmapped input but it didn't")
+		t.Error("expected Command to have exactly 1 unmapped input but it didn't")
 	} else if com.UnmappedInputs()[0] != "-b" {
 		t.Error("expected unmapped input to match input value but it didn't")
 	}
@@ -74,7 +74,7 @@ func TestCommandInterpreterShortSolo04(t *testing.T) {
 func TestCommandInterpreterShortSolo05(t *testing.T) {
 	_, err := cli.Command().
 		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		Parse([]string{"command", "-a"})
+		Parse([]string{"Command", "-a"})
 
 	if err == nil {
 		t.Error("expected error not to be nil, but it was")
@@ -85,7 +85,7 @@ func TestCommandInterpreterShortSolo05(t *testing.T) {
 func TestCommandInterpreterShortSolo06(t *testing.T) {
 	_, err := cli.Command().
 		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		Parse([]string{"command", "-a", "--"})
+		Parse([]string{"Command", "-a", "--"})
 
 	if err == nil {
 		t.Error("expected error not to be nil, but it was")
@@ -96,7 +96,7 @@ func TestCommandInterpreterShortSolo06(t *testing.T) {
 func TestCommandInterpreterShortSolo07(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		MustParse([]string{"command", "-a", "-b"})
+		MustParse([]string{"Command", "-a", "-b"})
 
 	flag := com.FindShortFlag('a')
 
@@ -113,7 +113,7 @@ func TestCommandInterpreterShortSolo07(t *testing.T) {
 func TestCommandInterpreterShortSolo08(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		MustParse([]string{"command", "-ab"})
+		MustParse([]string{"Command", "-ab"})
 
 	flag := com.FindShortFlag('a')
 
@@ -130,7 +130,7 @@ func TestCommandInterpreterShortSolo09(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
 		WithFlag(cli.ShortFlag('b')).
-		MustParse([]string{"command", "-ab"})
+		MustParse([]string{"Command", "-ab"})
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('b')
@@ -147,7 +147,7 @@ func TestCommandInterpreterShortSolo09(t *testing.T) {
 func TestCommandInterpreterShortSolo10(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-ab"})
+		MustParse([]string{"Command", "-ab"})
 
 	flag1 := com.FindShortFlag('a')
 
@@ -164,7 +164,7 @@ func TestCommandInterpreterShortSolo11(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a"})
+		MustParse([]string{"Command", "-a"})
 
 	flag := com.FindShortFlag('a')
 
@@ -179,7 +179,7 @@ func TestCommandInterpreterShortSolo12(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a", "--"})
+		MustParse([]string{"Command", "-a", "--"})
 
 	flag := com.FindShortFlag('a')
 
@@ -194,7 +194,7 @@ func TestCommandInterpreterShortSolo13(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a", "lamp"})
+		MustParse([]string{"Command", "-a", "lamp"})
 
 	flag := com.FindShortFlag('a')
 
@@ -211,7 +211,7 @@ func TestCommandInterpreterShortSolo14(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a", "-l"})
+		MustParse([]string{"Command", "-a", "-l"})
 
 	flag := com.FindShortFlag('a')
 
@@ -228,7 +228,7 @@ func TestCommandInterpreterShortSolo15(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a", "--paul"})
+		MustParse([]string{"Command", "-a", "--paul"})
 
 	flag := com.FindShortFlag('a')
 
@@ -246,7 +246,7 @@ func TestCommandInterpreterShortSolo16(t *testing.T) {
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
 		WithFlag(cli.ShortFlag('l')).
-		MustParse([]string{"command", "-a", "-l"})
+		MustParse([]string{"Command", "-a", "-l"})
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('l')
@@ -267,7 +267,7 @@ func TestCommandInterpreterShortSolo17(t *testing.T) {
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
 		WithFlag(cli.LongFlag("atom")).
-		MustParse([]string{"command", "-a", "--atom"})
+		MustParse([]string{"Command", "-a", "--atom"})
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindLongFlag("atom")
@@ -288,7 +288,7 @@ func TestCommandInterpreterShortSolo18(t *testing.T) {
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
 		WithFlag(cli.ShortFlag('l')).
-		MustParse([]string{"command", "-a", "-l=1"})
+		MustParse([]string{"Command", "-a", "-l=1"})
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('l')
@@ -309,7 +309,7 @@ func TestCommandInterpreterShortSolo19(t *testing.T) {
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
 		WithFlag(cli.LongFlag("atom")).
-		MustParse([]string{"command", "-a", "--atom=1"})
+		MustParse([]string{"Command", "-a", "--atom=1"})
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindLongFlag("atom")
@@ -329,7 +329,7 @@ func TestCommandInterpreterShortSolo20(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a", "-l=1"})
+		MustParse([]string{"Command", "-a", "-l=1"})
 
 	flag1 := com.FindShortFlag('a')
 
@@ -346,7 +346,7 @@ func TestCommandInterpreterShortSolo21(t *testing.T) {
 	com := cli.Command().
 		WithFlag(cli.ShortFlag('a').
 			WithArgument(cli.Argument())).
-		MustParse([]string{"command", "-a", "--atom=1"})
+		MustParse([]string{"Command", "-a", "--atom=1"})
 
 	flag1 := com.FindShortFlag('a')
 
@@ -365,7 +365,7 @@ func TestRegression18Command(t *testing.T) {
 		bind := false
 		com := cli.Command().
 			WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
-			MustParse([]string{"command", "-a"})
+			MustParse([]string{"Command", "-a"})
 
 		flag := com.FindShortFlag('a')
 
@@ -385,7 +385,7 @@ func TestRegression18Command(t *testing.T) {
 		bind := false
 		com := cli.Command().
 			WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
-			MustParse([]string{"command", "-a", "--", "flumps"})
+			MustParse([]string{"Command", "-a", "--", "flumps"})
 
 		flag := com.FindShortFlag('a')
 

@@ -1,190 +1,175 @@
 package tree
 
-import (
-	"errors"
-	"fmt"
-	"os"
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
 
+import (
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
-	"github.com/foxcapades/argonaut/v3/internal/utils"
-	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func NewLeafBuilder(name string) argo.LeafCommandBuilder {
-	out := new(leafBuilder)
-	out.childBuilder = newChildBuilder[argo.LeafCommandBuilder, argo.LeafCommand](name, out)
-	return out
+	return &LeafCommandBuilder{
+		name: name,
+	}
 }
 
-type leafBuilder struct {
-	childBuilder[argo.LeafCommandBuilder, argo.LeafCommand]
+type LeafCommandBuilder struct {
+	name    string
+	aliases []string
+	parent  argo.ParentNodeBuilder
 
-	umapLabel string
-	arguments []argo.ArgumentBuilder
+	disableHelp bool
+	description string
+	flagGroups  []argo.FlagGroupBuilder
+	callback    argo.CommandCallback[argo.LeafCommand]
+
+	arguments     []argo.Argument
+	unmapped      []string
+	unmappedLabel string
 }
 
-//
-
-func (l *leafBuilder) WithArgument(argument argo.ArgumentBuilder) argo.LeafCommandBuilder {
-	l.arguments = append(l.arguments, argument)
-	return l
+func (i *LeafCommandBuilder) Name() string {
+	return i.name
 }
 
-func (l *leafBuilder) WithArguments(arguments ...argo.ArgumentBuilder) argo.LeafCommandBuilder {
-	l.arguments = append(l.arguments, arguments...)
-	return l
+func (i *LeafCommandBuilder) WithAlias(alias string) argo.LeafCommandBuilder {
+	i.aliases = append(i.aliases, alias)
+	return i
 }
 
-func (l *leafBuilder) HasArguments() bool {
-	return len(l.arguments) > 0
+func (i *LeafCommandBuilder) WithAliases(aliases ...string) argo.LeafCommandBuilder {
+	i.aliases = append(i.aliases, aliases...)
+	return i
 }
 
-func (l *leafBuilder) Arguments() []argo.ArgumentBuilder {
-	return l.arguments
+func (i *LeafCommandBuilder) Aliases() []string {
+	return i.aliases
 }
 
-//
-
-func (l *leafBuilder) WithUnmappedInputLabel(label string) argo.LeafCommandBuilder {
-	l.umapLabel = label
-	return l
+func (i *LeafCommandBuilder) HasAliases() bool {
+	return len(i.aliases) > 0
 }
 
-func (l *leafBuilder) HasUnmappedInputLabel() bool {
-	return len(l.umapLabel) > 0
+func (i *LeafCommandBuilder) SetParentNode(parent argo.ParentNodeBuilder) argo.LeafCommandBuilder {
+	i.parent = parent
+	return i
 }
 
-func (l *leafBuilder) UnmappedInputLabel() string {
-	return l.umapLabel
+func (i *LeafCommandBuilder) ParentNode() argo.ParentNodeBuilder {
+	return i.parent
 }
 
-//
+func (i *LeafCommandBuilder) WithDescription(desc string) argo.LeafCommandBuilder {
+	i.description = desc
+	return i
+}
 
-func (l *leafBuilder) Build(ctx *argo.WarningContext) (argo.LeafCommand, error) {
-	errs := xerr.NewMultiError()
+func (i *LeafCommandBuilder) HasDescription() bool {
+	return len(i.description) > 0
+}
 
-	// Ensure the group name is not blank
-	if err := chars.ValidateCommandNodeName(l.name); err != nil {
-		errs.AppendError(err)
+func (i *LeafCommandBuilder) Description() string {
+	return i.description
+}
+
+func (i *LeafCommandBuilder) WithHelpDisabled() argo.LeafCommandBuilder {
+	i.disableHelp = true
+	return i
+}
+
+func (i *LeafCommandBuilder) IsHelpDisabled() bool {
+	return i.disableHelp
+}
+
+func (i *LeafCommandBuilder) WithFlagGroup(group argo.FlagGroupBuilder) argo.LeafCommandBuilder {
+	i.flagGroups = append(i.flagGroups, group)
+	return i
+}
+
+func (i *LeafCommandBuilder) WithFlagGroups(groups ...argo.FlagGroupBuilder) argo.LeafCommandBuilder {
+	i.flagGroups = append(i.flagGroups, groups...)
+	return i
+}
+
+func (i *LeafCommandBuilder) HasFlagGroups(includeDefault bool) bool {
+	return (includeDefault && len(i.flagGroups) > 0) ||
+		(i.hasDefaultFlagGroup() && len(i.flagGroups) > 1) ||
+		len(i.flagGroups) > 0
+}
+
+func (i *LeafCommandBuilder) FlagGroups(includeDefault bool) []argo.FlagGroupBuilder {
+	if !includeDefault && i.hasDefaultFlagGroup() {
+		return i.flagGroups[1:]
 	}
 
-	// Ensure the aliases are all not blank
-	for _, alias := range l.aliases {
-		if chars.IsBlank(alias) {
-			errs.AppendError(errors.New("command leaf aliases must not be blank"))
+	return i.flagGroups
+}
+
+func (i *LeafCommandBuilder) hasDefaultFlagGroup() bool {
+	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
+}
+
+func (i *LeafCommandBuilder) WithFlag(flag argo.FlagBuilder) argo.LeafCommandBuilder {
+	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
+	i.flagGroups[0].WithFlag(flag)
+	return i
+}
+
+func (i *LeafCommandBuilder) WithFlags(flags ...argo.FlagBuilder) argo.LeafCommandBuilder {
+	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
+	i.flagGroups[0].WithFlags(flags...)
+	return i
+}
+
+func (i *LeafCommandBuilder) HasFlags() bool {
+	for _, group := range i.flagGroups {
+		if group != nil && group.HasFlags() {
+			return true
 		}
 	}
 
-	if l.parent == nil {
-		panic("illegal state: attempted to build a command leaf with no parent set")
-	}
-
-	leaf := new(commandLeaf)
-	leaf.warnings = ctx
-
-	forceRequiredUntil := 0
-	for i, builder := range l.arguments {
-		if builder.IsRequired() {
-			forceRequiredUntil = i
-		}
-	}
-
-	leaf.args = make([]argo.Argument, 0, len(l.arguments))
-	for i, builder := range l.arguments {
-		if i < forceRequiredUntil && !builder.IsRequired() {
-			builder.Require()
-			ctx.AppendWarning(fmt.Sprintf("argument %d was not marked as required, but preceded required argument %d", i+1, forceRequiredUntil+1))
-		}
-		if arg, err := builder.Build(ctx); err != nil {
-			errs.AppendError(err)
-		} else {
-			leaf.args = append(leaf.args, arg)
-		}
-	}
-
-	uniqueFlagNames(l.flagGroups, errs)
-	leaf.flagGroups = make([]argo.FlagGroup, 0, len(l.flagGroups))
-	for _, builder := range l.flagGroups {
-		if builder.HasFlags() {
-			if fg, err := builder.Build(ctx); err != nil {
-				errs.AppendError(err)
-			} else {
-				leaf.flagGroups = append(leaf.flagGroups, fg)
-			}
-		}
-	}
-
-	if !l.disableHelp {
-		useShortH := true
-		useLongH := true
-
-		for _, group := range leaf.flagGroups {
-			for _, flag := range group.Flags() {
-				if flag.ShortForm() == 'h' {
-					useShortH = false
-				}
-				if flag.LongForm() == "help" {
-					useLongH = false
-				}
-			}
-		}
-
-		if useShortH || useLongH {
-			if len(leaf.flagGroups) == 0 || leaf.flagGroups[0].Name() != chars.DefaultGroupName || leaf.flagGroups[0].Size() > 5 {
-				group, err := flag.NewGroupBuilder("Help Flags").
-					WithFlag(makeLeafHelp(useShortH, useLongH, leaf)).
-					Build(ctx)
-
-				if err != nil {
-					errs.AppendError(err)
-				} else {
-					leaf.flagGroups = append(leaf.flagGroups, group)
-				}
-			} else {
-				flag, err := makeLeafHelp(useShortH, useLongH, leaf).Build(ctx)
-
-				if err != nil {
-					errs.AppendError(err)
-				} else {
-					group := leaf.flagGroups[0].(*flagGroup) // FIXME: don't assume internal access!!!
-					group.flags = append(group.flags, flag)
-				}
-			}
-		}
-	}
-
-	if len(errs.Errors()) > 0 {
-		return nil, errs
-	}
-
-	leaf.name = l.name
-	leaf.description = l.description
-	leaf.aliases = l.aliases
-	leaf.parent = l.parentNode
-	leaf.callback = l.callback
-	leaf.unmappedLabel = l.umapLabel
-
-	return leaf, nil
+	return false
 }
 
-func makeLeafHelp(short, long bool, leaf argo.LeafCommand) argo.FlagBuilder {
-	builder := flag.NewBuilder().
-		MarkAsHelpFlag().
-		WithCallback(func(flag argo.Flag) {
-			utils.Must(comLeafRenderer{}.RenderHelp(leaf, os.Stdout))
-			os.Exit(0)
-		}).
-		WithDescription("Prints this help text.")
+func (i *LeafCommandBuilder) WithCallback(callback argo.CommandCallback[argo.LeafCommand]) argo.LeafCommandBuilder {
+	i.callback = callback
+	return i
+}
 
-	if short {
-		builder.WithShortForm('h')
-	}
+func (i *LeafCommandBuilder) HasCallback() bool {
+	return i.callback != nil
+}
 
-	if long {
-		builder.WithLongForm("help")
-	}
+func (i *LeafCommandBuilder) Callback() argo.CommandCallback[argo.LeafCommand] {
+	return i.callback
+}
 
-	return builder
+func (i *LeafCommandBuilder) HasArguments() bool {
+	return len(i.arguments) > 0
+}
+
+func (i *LeafCommandBuilder) Arguments() []argo.Argument {
+	return i.arguments
+}
+
+func (i *LeafCommandBuilder) HasUnmappedInputs() bool {
+	return len(i.unmapped) > 0
+}
+
+func (i *LeafCommandBuilder) UnmappedInputs() []string {
+	return i.unmapped
+}
+
+func (i *LeafCommandBuilder) AppendUnmappedInput(input string) {
+	i.unmapped = append(i.unmapped, input)
+}
+
+func (i *LeafCommandBuilder) HasUnmappedInputLabel() bool {
+	return len(i.unmappedLabel) > 0
+}
+
+func (i *LeafCommandBuilder) UnmappedInputLabel() string {
+	return i.unmappedLabel
 }

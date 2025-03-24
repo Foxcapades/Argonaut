@@ -46,12 +46,12 @@ func ConfigureHelpFlags[T any](builder FlagGroupContainer, renderer render.HelpR
 			group = groups[0]
 		}
 
-		for _, group := range groups {
-			for _, flag := range group.Flags() {
-				if flag.ShortForm() == 'h' {
+		for _, g := range groups {
+			for _, f := range g.Flags() {
+				if f.ShortForm() == 'h' {
 					useShortH = false
 				}
-				if flag.LongForm() == "help" {
+				if f.LongForm() == "help" {
 					useLongH = false
 				}
 				if !(useShortH || useLongH) {
@@ -62,6 +62,7 @@ func ConfigureHelpFlags[T any](builder FlagGroupContainer, renderer render.HelpR
 	}
 
 	if useShortH || useLongH {
+		TryAddHelpFlags()
 		group.WithFlag(makeHelpFlag(useShortH, useLongH, renderer, com))
 	}
 

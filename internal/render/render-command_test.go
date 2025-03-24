@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
-	cli "github.com/Foxcapades/Argonaut"
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	cli "github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 const commandHelp001 = `Usage:
@@ -33,7 +35,7 @@ Arguments
 `
 
 func TestCommandHelpRenderer001(t *testing.T) {
-	com := argo.NewCommandBuilder().
+	com := cli.MustBuildCommand(cli.Command().
 		WithDescription("A command description.").
 		WithFlagGroup(cli.FlagGroup("Meta Flags").
 			WithDescription("Meat flags.").
@@ -44,10 +46,12 @@ func TestCommandHelpRenderer001(t *testing.T) {
 			WithName("argument").
 			WithDescription("poo")).
 		WithArgument(cli.Argument()).
-		WithUnmappedLabel("asteroids...").
-		MustParse([]string{"command", "-m"})
+		WithUnmappedInputLabel("asteroids..."))
 
-	renderOutputCheck(t, commandHelp001, com, argo.CommandHelpRenderer())
+	cli.MustParseCommand(com)
+
+	buf := new(strings.Builder)
+	renderOutputCheck(t, commandHelp001, com, render.CommandHelp(com, buf))
 }
 
 func TestCommandHelpRendererFail01(t *testing.T) {

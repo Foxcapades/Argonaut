@@ -1,5 +1,8 @@
 package tree
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
 type Branch struct {
@@ -16,31 +19,31 @@ type Branch struct {
 }
 
 func (i *Branch) HasDescription() bool {
-  return len(c.description) > 0
+  return len(i.description) > 0
 }
 
 func (i *Branch) Description() string {
-  return c.description
+  return i.description
 }
 
-func (i *Branch) HasFlagGroups(includeDefault bool) bool {
-
+func (i *Branch) HasFlagGroups() bool {
+  return len(i.flagGroups) > 0
 }
 
-func (i *Branch) FlagGroups(includeDefault bool) []argo.FlagGroup {
-
+func (i *Branch) FlagGroups() []argo.FlagGroup {
+  return i.flagGroups
 }
 
 func (i *Branch) HasCallback() bool {
-  return c.callback != nil
+  return i.callback != nil
 }
 
 func (i *Branch) Callback() argo.CommandCallback[argo.BranchCommand] {
-  return c.callback
+  return i.callback
 }
 
 func (i *Branch) FindShortFlag(b byte) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindShortFlag(b); flag != nil {
       return flag
     }
@@ -50,7 +53,7 @@ func (i *Branch) FindShortFlag(b byte) argo.Flag {
 }
 
 func (i *Branch) FindLongFlag(name string) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindLongFlag(name); flag != nil {
       return flag
     }
@@ -60,7 +63,7 @@ func (i *Branch) FindLongFlag(name string) argo.Flag {
 }
 
 func (i *Branch) IsHelpDisabled() bool {
-  return c.disableHelp
+  return i.disableHelp
 }
 
 func (i *Branch) Name() string {
@@ -93,28 +96,30 @@ func (i *Branch) Matches(name string) bool {
   return false
 }
 
-func (i *Branch) HasCommandGroups(includeDefault bool) bool {
-	return len(i.groups) > 1 || (includeDefault && i.hasDefaultCommandGroup())
+func (i *Branch) HasCommandGroups() bool {
+	return len(i.commandGroups) > 0
 }
 
-func (i *Branch) CommandGroups(includeDefault bool) []argo.CommandGroup {
-	if !i.HasCommandGroups(includeDefault) {
-		return nil
-	}
-
-	if includeDefault && i.hasDefaultCommandGroup() {
-		return i.groups
-	}
-
-	return i.groups[1:]
+func (i *Branch) CommandGroups() []argo.CommandGroup {
+	return i.commandGroups
 }
 
 func (i *Branch) hasDefaultCommandGroup() bool {
-	return i.groups[0] != nil
+	return i.commandGroups[0] != nil
+}
+
+func (i *Branch) HasSubcommands() bool {
+	for _, group := range i.commandGroups {
+		if group.HasSubcommands() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (i *Branch) FindChild(name string) argo.ChildNode {
-	for _, group := range i.groups {
+	for _, group := range i.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			return child
 		}
@@ -128,7 +133,7 @@ func (i *Branch) HasSelectedChild() bool {
 }
 
 func (i *Branch) SelectChild(name string) bool {
-	for _, group := range i.groups {
+	for _, group := range i.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			i.selectedChild = child
 			return true
@@ -146,6 +151,6 @@ func (i *Branch) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *Branch) IncompleteHandler() argo.IncompleteCommandHandler[argo.CommandTree] {
+func (i *Branch) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeCommand] {
 	return i.incompleteFn
 }

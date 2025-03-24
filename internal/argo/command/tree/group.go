@@ -2,42 +2,48 @@ package tree
 
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
-type commandGroup struct {
+const DefaultGroupName = "__DEFAULT_GROUP_NAME__"
+
+type CommandGroup struct {
 	name        string
 	description string
 	branches    []argo.BranchCommand
 	leaves      []argo.LeafCommand
 }
 
-func (g commandGroup) Description() string {
+func (g CommandGroup) Description() string {
 	return g.description
 }
 
-func (g commandGroup) HasDescription() bool {
+func (g CommandGroup) HasDescription() bool {
 	return len(g.description) > 0
 }
 
-func (g commandGroup) Name() string {
+func (g CommandGroup) Name() string {
 	return g.name
 }
 
-func (g commandGroup) Branches() []argo.BranchCommand {
+func (g CommandGroup) Branches() []argo.BranchCommand {
 	return g.branches
 }
 
-func (g commandGroup) HasBranches() bool {
+func (g CommandGroup) HasBranches() bool {
 	return len(g.branches) > 0
 }
 
-func (g commandGroup) Leaves() []argo.LeafCommand {
+func (g CommandGroup) Leaves() []argo.LeafCommand {
 	return g.leaves
 }
 
-func (g commandGroup) HasLeaves() bool {
+func (g CommandGroup) HasLeaves() bool {
 	return len(g.branches) > 0
 }
 
-func (g commandGroup) FindChild(name string) argo.ChildNode {
+func (g CommandGroup) HasSubcommands() bool {
+	return len(g.branches)+len(g.leaves) > 0
+}
+
+func (g CommandGroup) FindChild(name string) argo.ChildNode {
 	for _, leaf := range g.leaves {
 		if leaf.Matches(name) {
 			return leaf

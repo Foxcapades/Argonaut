@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/foxcapades/argonaut/v3/scripts/generate/data"
 )
 
 func main() {
@@ -15,25 +17,17 @@ func main() {
 	implementations()
 }
 
-type InterfaceFields struct {
-	OutputType, BuilderType, CLIFunc string
-}
-
 func interfaces() {
 	tpls, impls := buildFileLists("templates/pkg")
 
 	t := template.New("interfaces")
 	t.Funcs(map[string]any{
-		"types": func(out, build, cli string) InterfaceFields {
-			return InterfaceFields{out, build, cli}
+		"types": func(out, build, cli string, takesArg bool) data.InterfaceFields {
+			return data.InterfaceFields{OutputType: out, BuilderType: build, CLIFunc: cli, CLITakesArg: takesArg}
 		},
 	})
 
 	runTemplates(tpls, impls, t)
-}
-
-type ImplementationFields struct {
-	BuilderType, ImplType, OutputType string
 }
 
 func implementations() {
@@ -41,8 +35,8 @@ func implementations() {
 
 	t := template.New("implementations")
 	t.Funcs(map[string]any{
-		"types": func(builder, impl, output string) ImplementationFields {
-			return ImplementationFields{builder, impl, output}
+		"types": func(builder, impl, output string) data.ImplementationFields {
+			return data.ImplementationFields{BuilderType: builder, ImplType: impl, OutputType: output}
 		},
 		"map": func(pairs ...any) (map[string]any, error) {
 			if len(pairs)%2 != 0 {

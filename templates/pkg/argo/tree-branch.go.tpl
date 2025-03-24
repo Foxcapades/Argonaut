@@ -1,5 +1,14 @@
-{{ $vars := (types "BranchCommand" "BranchCommandBuilder" "Branch") -}}
+{{ $vars := (types "BranchCommand" "BranchCommandBuilder" "Branch" true) -}}
 package argo
+
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
+{{ if false -}}
+import (
+	. "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+{{- end -}}
 
 // BranchCommand represents a subcommand under a CommandTree that is an
 // intermediate node between the tree root and an executable LeafCommand.

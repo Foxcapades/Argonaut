@@ -1,12 +1,15 @@
 package tree
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
 type Leaf struct {
   disableHelp bool
   description string
   flagGroups  []argo.FlagGroup
-  callback    argo.CommandCallback[<no value>]
+  callback    argo.CommandCallback[argo.LeafCommand]
   name    string
   parent  argo.ParentNode
   aliases []string
@@ -74,31 +77,31 @@ func (i *Leaf) Matches(name string) bool {
 }
 
 func (i *Leaf) HasDescription() bool {
-  return len(c.description) > 0
+  return len(i.description) > 0
 }
 
 func (i *Leaf) Description() string {
-  return c.description
+  return i.description
 }
 
-func (i *Leaf) HasFlagGroups(includeDefault bool) bool {
-
+func (i *Leaf) HasFlagGroups() bool {
+  return len(i.flagGroups) > 0
 }
 
-func (i *Leaf) FlagGroups(includeDefault bool) []argo.FlagGroup {
-
+func (i *Leaf) FlagGroups() []argo.FlagGroup {
+  return i.flagGroups
 }
 
 func (i *Leaf) HasCallback() bool {
-  return c.callback != nil
+  return i.callback != nil
 }
 
-func (i *Leaf) Callback() argo.CommandCallback[<no value>] {
-  return c.callback
+func (i *Leaf) Callback() argo.CommandCallback[argo.LeafCommand] {
+  return i.callback
 }
 
 func (i *Leaf) FindShortFlag(b byte) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindShortFlag(b); flag != nil {
       return flag
     }
@@ -108,7 +111,7 @@ func (i *Leaf) FindShortFlag(b byte) argo.Flag {
 }
 
 func (i *Leaf) FindLongFlag(name string) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindLongFlag(name); flag != nil {
       return flag
     }
@@ -118,5 +121,5 @@ func (i *Leaf) FindLongFlag(name string) argo.Flag {
 }
 
 func (i *Leaf) IsHelpDisabled() bool {
-  return c.disableHelp
+  return i.disableHelp
 }

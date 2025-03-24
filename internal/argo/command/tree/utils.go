@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -29,16 +30,18 @@ func massUniqueCommandNames(groups []argo.CommandGroupBuilder, errs argo.MultiEr
 	}
 }
 
-func defaultOnIncompleteHandler(parent argo.ParentNode) {
-	if tree, ok := parent.(argo.CommandTree); ok {
-		utils.Must(comTreeRenderer{}.RenderHelp(tree, os.Stderr))
-	} else if branch, ok := parent.(argo.BranchCommand); ok {
-		utils.Must(comBranchRenderer{}.RenderHelp(branch, os.Stderr))
-	} else {
-		panic("illegal state: unrecognized command parent implementation")
-	}
+func makeDefaultOnIncompleteHandler[T argo.ParentNode](opts argo.Options) argo.IncompleteCommandHandler[T] {
+	return func(parent T) {
+		if tree, ok := argo.ParentNode(parent).(argo.TreeCommand); ok {
+			utils.Must(RenderHelp(tree, opts, os.Stderr))
+		} else if branch, ok := argo.ParentNode(parent).(argo.BranchCommand); ok {
+			utils.Must(RenderBranchHelp(branch, opts, os.Stderr))
+		} else {
+			panic("illegal state: unrecognized command parent implementation")
+		}
 
-	os.Exit(1)
+		os.Exit(1)
+	}
 }
 
 func uniqueNames(
@@ -74,4 +77,40 @@ func uniqueNames(
 			}
 		}
 	}
+}
+
+func processFlagGroups(builders []argo.FlagGroupBuilder, errs argo.MultiError) []argo.FlagGroup {
+	flagGroups := make([]argo.FlagGroup, 0, len(builders))
+
+	flag.UniqueFlagNames(builders, errs)
+
+	for _, builder := range builders {
+		if builder.HasFlags() {
+			if group, err := flag.BuildGroup(builder); err != nil {
+				errs.AppendError(err)
+			} else {
+				flagGroups = append(flagGroups, group)
+			}
+		}
+	}
+
+	return flagGroups
+}
+
+func processCommandGroups(builders []argo.CommandGroupBuilder, opts argo.Options, parent argo.ParentNode, errs argo.MultiError) []argo.CommandGroup {
+	commandGroups := make([]argo.CommandGroup, 0, len(builders))
+
+	massUniqueCommandNames(builders, errs)
+
+	for _, build := range builders {
+		if build.HasSubcommands() {
+			if group, err := BuildGroup(build, opts, parent); err != nil {
+				errs.AppendError(err)
+			} else {
+				commandGroups = append(commandGroups, group)
+			}
+		}
+	}
+
+	return commandGroups
 }

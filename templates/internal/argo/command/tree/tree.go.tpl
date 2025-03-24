@@ -1,5 +1,8 @@
-{{ $vars := (map "ImplType" "Tree" "OutputType" "argo.CommandTree") -}}
+{{ $vars := (map "ImplType" "Tree" "OutputType" "argo.TreeCommand") -}}
 package tree
+
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
 
 import (
 	"os"

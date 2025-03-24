@@ -1,5 +1,8 @@
 package tree
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 import (
 	"os"
 	"path/filepath"
@@ -11,10 +14,10 @@ type Tree struct {
 	disableHelp bool
   description string
   flagGroups  []argo.FlagGroup
-  callback    argo.CommandCallback[argo.CommandTree]
+  callback    argo.CommandCallback[argo.TreeCommand]
 	commandGroups []argo.CommandGroup
 	selectedChild argo.ChildNode
-	incompleteFn argo.IncompleteCommandHandler[argo.CommandTree]
+	incompleteFn argo.IncompleteCommandHandler[argo.TreeCommand]
 	selectedLeaf argo.LeafCommand
 }
 
@@ -26,28 +29,30 @@ func (i *Tree) SelectedCommand() argo.LeafCommand {
 	return i.selectedLeaf
 }
 
-func (i *Tree) HasCommandGroups(includeDefault bool) bool {
-	return len(i.groups) > 1 || (includeDefault && i.hasDefaultCommandGroup())
+func (i *Tree) HasCommandGroups() bool {
+	return len(i.commandGroups) > 0
 }
 
-func (i *Tree) CommandGroups(includeDefault bool) []argo.CommandGroup {
-	if !i.HasCommandGroups(includeDefault) {
-		return nil
-	}
-
-	if includeDefault && i.hasDefaultCommandGroup() {
-		return i.groups
-	}
-
-	return i.groups[1:]
+func (i *Tree) CommandGroups() []argo.CommandGroup {
+	return i.commandGroups
 }
 
 func (i *Tree) hasDefaultCommandGroup() bool {
-	return i.groups[0] != nil
+	return i.commandGroups[0] != nil
+}
+
+func (i *Tree) HasSubcommands() bool {
+	for _, group := range i.commandGroups {
+		if group.HasSubcommands() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (i *Tree) FindChild(name string) argo.ChildNode {
-	for _, group := range i.groups {
+	for _, group := range i.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			return child
 		}
@@ -61,7 +66,7 @@ func (i *Tree) HasSelectedChild() bool {
 }
 
 func (i *Tree) SelectChild(name string) bool {
-	for _, group := range i.groups {
+	for _, group := range i.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			i.selectedChild = child
 			return true
@@ -79,36 +84,36 @@ func (i *Tree) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *Tree) IncompleteHandler() argo.IncompleteCommandHandler[argo.CommandTree] {
+func (i *Tree) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeCommand] {
 	return i.incompleteFn
 }
 
 func (i *Tree) HasDescription() bool {
-  return len(c.description) > 0
+  return len(i.description) > 0
 }
 
 func (i *Tree) Description() string {
-  return c.description
+  return i.description
 }
 
-func (i *Tree) HasFlagGroups(includeDefault bool) bool {
-
+func (i *Tree) HasFlagGroups() bool {
+  return len(i.flagGroups) > 0
 }
 
-func (i *Tree) FlagGroups(includeDefault bool) []argo.FlagGroup {
-
+func (i *Tree) FlagGroups() []argo.FlagGroup {
+  return i.flagGroups
 }
 
 func (i *Tree) HasCallback() bool {
-  return c.callback != nil
+  return i.callback != nil
 }
 
-func (i *Tree) Callback() argo.CommandCallback[argo.CommandTree] {
-  return c.callback
+func (i *Tree) Callback() argo.CommandCallback[argo.TreeCommand] {
+  return i.callback
 }
 
 func (i *Tree) FindShortFlag(b byte) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindShortFlag(b); flag != nil {
       return flag
     }
@@ -118,7 +123,7 @@ func (i *Tree) FindShortFlag(b byte) argo.Flag {
 }
 
 func (i *Tree) FindLongFlag(name string) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindLongFlag(name); flag != nil {
       return flag
     }
@@ -128,5 +133,5 @@ func (i *Tree) FindLongFlag(name string) argo.Flag {
 }
 
 func (i *Tree) IsHelpDisabled() bool {
-  return c.disableHelp
+  return i.disableHelp
 }

@@ -1,5 +1,8 @@
 package argo
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 // Command represents a singular, non-nested command which accepts flags and
 // arguments.
 type Command interface {
@@ -21,11 +24,11 @@ type Command interface {
   // This method will only return flag groups that had flags assigned to them,
   // the rest of the flag groups will have been filtered out when the node was
   // built.
-  FlagGroups(includeDefault bool) []FlagGroup
+  FlagGroups() []FlagGroup
 
   // HasFlagGroups indicates whether this Node has at least one populated
   // flag group.
-  HasFlagGroups(includeDefault bool) bool
+  HasFlagGroups() bool
 
   // FindShortFlag looks up a target Flag instance by its short-form character.
   //
@@ -45,20 +48,19 @@ type Command interface {
 
   IsHelpDisabled() bool
 
-	
   // Arguments returns the positional Argument instances attached to this
   // Command.
   Arguments() []Argument
 
   // HasArguments indicates whether this Command has any positional
-	// arguments attached.
+	// Arguments attached.
   //
-  // This method does not indicate whether those arguments were present on the
-  // command line, it simply indicates whether Argument instances were attached
-  // to the command by the builder.
+  // This method does not indicate whether those Arguments were present on the
+  // command line, it only indicates whether any Argument instances were
+  // attached to the command with the CommandBuilder.
   //
-  // To determine whether an argument was present on the command line, test the
-  // argument itself by using the Argument.WasHit method.
+  // To determine whether an Argument was present on the command line, test the
+  // Argument itself by using the Argument.WasHit method.
   HasArguments() bool
 
   // UnmappedInputs returns a collection of inputs that were passed to this
@@ -79,13 +81,13 @@ type Command interface {
 
   AppendUnmappedInput(val string)
 
-  // GetUnmappedLabel returns the label used when generating help text to
+  // UnmappedInputLabel returns the label used when generating help text to
   // indicate the shape or purpose of unmapped inputs.
-  GetUnmappedLabel() string
+  UnmappedInputLabel() string
 
-  // HasUnmappedLabel indicates whether an unmapped label has been set on this
+  // HasUnmappedInputLabel indicates whether an unmapped label has been set on this
   // command.
-  HasUnmappedLabel() bool
+  HasUnmappedInputLabel() bool
 
 }
 
@@ -143,19 +145,25 @@ type CommandBuilder interface {
 
   WithCallback(callback CommandCallback[Command]) CommandBuilder
 
-  HasCallback() bool
-
   Callback() CommandCallback[Command]
 
+  HasCallback() bool
+
   
-  // WithArgument appends the given ArgumentBuilder to this CommandBuilder's
-  // list of positional arguments.
+  // WithArgument appends the given ArgumentBuilder instance to this
+  // CommandBuilder's list of positional arguments.
   WithArgument(arg ArgumentBuilder) CommandBuilder
 
+  // WithArguments appends the given ArgumentBuilder instances to this
+  // CommandBuilder's list of positional arguments.
   WithArguments(args ...ArgumentBuilder) CommandBuilder
 
+  // HasArguments indicates whether any positional arguments have been set on
+  // this CommandBuilder instance.
   HasArguments() bool
 
+  // Arguments returns a slice containing the ArgumentBuilders that have been
+  // set on this CommandBuilder instance.
   Arguments() []ArgumentBuilder
 
   // WithUnmappedInputLabel sets the help-text label for unmapped arguments.
@@ -172,8 +180,15 @@ type CommandBuilder interface {
   //       my-command [FILE...]
   WithUnmappedInputLabel(label string) CommandBuilder
 
+  // HasUnmappedInputLabel indicates whether an unmapped input label has been
+  // set on this CommandBuilder instance.
   HasUnmappedInputLabel() bool
 
+  // UnmappedInputLabel returns the unmapped input label set on this
+  // CommandBuilder instance.
+  //
+  // If no unmapped input label has been set, this method returns an empty
+  // string.
   UnmappedInputLabel() string
 
 }

@@ -32,6 +32,8 @@ type CommandGroup interface {
 	// HasLeaves indicates whether this CommandGroup contains any leaf nodes.
 	HasLeaves() bool
 
+	HasSubcommands() bool
+
 	// FindChild searches this CommandGroup instance for a BranchCommand or
 	// LeafCommand node that matches the given string.
 	//
@@ -71,8 +73,4 @@ type CommandGroupBuilder interface {
 	Leaves() []LeafCommandBuilder
 
 	HasSubcommands() bool
-
-	// Build attempts to build a new CommandGroup instance from the set
-	// configuration.
-	Build(warnings *WarningContext) (CommandGroup, error)
 }

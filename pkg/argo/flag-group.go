@@ -61,6 +61,4 @@ type FlagGroupBuilder interface {
 	Flags() []FlagBuilder
 
 	Size() int
-
-	Build(warnings *WarningContext) (FlagGroup, error)
 }

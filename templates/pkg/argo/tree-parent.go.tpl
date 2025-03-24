@@ -1,11 +1,20 @@
 package argo
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
+{{ if false -}}
+import (
+  . "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+{{- end -}}
+
 type ParentNode interface {
   // CommandGroups returns the CommandGroup instances attached to this
   // ParentNode node.
-  CommandGroups(includeDefault bool) []CommandGroup
+  CommandGroups() []CommandGroup
 
-  HasCommandGroups(includeDefault bool) bool
+  HasCommandGroups() bool
 
   HasSubcommands() bool
 

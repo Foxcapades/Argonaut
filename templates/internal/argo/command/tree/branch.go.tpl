@@ -1,6 +1,9 @@
 {{ $vars := (map "ImplType" "Branch" "OutputType" "argo.BranchCommand") -}}
 package tree
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
 type Branch struct {

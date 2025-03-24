@@ -37,6 +37,10 @@ func (q *Queue) Iterator() iter.Seq[argo.Flag] {
 	}
 }
 
+func (q *Queue) Clear() {
+	*q = NewQueue()
+}
+
 //
 
 func HasBooleanArgument(flag argo.Flag) bool {

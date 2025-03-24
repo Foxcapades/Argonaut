@@ -1,5 +1,14 @@
-{{ $vars := (types "LeafCommand" "LeafCommandBuilder" "Leaf") -}}
+{{ $vars := (types "LeafCommand" "LeafCommandBuilder" "Leaf" false) -}}
 package argo
+
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
+{{ if false -}}
+import (
+	. "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+{{- end -}}
 
 // A LeafCommand is the final node in a CommandTree branch.
 //

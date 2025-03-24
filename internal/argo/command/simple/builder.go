@@ -3,7 +3,6 @@ package command
 import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -17,7 +16,7 @@ type commandBuilder struct {
 	flagGroups  []argo.FlagGroupBuilder
 	arguments   []argo.ArgumentBuilder
 	disableHelp bool
-	callback    argo.CommandCallback
+	callback    argo.CommandCallback[argo.Command]
 }
 
 //
@@ -137,7 +136,7 @@ func (b *commandBuilder) UnmappedInputLabel() string {
 
 //
 
-func (b *commandBuilder) WithCallback(cb argo.CommandCallback) argo.CommandBuilder {
+func (b *commandBuilder) WithCallback(cb argo.CommandCallback[argo.Command]) argo.CommandBuilder {
 	b.callback = cb
 	return b
 }
@@ -146,25 +145,6 @@ func (b *commandBuilder) HasCallback() bool {
 	return b.callback != nil
 }
 
-func (b *commandBuilder) Callback() argo.CommandCallback {
+func (b *commandBuilder) Callback() argo.CommandCallback[argo.Command] {
 	return b.callback
-}
-
-//
-
-func (b *commandBuilder) Parse(args []string) (argo.Command, error) {
-	ctx := new(argo.WarningContext)
-	if cmd, err := b.Build(ctx); err != nil {
-		return nil, err
-	} else {
-		if err = newCommandInterpreter(args, cmd).Run(); err != nil {
-			return nil, err
-		}
-
-		return cmd, nil
-	}
-}
-
-func (b *commandBuilder) MustParse(args []string) argo.Command {
-	return utils.MustReturn(b.Parse(args))
 }

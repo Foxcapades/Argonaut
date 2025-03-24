@@ -1,7 +1,16 @@
-{{ $vars := (types "CommandTree" "CommandTreeBuilder" "Tree") -}}
+{{ $vars := (types "TreeCommand" "TreeCommandBuilder" "Tree" true) -}}
 package argo
 
-// CommandTree represents the root of a tree of subcommands.
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
+{{ if false -}}
+import (
+	. "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+{{- end -}}
+
+// TreeCommand represents the root of a tree of subcommands.
 //
 // The command tree consists of branch and leaf nodes.  The branch nodes can be
 // thought of as categories for containing sub-branches and/or leaves.  Leaf
@@ -23,7 +32,7 @@ package argo
 //	 |   |- ls
 //	 |   |- ...
 //	 |- ...
-type CommandTree interface {
+type TreeCommand interface {
 	ParentNode
 	{{ template "CommandCommon" $vars }}
   {{- template "ParentNodeCommon" $vars }}
@@ -31,10 +40,10 @@ type CommandTree interface {
   SelectedCommand() LeafCommand
 }
 
-// A CommandTreeBuilder is a builder type used to construct a CommandTree
+// A TreeCommandBuilder is a builder type used to construct a TreeCommand
 // instance.
 //
-// A CommandTree is a command that consists of branching subcommands.  Examples
+// A TreeCommand is a command that consists of branching subcommands.  Examples
 // of such commands include the `go` command, `docker`, or `kubectl`.
 //
 // To use the Docker command example we have a command tree that includes the
@@ -50,7 +59,7 @@ type CommandTree interface {
 //	 |   |- ls
 //	 |   |- ...
 //	 |- ...
-type CommandTreeBuilder interface {
+type TreeCommandBuilder interface {
 	ParentNodeBuilder
 	{{ template "CommandBuilderCommon" $vars }}
   {{- template "ParentNodeBuilderCommon" $vars }}

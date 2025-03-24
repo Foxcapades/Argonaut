@@ -3,78 +3,59 @@ package tree
 import (
 	"bufio"
 	"io"
-	"slices"
 
-	"github.com/Foxcapades/Argonaut/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-// CommandLeafHelpRenderer returns a HelpRenderer instance that is suited to
-// rendering help text for CommandLeaf instances.
-func CommandLeafHelpRenderer() HelpRenderer[CommandLeaf] {
-	return comLeafRenderer{}
-}
+func RenderLeafHelp(leaf argo.LeafCommand, options argo.Options, writer io.Writer) error {
+	if leaf.IsHelpDisabled() {
+		return nil
+	}
 
-type comLeafRenderer struct{ renderCommandBase }
+	var buf *bufio.Writer
+	defer utils.DisregardError(buf.Flush)
 
-func (r comLeafRenderer) RenderHelp(leaf CommandLeaf, writer io.Writer) error {
-	if buf, ok := writer.(*bufio.Writer); ok {
-		return r.renderCommandLeaf(leaf, buf)
+	if b, ok := writer.(*bufio.Writer); ok {
+		buf = b
 	} else {
-		buf := bufio.NewWriter(writer)
-		err := r.renderCommandLeaf(leaf, buf)
-		_ = buf.Flush()
-		return err
+		buf = bufio.NewWriter(writer)
 	}
+
+	return renderCommandLeaf(leaf, options, buf)
 }
 
-func (r comLeafRenderer) renderCommandLeaf(leaf CommandLeaf, out *bufio.Writer) error {
-	if err := r.renderCommandLeafUsage(leaf, out); err != nil {
+func renderCommandLeaf(leaf argo.LeafCommand, options argo.Options, out *bufio.Writer) error {
+	if err := renderCommandLeafUsage(leaf, out); err != nil {
 		return err
 	}
+
 	if err := out.WriteByte(chars.CharLF); err != nil {
 		return err
 	}
 
-	if leaf.HasAliases() {
-		if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
-			return err
-		}
-		if _, err := out.WriteString("Aliases: "); err != nil {
-			return err
-		}
-
-		aliases := leaf.Aliases()
-		slices.Sort(aliases)
-
-		for i, alias := range aliases {
-			if i > 0 {
-				if _, err := out.WriteString(", "); err != nil {
-					return err
-				}
-			}
-			if _, err := out.WriteString(alias); err != nil {
-				return err
-			}
-		}
-		if err := out.WriteByte(chars.CharLF); err != nil {
-			return err
-		}
+	if err := tryRenderAliases(leaf, out); err != nil {
+		return err
 	}
 
-	return renderCommandLeafBackHalf(leaf, out)
+	return renderCommandLeafBackHalf(leaf, options, out)
 }
 
-func (r comLeafRenderer) renderCommandLeafUsage(leaf CommandLeaf, out *bufio.Writer) error {
-	if _, err := out.WriteString(comPrefix); err != nil {
+func renderCommandLeafUsage(leaf argo.LeafCommand, out *bufio.Writer) error {
+	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
 		return err
 	}
 	if err := renderSubCommandPath(leaf, out); err != nil {
 		return err
 	}
-	return r.renderCommandUsageBackHalf(leaf, out)
+	return common.RenderCommandUsageBackHalf(leaf, out)
 }
 
-func renderCommandLeafBackHalf(com CommandLeaf, out *bufio.Writer) error {
+func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *bufio.Writer) error {
 
 	// If the command has a description, append it.
 	if com.HasDescription() {
@@ -82,7 +63,7 @@ func renderCommandLeafBackHalf(com CommandLeaf, out *bufio.Writer) error {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], chars.HelpTextMaxWidth, out)
+		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(com.Description()); err != nil {
 			return err
 		}
@@ -115,12 +96,12 @@ func renderCommandLeafBackHalf(com CommandLeaf, out *bufio.Writer) error {
 		if err := out.WriteByte(chars.CharLF); err != nil {
 			return err
 		}
-		if err := FlagGroups(com.FlagGroups(), 0, out); err != nil {
+		if err := flag.RenderGroups(com.FlagGroups(), options, 0, out); err != nil {
 			return err
 		}
 	}
 
-	inherited := flattenFlagInheritance(com)
+	inherited := flag.FlattenInheritance(com)
 	if len(inherited) > 0 {
 		if com.HasFlagGroups() {
 			if err := out.WriteByte(chars.CharLF); err != nil {
@@ -136,7 +117,7 @@ func renderCommandLeafBackHalf(com CommandLeaf, out *bufio.Writer) error {
 			if err := out.WriteByte(chars.CharLF); err != nil {
 				return err
 			}
-			if err := renderInheritedFlag(&inherited[i], 1, out); err != nil {
+			if err := flag.RenderInherited(&inherited[i], options, 1, out); err != nil {
 				return err
 			}
 		}
@@ -149,7 +130,7 @@ func renderCommandLeafBackHalf(com CommandLeaf, out *bufio.Writer) error {
 		if _, err := out.WriteString(chars.HeaderPadding[0]); err != nil {
 			return err
 		}
-		if _, err := out.WriteString(comArgs); err != nil {
+		if _, err := out.WriteString(common.CommandRenderArgs); err != nil {
 			return err
 		}
 
@@ -165,11 +146,11 @@ func renderCommandLeafBackHalf(com CommandLeaf, out *bufio.Writer) error {
 				return err
 			}
 			if multiArgs {
-				if err := Argument(arg, 1, out, i+1); err != nil {
+				if err := argument.Render(arg, options, 1, out, i+1); err != nil {
 					return err
 				}
 			} else {
-				if err := Argument(arg, 1, out, 0); err != nil {
+				if err := argument.Render(arg, options, 1, out, 0); err != nil {
 					return err
 				}
 			}

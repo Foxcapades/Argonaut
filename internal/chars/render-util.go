@@ -3,30 +3,7 @@ package chars
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"os/exec"
-	"strconv"
-	"strings"
 )
-
-var HelpTextMaxWidth = 100
-
-func init() {
-	cmd := exec.Command("tput", "cols")
-	cmd.Stdin = os.Stdin
-
-	out, err := cmd.Output()
-	if err != nil {
-		return
-	}
-
-	width, err := strconv.Atoi(strings.TrimSpace(string(out)))
-	if err != nil {
-		return
-	}
-
-	HelpTextMaxWidth = min(width-20, 100)
-}
 
 func Pad(size int, out *bufio.Writer) error {
 	for i := 0; i < size; i++ {
@@ -73,11 +50,15 @@ func IsBreakChar(b byte) bool {
 type Break = [2]int
 
 // NewDescriptionFormatter returns a configured DescriptionFormatter instance.
+//
+// TODO: get rid of the constructor and just expose the format function.  There
+//
+//	is no need for the caller to know about the config struct.
 func NewDescriptionFormatter(
 	prefixPadding string,
 	maxTotalWidth int,
 	writer *bufio.Writer,
-) DescriptionFormatter {
+) *DescriptionFormatter {
 	maxLineWidth := maxTotalWidth - len(prefixPadding)
 
 	if maxLineWidth < 1 {
@@ -90,7 +71,7 @@ func NewDescriptionFormatter(
 		))
 	}
 
-	return DescriptionFormatter{
+	return &DescriptionFormatter{
 		prefixPadding: prefixPadding,
 		maxLineWidth:  maxLineWidth,
 		writer:        writer,

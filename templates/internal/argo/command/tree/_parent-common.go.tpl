@@ -15,28 +15,30 @@ type ParentCommon struct {
 }
 
 {{ define "ParentCommonFuncs" -}}
-func (i *{{ .ImplType }}) HasCommandGroups(includeDefault bool) bool {
-	return len(i.groups) > 1 || (includeDefault && i.hasDefaultCommandGroup())
+func (i *{{ .ImplType }}) HasCommandGroups() bool {
+	return len(i.commandGroups) > 0
 }
 
-func (i *{{ .ImplType }}) CommandGroups(includeDefault bool) []argo.CommandGroup {
-	if !i.HasCommandGroups(includeDefault) {
-		return nil
-	}
-
-	if includeDefault && i.hasDefaultCommandGroup() {
-		return i.groups
-	}
-
-	return i.groups[1:]
+func (i *{{ .ImplType }}) CommandGroups() []argo.CommandGroup {
+	return i.commandGroups
 }
 
 func (i *{{ .ImplType }}) hasDefaultCommandGroup() bool {
-	return i.groups[0] != nil
+	return i.commandGroups[0] != nil
+}
+
+func (i *{{ .ImplType }}) HasSubcommands() bool {
+	for _, group := range i.commandGroups {
+		if group.HasSubcommands() {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (i *{{ .ImplType }}) FindChild(name string) argo.ChildNode {
-	for _, group := range i.groups {
+	for _, group := range i.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			return child
 		}
@@ -50,7 +52,7 @@ func (i *{{ .ImplType }}) HasSelectedChild() bool {
 }
 
 func (i *{{ .ImplType }}) SelectChild(name string) bool {
-	for _, group := range i.groups {
+	for _, group := range i.commandGroups {
 		if child := group.FindChild(name); child != nil {
 			i.selectedChild = child
 			return true
@@ -68,7 +70,7 @@ func (i *{{ .ImplType }}) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *{{ .ImplType }}) IncompleteHandler() argo.IncompleteCommandHandler[argo.CommandTree] {
+func (i *{{ .ImplType }}) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeCommand] {
 	return i.incompleteFn
 }
 {{- end }}

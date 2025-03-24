@@ -1,0 +1,12 @@
+= TODO List
+:icons: font
+
+* [ ] Process tree command flags at a node by node basis.  Do not permit flags
+      from a child node to appear before the child node in the CLI call.  In
+      other words, flags apply to the first command node that precedes them in
+      the call.
+
+* [ ] Proper flag inheritance.  Given the note above, flag inheritance should
+      allow a parent node's flags to be used after a child node appears in the
+      CLI call, provided the child does not have a conflicting flag, in which
+      case, the child's flag takes priority.

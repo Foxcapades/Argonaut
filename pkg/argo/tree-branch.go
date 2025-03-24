@@ -1,5 +1,8 @@
 package argo
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 // BranchCommand represents a subcommand under a CommandTree that is an
 // intermediate node between the tree root and an executable LeafCommand.
 //
@@ -38,11 +41,11 @@ type BranchCommand interface {
   // This method will only return flag groups that had flags assigned to them,
   // the rest of the flag groups will have been filtered out when the node was
   // built.
-  FlagGroups(includeDefault bool) []FlagGroup
+  FlagGroups() []FlagGroup
 
   // HasFlagGroups indicates whether this Node has at least one populated
   // flag group.
-  HasFlagGroups(includeDefault bool) bool
+  HasFlagGroups() bool
 
   // FindShortFlag looks up a target Flag instance by its short-form character.
   //
@@ -62,6 +65,11 @@ type BranchCommand interface {
 
   IsHelpDisabled() bool
 
+  // IncompleteHandler returns the incomplete command handler function that was
+  // attached to this BranchCommand through the BranchCommandBuilder.
+  //
+  // If no incomplete command handler function was attached, this method returns
+  // nil.
   IncompleteHandler() IncompleteCommandHandler[BranchCommand]
   
 }
@@ -116,21 +124,52 @@ type BranchCommandBuilder interface {
 
   WithCallback(callback CommandCallback[BranchCommand]) BranchCommandBuilder
 
-  HasCallback() bool
-
   Callback() CommandCallback[BranchCommand]
 
+  HasCallback() bool
+
+  // WithBranch appends the given BranchCommandBuilder instance to this
+  // BranchCommandBuilder instance.
+  //
+  // Branch commands added to this BranchCommandBuilder are placed in the default
+  // CommandGroupBuilder.
   WithBranch(branch BranchCommandBuilder) BranchCommandBuilder
+
+  // WithBranches appends the given BranchCommandBuilder instances to this
+  // BranchCommandBuilder instance.
+  //
+  // Branch commands added to this BranchCommandBuilder are placed in the default
+  // CommandGroupBuilder.
   WithBranches(branches ...BranchCommandBuilder) BranchCommandBuilder
 
+  // WithLeaf appends the given LeafCommandBuilder instance to this
+  // BranchCommandBuilder instance.
+  //
+  // Leaf commands added to this BranchCommandBuilder are placed in the default
+  // CommandGroupBuilder.
   WithLeaf(leaf LeafCommandBuilder) BranchCommandBuilder
+
+  // WithLeaves appends the given LeafCommandBuilder instances to this
+  // BranchCommandBuilder instance.
+  //
+  // Leaf commands added to this BranchCommandBuilder are placed in the default
+  // CommandGroupBuilder.
   WithLeaves(leaves ...LeafCommandBuilder) BranchCommandBuilder
 
-  // WithCommandGroup appends the given command group builder to be built with
-  // this command tree.
+  // WithCommandGroup appends the given CommandGroupBuilder instance to this
+  // BranchCommandBuilder instance.
   //
   // Command groups are used for organizing subcommands into named groups that
   // are primarily used for rendering help text.
+  //
+  // Example usage:
+  //   cli.Tree().
+  //       WithCommandGroup(cli.CommandGroup("My Command Group").
+  //       WithBranch(cli.Branch("foo").
+  //           WithLeaf(cli.Leaf("bar"))))
+  //
+  // Resulting help text:
+  //
   WithCommandGroup(group CommandGroupBuilder) BranchCommandBuilder
 
   WithCommandGroups(groups ...CommandGroupBuilder) BranchCommandBuilder

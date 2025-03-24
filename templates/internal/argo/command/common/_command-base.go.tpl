@@ -13,31 +13,31 @@ type CommandBase struct {
 
 {{ define "CommandBaseFuncs" -}}
 func (i *{{ .ImplType }}) HasDescription() bool {
-  return len(c.description) > 0
+  return len(i.description) > 0
 }
 
 func (i *{{ .ImplType }}) Description() string {
-  return c.description
+  return i.description
 }
 
-func (i *{{ .ImplType }}) HasFlagGroups(includeDefault bool) bool {
-
+func (i *{{ .ImplType }}) HasFlagGroups() bool {
+  return len(i.flagGroups) > 0
 }
 
-func (i *{{ .ImplType }}) FlagGroups(includeDefault bool) []argo.FlagGroup {
-
+func (i *{{ .ImplType }}) FlagGroups() []argo.FlagGroup {
+  return i.flagGroups
 }
 
 func (i *{{ .ImplType }}) HasCallback() bool {
-  return c.callback != nil
+  return i.callback != nil
 }
 
 func (i *{{ .ImplType }}) Callback() argo.CommandCallback[{{ .OutputType }}] {
-  return c.callback
+  return i.callback
 }
 
 func (i *{{ .ImplType }}) FindShortFlag(b byte) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindShortFlag(b); flag != nil {
       return flag
     }
@@ -47,7 +47,7 @@ func (i *{{ .ImplType }}) FindShortFlag(b byte) argo.Flag {
 }
 
 func (i *{{ .ImplType }}) FindLongFlag(name string) argo.Flag {
-  for _, group := range c.flagGroups {
+  for _, group := range i.flagGroups {
     if flag := group.FindLongFlag(name); flag != nil {
       return flag
     }
@@ -57,6 +57,6 @@ func (i *{{ .ImplType }}) FindLongFlag(name string) argo.Flag {
 }
 
 func (i *{{ .ImplType }}) IsHelpDisabled() bool {
-  return c.disableHelp
+  return i.disableHelp
 }
 {{- end }}

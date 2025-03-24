@@ -1,5 +1,8 @@
-{{ $vars := (map "ImplType" "Leaf") -}}
+{{ $vars := (types "argo.LeafCommandBuilder" "Leaf" "argo.LeafCommand") -}}
 package tree
+
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
 
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 

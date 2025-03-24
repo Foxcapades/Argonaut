@@ -13,3 +13,7 @@ func MustReturn[T any](value T, err error) T {
 
 	return value
 }
+
+func DisregardError(fn func() error) {
+	_ = fn()
+}

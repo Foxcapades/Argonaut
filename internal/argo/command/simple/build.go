@@ -4,18 +4,17 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func Build(builder argo.CommandBuilder) (argo.Command, error) {
+func Build(builder argo.CommandBuilder, options argo.Options) (argo.Command, error) {
 	errs := xerr.NewMultiError()
-	com := new(command)
+	com := new(Command)
 
 	var flagGroups []argo.FlagGroupBuilder
 	if !builder.IsHelpDisabled() {
-		flagGroups = common.ConfigureHelpFlags[argo.Command](builder, render.CommandHelpRenderer(), com)
+		flagGroups = common.ConfigureHelpFlags[argo.Command](builder, RenderHelp, com)
 	} else {
 		flagGroups = builder.FlagGroups(true)
 	}

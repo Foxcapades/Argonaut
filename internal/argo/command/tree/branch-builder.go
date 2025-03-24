@@ -1,54 +1,30 @@
 package tree
 
+// WARNING:
+//   This is a generated file!  Edits here will be lost!
+
 import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func NewBranchBuilder(name string) argo.BranchCommandBuilder {
 	return &CommandBranchBuilder{
-		name:       name,
-		flagGroups: []argo.FlagGroupBuilder{flag.NewGroupBuilder(chars.DefaultGroupName)},
-		comGroups:  []argo.CommandGroupBuilder{NewGroupBuilder(chars.DefaultGroupName)},
+		name: name,
 	}
 }
 
 type CommandBranchBuilder struct {
-	name      string
-	comGroups []argo.CommandGroupBuilder
-	aliases   []string
-	parent    argo.ParentNodeBuilder
-
-	onIncompleteHandler argo.IncompleteCommandHandler[argo.BranchCommand]
-
+	comGroups    []argo.CommandGroupBuilder
+	incompleteFn argo.IncompleteCommandHandler[argo.BranchCommand]
+	name    string
+	aliases []string
+	parent  argo.ParentNodeBuilder
 	disableHelp bool
 	description string
 	flagGroups  []argo.FlagGroupBuilder
 	callback    argo.CommandCallback[argo.BranchCommand]
-}
-
-func (i *CommandBranchBuilder) Name() string {
-	return i.name
-}
-
-func (i *CommandBranchBuilder) WithAlias(alias string) argo.BranchCommandBuilder {
-	i.aliases = append(i.aliases, alias)
-	return i
-}
-
-func (i *CommandBranchBuilder) WithAliases(aliases ...string) argo.BranchCommandBuilder {
-	i.aliases = append(i.aliases, aliases...)
-	return i
-}
-
-func (i *CommandBranchBuilder) Aliases() []string {
-	return i.aliases
-}
-
-func (i *CommandBranchBuilder) HasAliases() bool {
-	return len(i.aliases) > 0
 }
 
 func (i *CommandBranchBuilder) WithCommandGroup(group argo.CommandGroupBuilder) argo.BranchCommandBuilder {
@@ -114,16 +90,37 @@ func (i *CommandBranchBuilder) HasSubcommands() bool {
 }
 
 func (i *CommandBranchBuilder) WithIncompleteHandler(handler argo.IncompleteCommandHandler[argo.BranchCommand]) argo.BranchCommandBuilder {
-	i.onIncompleteHandler = handler
+	i.incompleteFn = handler
 	return i
 }
 
 func (i *CommandBranchBuilder) HasIncompleteHandler() bool {
-	return i.onIncompleteHandler != nil
+	return i.incompleteFn != nil
 }
 
 func (i *CommandBranchBuilder) IncompleteHandler() argo.IncompleteCommandHandler[argo.BranchCommand] {
-	return i.onIncompleteHandler
+	return i.incompleteFn
+}
+func (i *CommandBranchBuilder) Name() string {
+	return i.name
+}
+
+func (i *CommandBranchBuilder) WithAlias(alias string) argo.BranchCommandBuilder {
+	i.aliases = append(i.aliases, alias)
+	return i
+}
+
+func (i *CommandBranchBuilder) WithAliases(aliases ...string) argo.BranchCommandBuilder {
+	i.aliases = append(i.aliases, aliases...)
+	return i
+}
+
+func (i *CommandBranchBuilder) Aliases() []string {
+	return i.aliases
+}
+
+func (i *CommandBranchBuilder) HasAliases() bool {
+	return len(i.aliases) > 0
 }
 
 func (i *CommandBranchBuilder) SetParentNode(parent argo.ParentNodeBuilder) argo.BranchCommandBuilder {
@@ -134,7 +131,6 @@ func (i *CommandBranchBuilder) SetParentNode(parent argo.ParentNodeBuilder) argo
 func (i *CommandBranchBuilder) ParentNode() argo.ParentNodeBuilder {
 	return i.parent
 }
-
 func (i *CommandBranchBuilder) WithDescription(desc string) argo.BranchCommandBuilder {
 	i.description = desc
 	return i
