@@ -6,11 +6,19 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-type Appender struct {
+func NewValueAppender(arguments []argo.Argument) ValueAppender {
+	return ValueAppender{stream: func(yield func(argo.Argument) bool) {
+		for _, arg := range arguments {
+			yield(arg)
+		}
+	}}
+}
+
+type ValueAppender struct {
 	stream iter.Seq[argo.Argument]
 }
 
-func (a Appender) Append(rawValue string) (bool, error) {
+func (a ValueAppender) Append(rawValue string) (bool, error) {
 	next, _ := iter.Pull(a.stream)
 
 	for {
@@ -30,6 +38,6 @@ func (a Appender) Append(rawValue string) (bool, error) {
 	return false, nil
 }
 
-func (a Appender) Remaining() iter.Seq[argo.Argument] {
+func (a ValueAppender) Remaining() iter.Seq[argo.Argument] {
 	return a.stream
 }

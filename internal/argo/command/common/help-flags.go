@@ -8,8 +8,9 @@ import (
 func TryAddHelpFlags[T any](c flag.GroupContainerBuilder[T], fn argo.FlagCallback, options argo.Options) {
 	var targetGroup argo.FlagGroupBuilder
 	var groups []argo.FlagGroupBuilder
-	hasShortH := false
-	hasLongH := false
+
+	hasH := false
+	hasHelp := false
 
 	if c.HasFlagGroups(true) {
 		groups = c.FlagGroups(true)
@@ -17,46 +18,51 @@ func TryAddHelpFlags[T any](c flag.GroupContainerBuilder[T], fn argo.FlagCallbac
 		// If there is no default flag group, or the default flag group already
 		// has too many flags, create a meta group.
 		if !flag.IsDefaultGroup(groups[0]) || groups[0].Size() > options.MaxDefaultFlagGroupSizeForMetaGroup {
-			targetGroup = flag.NewGroupBuilder(flag.MetaFlagGroupName)
+			targetGroup = flag.NewDefaultGroupBuilder()
 			c.WithFlagGroup(targetGroup)
 		} else {
 			targetGroup = groups[0]
+		}
+
+		if hasH, hasHelp = checkForHelpFlagConflicts(groups); hasH && hasHelp {
+			return
 		}
 	} else {
 		targetGroup = flag.NewDefaultGroupBuilder()
 		c.WithFlagGroup(targetGroup)
 	}
 
-OUTER:
+	f := flag.NewBuilder().
+		WithDescription("Prints this help text.").
+		WithCallback(fn)
+
+	if !hasHelp {
+		f.WithLongForm("help")
+	}
+
+	if !hasH {
+		f.WithShortForm('h')
+	}
+
+	targetGroup.WithFlag(f)
+}
+
+func checkForHelpFlagConflicts(groups []argo.FlagGroupBuilder) (hasH, hasHelp bool) {
 	for _, g := range groups {
 		for _, f := range g.Flags() {
 			if f.HasShortForm() && f.ShortForm() == 'h' {
-				hasShortH = true
+				hasH = true
 			}
 
 			if f.HasLongForm() && f.LongForm() == "help" {
-				hasLongH = true
+				hasHelp = true
 			}
 
-			if hasShortH && hasLongH {
-				break OUTER
+			if hasH && hasHelp {
+				return
 			}
 		}
 	}
 
-	if !hasLongH || !hasShortH {
-		f := flag.NewBuilder().
-			WithDescription("Prints this help text.").
-			WithCallback(fn)
-
-		if !hasLongH {
-			f.WithLongForm("help")
-		}
-
-		if !hasShortH {
-			f.WithShortForm('h')
-		}
-
-		targetGroup.WithFlag(f)
-	}
+	return
 }

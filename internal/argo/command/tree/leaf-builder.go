@@ -25,7 +25,7 @@ type LeafCommandBuilder struct {
 	flagGroups  []argo.FlagGroupBuilder
 	callback    argo.CommandCallback[argo.LeafCommand]
 
-	arguments     []argo.Argument
+	arguments     []argo.ArgumentBuilder
 	unmapped      []string
 	unmappedLabel string
 }
@@ -146,11 +146,21 @@ func (i *LeafCommandBuilder) Callback() argo.CommandCallback[argo.LeafCommand] {
 	return i.callback
 }
 
+func (i *LeafCommandBuilder) WithArgument(argument argo.ArgumentBuilder) argo.LeafCommandBuilder {
+	i.arguments = append(i.arguments, argument)
+	return i
+}
+
+func (i *LeafCommandBuilder) WithArguments(arguments ...argo.ArgumentBuilder) argo.LeafCommandBuilder {
+	i.arguments = append(i.arguments, arguments...)
+	return i
+}
+
 func (i *LeafCommandBuilder) HasArguments() bool {
 	return len(i.arguments) > 0
 }
 
-func (i *LeafCommandBuilder) Arguments() []argo.Argument {
+func (i *LeafCommandBuilder) Arguments() []argo.ArgumentBuilder {
 	return i.arguments
 }
 
@@ -164,6 +174,11 @@ func (i *LeafCommandBuilder) UnmappedInputs() []string {
 
 func (i *LeafCommandBuilder) AppendUnmappedInput(input string) {
 	i.unmapped = append(i.unmapped, input)
+}
+
+func (i *LeafCommandBuilder) WithUnmappedInputLabel(label string) argo.LeafCommandBuilder {
+	i.unmappedLabel = label
+	return i
 }
 
 func (i *LeafCommandBuilder) HasUnmappedInputLabel() bool {

@@ -3,7 +3,6 @@ package flag
 import (
 	"fmt"
 	"iter"
-	"reflect"
 
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
@@ -39,12 +38,6 @@ func (q *Queue) Iterator() iter.Seq[argo.Flag] {
 
 func (q *Queue) Clear() {
 	*q = NewQueue()
-}
-
-//
-
-func HasBooleanArgument(flag argo.Flag) bool {
-	return flag.HasArgument() && flag.Argument().HasBinding() && flag.Argument().BindingType().Kind() == reflect.Bool
 }
 
 //

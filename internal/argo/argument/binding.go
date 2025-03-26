@@ -1,57 +1,75 @@
 package argument
 
-import "github.com/foxcapades/argonaut/v3/pkg/argo"
+import (
+	"errors"
+	"fmt"
+	"reflect"
 
-type BoundErrorFn[T any] = func(value T) error
+	"github.com/foxcapades/argonaut/v3/internal/unmarshal"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
+)
 
-func FunctionBinding[T any](fn BoundErrorFn[T]) argo.Binding {
-	return binding{argo.BindingTypeErrorFunc, fn}
+func NewBinding(value any) Binding {
+	return Binding{value, argo.BindingTypeUnknown}
 }
 
-type BoundSimpleFn[T any] = func(value T)
-
-func SimpleFunctionBinding[T any](fn BoundSimpleFn[T]) argo.Binding {
-	return binding{argo.BindingTypeSimpleFunc, fn}
+type Binding struct {
+	raw   any
+	bType argo.ArgumentBindingType
 }
 
-func UnmarshalerBinding(un argo.ValueUnmarshaler) argo.Binding {
-	return binding{argo.BindingTypeUnmarshaler, un}
+func (b *Binding) Type() argo.ArgumentBindingType {
+	return b.bType
 }
 
-func PointerBinding(ptr any) argo.Binding {
-	return binding{argo.BindingTypePointer, ptr}
+func (b *Binding) BoundTo() any {
+	return b.raw
 }
 
-type binding struct {
-	kind argo.BindingType
-	ref  any
+func (b *Binding) IsUsable() bool {
+	// This method is only called internally by the default implementations, so we
+	// know that the "Unknown" type isn't a possible value.
+	return !(b.bType == argo.BindingTypeNone || b.bType == argo.BindingTypeInvalid)
 }
 
-func (b binding) Type() argo.BindingType {
-	return b.kind
+func DetermineBindType(bind any) (kind argo.ArgumentBindingType, err error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			kind = argo.BindingTypeInvalid
+			err = errors.New("binding must be a pointer, a consumer func, or an argo.Unmarshaler instance")
+		}
+	}()
+
+	rt := reflect.TypeOf(bind)
+	rk := rt.Kind()
+
+	switch rk {
+	case reflect.Ptr:
+		if unmarshal.IsUnmarshalable(rt) {
+			if rt.Elem().AssignableTo(unmarshal.UnmarshalerType) {
+				return argo.BindingTypeUnmarshaler, nil
+			}
+
+			return argo.BindingTypePointer, nil
+		}
+
+		return argo.BindingTypeInvalid, errors.New("binding is a pointer to a type that cannot be unmarshalled")
+
+	case reflect.Func:
+		if unmarshal.IsUnmarshalable(rt) {
+			if xreflect.FuncHasReturn(rt) {
+				return argo.BindingTypeErrorFunc, nil
+			}
+
+			return argo.BindingTypeSimpleFunc, nil
+		}
+
+		return argo.BindingTypeInvalid, fmt.Errorf("binding is invalid function type %s", rt)
+
+	default:
+		return argo.BindingTypeInvalid, fmt.Errorf("invalid binding kind: %s", rk)
+	}
 }
 
-func (b binding) BoundTo() any {
-	return b.ref
-}
-
-func newArgumentBindingError(root error, builder argo.ArgumentBuilder) argo.ArgumentBindingError {
-	return &argumentBindingError{root, builder}
-}
-
-type argumentBindingError struct {
-	root    error
-	builder argo.ArgumentBuilder
-}
-
-func (a argumentBindingError) Unwrap() error {
-	return a.root
-}
-
-func (a argumentBindingError) Error() string {
-	return "ArgumentBindingError: " + a.root.Error()
-}
-
-func (a argumentBindingError) Builder() argo.ArgumentBuilder {
-	return a.builder
-}
+// ///////////////////////

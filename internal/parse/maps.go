@@ -2,6 +2,8 @@ package parse
 
 import (
 	"errors"
+
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -34,11 +36,9 @@ type mapElementParser struct {
 	expectingValue bool
 }
 
-func (m mapElementParser) HasNext() bool {
+func (m *mapElementParser) HasNext() bool {
 	return m.position < len(m.raw)
 }
-
-const charBS byte = '\\'
 
 // Next returns the next split string from the input.
 //
@@ -94,7 +94,7 @@ func (m *mapElementParser) parse(test func(byte) bool) string {
 				return out
 			}
 		} else {
-			lastWasBS = c == charBS
+			lastWasBS = c == text.BackSlashByte
 			m.position++
 		}
 	}
@@ -108,7 +108,7 @@ func (m *mapElementParser) parse(test func(byte) bool) string {
 	return ""
 }
 
-func (m mapElementParser) isKeyValSeparator(c byte) bool {
+func (m *mapElementParser) isKeyValSeparator(c byte) bool {
 	for i := range m.properties.KeyValSeparatorChars {
 		if c == m.properties.KeyValSeparatorChars[i] {
 			return true
@@ -117,7 +117,7 @@ func (m mapElementParser) isKeyValSeparator(c byte) bool {
 	return false
 }
 
-func (m mapElementParser) isEntrySeparator(c byte) bool {
+func (m *mapElementParser) isEntrySeparator(c byte) bool {
 	for i := range m.properties.EntrySeparatorChars {
 		if c == m.properties.EntrySeparatorChars[i] {
 			return true

@@ -11,14 +11,14 @@ import (
 )
 
 type Tree struct {
-	disableHelp bool
-  description string
-  flagGroups  []argo.FlagGroup
-  callback    argo.CommandCallback[argo.TreeCommand]
+	disableHelp   bool
+	description   string
+	flagGroups    []argo.FlagGroup
+	callback      argo.CommandCallback[argo.TreeCommand]
 	commandGroups []argo.CommandGroup
 	selectedChild argo.ChildNode
-	incompleteFn argo.IncompleteCommandHandler[argo.TreeCommand]
-	selectedLeaf argo.LeafCommand
+	incompleteFn  argo.IncompleteCommandHandler[argo.TreeCommand]
+	selectedLeaf  argo.LeafCommand
 }
 
 func (_ *Tree) Name() string {
@@ -89,49 +89,49 @@ func (i *Tree) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeComman
 }
 
 func (i *Tree) HasDescription() bool {
-  return len(i.description) > 0
+	return len(i.description) > 0
 }
 
 func (i *Tree) Description() string {
-  return i.description
+	return i.description
 }
 
 func (i *Tree) HasFlagGroups() bool {
-  return len(i.flagGroups) > 0
+	return len(i.flagGroups) > 0
 }
 
 func (i *Tree) FlagGroups() []argo.FlagGroup {
-  return i.flagGroups
+	return i.flagGroups
 }
 
 func (i *Tree) HasCallback() bool {
-  return i.callback != nil
+	return i.callback != nil
 }
 
 func (i *Tree) Callback() argo.CommandCallback[argo.TreeCommand] {
-  return i.callback
+	return i.callback
 }
 
 func (i *Tree) FindShortFlag(b byte) argo.Flag {
-  for _, group := range i.flagGroups {
-    if flag := group.FindShortFlag(b); flag != nil {
-      return flag
-    }
-  }
+	for _, group := range i.flagGroups {
+		if flag := group.FindShortFlag(b); flag != nil {
+			return flag
+		}
+	}
 
-  return nil
+	return nil
 }
 
 func (i *Tree) FindLongFlag(name string) argo.Flag {
-  for _, group := range i.flagGroups {
-    if flag := group.FindLongFlag(name); flag != nil {
-      return flag
-    }
-  }
+	for _, group := range i.flagGroups {
+		if flag := group.FindLongFlag(name); flag != nil {
+			return flag
+		}
+	}
 
-  return nil
+	return nil
 }
 
 func (i *Tree) IsHelpDisabled() bool {
-  return i.disableHelp
+	return i.disableHelp
 }

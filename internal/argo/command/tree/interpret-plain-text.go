@@ -8,7 +8,7 @@ import (
 
 func (c *CommandTreeInterpreter) handlePlainText(
 	element parse.Element,
-	arguments argument.Appender,
+	arguments argument.ValueAppender,
 	unmapped *[]string,
 	errs argo.MultiError, // Only use for execution errors!  Invalid command structure errors should be passed up!
 ) ([]string, error) {

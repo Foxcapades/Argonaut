@@ -3,7 +3,7 @@ package emit_test
 import (
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/emit"
+	"github.com/foxcapades/argonaut/v3/internal/emit"
 )
 
 func TestEmitter_Next01(t *testing.T) {

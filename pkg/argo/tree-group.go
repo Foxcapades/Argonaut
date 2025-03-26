@@ -1,5 +1,7 @@
 package argo
 
+import "iter"
+
 // A CommandGroup is an organizational category containing one or more commands.
 //
 // Subcommands that are appended to a parent directly will be placed in a
@@ -33,6 +35,8 @@ type CommandGroup interface {
 	HasLeaves() bool
 
 	HasSubcommands() bool
+
+	Subcommands() iter.Seq[ChildNode]
 
 	// FindChild searches this CommandGroup instance for a BranchCommand or
 	// LeafCommand node that matches the given string.
@@ -73,4 +77,6 @@ type CommandGroupBuilder interface {
 	Leaves() []LeafCommandBuilder
 
 	HasSubcommands() bool
+
+	Subcommands() iter.Seq[ChildNodeBuilder]
 }

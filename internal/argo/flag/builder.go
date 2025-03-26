@@ -1,11 +1,7 @@
 package flag
 
 import (
-	"errors"
-
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
-	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -140,83 +136,3 @@ func (b *flagBuilder) IsHelpFlag() bool {
 }
 
 //
-
-func (b *flagBuilder) Build(ctx *argo.WarningContext) (argo.Flag, error) {
-	errs := xerr.NewMultiError()
-
-	if b.short > 0 {
-		if err := validateShortForm(b.short); err != nil {
-			errs.AppendError(err)
-		}
-	}
-
-	if len(b.long) > 0 {
-		if err := validateLongForm(b.long); err != nil {
-			errs.AppendError(err)
-		}
-	}
-
-	if !b.HasShortForm() && !b.HasLongForm() {
-		errs.AppendError(errors.New("flag declared with neither a long or short form"))
-	}
-
-	var arg argo.Argument
-
-	if b.arg != nil {
-		var err error
-		arg, err = b.arg.Build(ctx)
-
-		if err != nil {
-			var e argo.MultiError
-			if errors.As(err, &e) {
-				var be argo.ArgumentBindingError
-				for _, err := range e.Errors() {
-					if errors.As(err, &be) {
-						errs.AppendError(NewBindingError(be, b.arg, b))
-					} else {
-						errs.AppendError(err)
-					}
-				}
-			} else {
-				errs.AppendError(err)
-			}
-		}
-	}
-
-	if len(errs.Errors()) > 0 {
-		return nil, errs
-	}
-
-	return &flag{
-		warnings: ctx,
-		short:    b.short,
-		required: b.req,
-		arg:      arg,
-		long:     b.long,
-		desc:     b.desc,
-		isHelp:   b.isHelp,
-		callback: b.onHit,
-	}, nil
-}
-
-func validateShortForm(c byte) error {
-	if !chars.IsAlphanumeric(c) {
-		return errors.New("short-form flags must be alphanumeric")
-	}
-
-	return nil
-}
-
-func validateLongForm(f string) error {
-	if !chars.IsAlphanumeric(f[0]) {
-		return errors.New("long-form flags must begin with an alphanumeric character")
-	}
-
-	for i := 1; i < len(f); i++ {
-		if !chars.IsFlagStringSafe(f[i]) {
-			return errors.New("long-form flags must only contain alphanumeric characters, dashes, and/or underscores")
-		}
-	}
-
-	return nil
-}

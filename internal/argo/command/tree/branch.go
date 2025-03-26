@@ -6,94 +6,94 @@ package tree
 import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
 type Branch struct {
-  disableHelp bool
-  description string
-  flagGroups  []argo.FlagGroup
-  callback    argo.CommandCallback[argo.BranchCommand]
-  name    string
-  parent  argo.ParentNode
-  aliases []string
-  commandGroups []argo.CommandGroup
+	disableHelp   bool
+	description   string
+	flagGroups    []argo.FlagGroup
+	callback      argo.CommandCallback[argo.BranchCommand]
+	name          string
+	parent        argo.ParentNode
+	aliases       []string
+	commandGroups []argo.CommandGroup
 	selectedChild argo.ChildNode
-	incompleteFn argo.IncompleteCommandHandler[argo.BranchCommand]
+	incompleteFn  argo.IncompleteCommandHandler[argo.BranchCommand]
 }
 
 func (i *Branch) HasDescription() bool {
-  return len(i.description) > 0
+	return len(i.description) > 0
 }
 
 func (i *Branch) Description() string {
-  return i.description
+	return i.description
 }
 
 func (i *Branch) HasFlagGroups() bool {
-  return len(i.flagGroups) > 0
+	return len(i.flagGroups) > 0
 }
 
 func (i *Branch) FlagGroups() []argo.FlagGroup {
-  return i.flagGroups
+	return i.flagGroups
 }
 
 func (i *Branch) HasCallback() bool {
-  return i.callback != nil
+	return i.callback != nil
 }
 
 func (i *Branch) Callback() argo.CommandCallback[argo.BranchCommand] {
-  return i.callback
+	return i.callback
 }
 
 func (i *Branch) FindShortFlag(b byte) argo.Flag {
-  for _, group := range i.flagGroups {
-    if flag := group.FindShortFlag(b); flag != nil {
-      return flag
-    }
-  }
+	for _, group := range i.flagGroups {
+		if flag := group.FindShortFlag(b); flag != nil {
+			return flag
+		}
+	}
 
-  return nil
+	return nil
 }
 
 func (i *Branch) FindLongFlag(name string) argo.Flag {
-  for _, group := range i.flagGroups {
-    if flag := group.FindLongFlag(name); flag != nil {
-      return flag
-    }
-  }
+	for _, group := range i.flagGroups {
+		if flag := group.FindLongFlag(name); flag != nil {
+			return flag
+		}
+	}
 
-  return nil
+	return nil
 }
 
 func (i *Branch) IsHelpDisabled() bool {
-  return i.disableHelp
+	return i.disableHelp
 }
 
 func (i *Branch) Name() string {
-  return i.name
+	return i.name
 }
 
 func (i *Branch) Parent() argo.ParentNode {
-  return i.parent
+	return i.parent
 }
 
 func (i *Branch) HasAliases() bool {
-  return len(i.aliases) > 0
+	return len(i.aliases) > 0
 }
 
 func (i *Branch) Aliases() []string {
-  return i.aliases
+	return i.aliases
 }
 
 func (i *Branch) Matches(name string) bool {
-  if i.name == name {
-    return true
-  }
+	if i.name == name {
+		return true
+	}
 
-  for _, alias := range i.aliases {
-    if alias == name {
-      return true
-    }
-  }
+	for _, alias := range i.aliases {
+		if alias == name {
+			return true
+		}
+	}
 
-  return false
+	return false
 }
 
 func (i *Branch) HasCommandGroups() bool {

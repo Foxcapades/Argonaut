@@ -1,8 +1,12 @@
 package tree
 
-import "github.com/foxcapades/argonaut/v3/pkg/argo"
+import (
+	"iter"
 
-const DefaultGroupName = "__DEFAULT_GROUP_NAME__"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
+)
+
+const DefaultCommandGroupName = "__DEFAULT_COMMAND_GROUP__"
 
 type CommandGroup struct {
 	name        string
@@ -41,6 +45,17 @@ func (g CommandGroup) HasLeaves() bool {
 
 func (g CommandGroup) HasSubcommands() bool {
 	return len(g.branches)+len(g.leaves) > 0
+}
+
+func (g CommandGroup) Subcommands() iter.Seq[argo.ChildNode] {
+	return func(y func(argo.ChildNode) bool) {
+		for _, b := range g.branches {
+			y(b)
+		}
+		for _, l := range g.leaves {
+			y(l)
+		}
+	}
 }
 
 func (g CommandGroup) FindChild(name string) argo.ChildNode {

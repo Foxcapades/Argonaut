@@ -1,6 +1,9 @@
 package argo
 
-import "time"
+import (
+	"iter"
+	"time"
+)
 
 // UnmarshalProps defines configuration options for the included "magic"
 // Unmarshaler implementation.
@@ -146,7 +149,7 @@ func DefaultUnmarshalProps() UnmarshalProps {
 			EntrySeparatorChars:  ",; ",
 		},
 		Slices: UnmarshalSliceProps{
-			Scanner:         func(s string) Scanner[string] { return DelimitedSliceScanner(s, ",") },
+			Scanner:         func(s string) iter.Seq[string] { return DelimitedSliceScanner(s, ",") },
 			ByteSliceParser: ByteSliceParserRaw,
 		},
 		Time: UnmarshalTimeProps{

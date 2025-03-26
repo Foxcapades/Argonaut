@@ -1,12 +1,8 @@
 package flag
 
-import (
-	"fmt"
+import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
-	"github.com/foxcapades/argonaut/v3/pkg/argo"
-)
-
-type flag struct {
+type Flag struct {
 	hits uint16
 
 	short    byte
@@ -19,110 +15,90 @@ type flag struct {
 	desc string
 
 	callback argo.FlagCallback
-	warnings *argo.WarningContext
 }
 
 //
 
-func (f *flag) ShortForm() byte {
+func (f *Flag) ShortForm() byte {
 	return f.short
 }
 
-func (f *flag) HasShortForm() bool {
+func (f *Flag) HasShortForm() bool {
 	return f.short != 0
 }
 
 //
 
-func (f *flag) LongForm() string {
+func (f *Flag) LongForm() string {
 	return f.long
 }
 
-func (f *flag) HasLongForm() bool {
+func (f *Flag) HasLongForm() bool {
 	return len(f.long) > 0
 }
 
 //
 
-func (f *flag) Description() string {
+func (f *Flag) Description() string {
 	return f.desc
 }
 
-func (f *flag) HasDescription() bool {
+func (f *Flag) HasDescription() bool {
 	return len(f.desc) > 0
 }
 
 //
 
-func (f *flag) Argument() argo.Argument {
+func (f *Flag) Argument() argo.Argument {
 	return f.arg
 }
 
-func (f *flag) HasArgument() bool {
+func (f *Flag) HasArgument() bool {
 	return f.arg != nil
 }
 
 //
 
-func (f *flag) IsRequired() bool {
+func (f *Flag) IsRequired() bool {
 	return f.required
 }
 
-func (f *flag) RequiresArgument() bool {
+func (f *Flag) RequiresArgument() bool {
 	return f.arg != nil && f.arg.IsRequired()
 }
 
 //
 
-func (f *flag) WasHit() bool {
+func (f *Flag) WasHit() bool {
 	return f.hits > 0
 }
 
-func (f *flag) HitCount() int {
+func (f *Flag) HitCount() int {
 	return int(f.hits)
 }
 
 //
 
-func (f *flag) HasCallback() bool {
+func (f *Flag) HasCallback() bool {
 	return f.callback != nil
 }
 
-func (f *flag) Callback() argo.FlagCallback {
+func (f *Flag) Callback() argo.FlagCallback {
 	return f.callback
 }
 
 //
 
-func (f *flag) IsHelpFlag() bool {
+func (f *Flag) IsHelpFlag() bool {
 	return f.isHelp
 }
 
 //
 
-func (f *flag) String() string {
+func (f *Flag) String() string {
 	return PrintFlagNames(f)
 }
 
-func (f *flag) IncrementHitCount() {
+func (f *Flag) IncrementHitCount() {
 	f.hits++
-	if f.HasArgument() && f.arg.IsRequired() {
-		return fmt.Errorf("flag %s requires an input", PrintFlagNames(f))
-	}
-
-	if HasBooleanArgument(f) {
-		return f.arg.SetValue("true")
-	}
-
-	return nil
-}
-
-func (f *flag) hitWithArg(rawArg string) error {
-	f.hits++
-
-	if f.arg != nil {
-		return f.arg.SetValue(rawArg)
-	} else {
-		return nil // TODO: warning for this
-	}
 }

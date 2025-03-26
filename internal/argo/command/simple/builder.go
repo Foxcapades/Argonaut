@@ -1,7 +1,6 @@
 package command
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -77,14 +76,14 @@ func (b *commandBuilder) hasDefaultFlagGroup() bool {
 
 //
 
-func (b *commandBuilder) WithFlag(flag argo.FlagBuilder) argo.CommandBuilder {
-	b.flagGroups = common.EnsureDefaultFlagGroup(b.flagGroups)
-	b.flagGroups[0].WithFlag(flag)
+func (b *commandBuilder) WithFlag(f argo.FlagBuilder) argo.CommandBuilder {
+	b.flagGroups = flag.EnsureDefaultGroup(b.flagGroups)
+	b.flagGroups[0].WithFlag(f)
 	return b
 }
 
 func (b *commandBuilder) WithFlags(flags ...argo.FlagBuilder) argo.CommandBuilder {
-	b.flagGroups = common.EnsureDefaultFlagGroup(b.flagGroups)
+	b.flagGroups = flag.EnsureDefaultGroup(b.flagGroups)
 	b.flagGroups[0].WithFlags(flags...)
 	return b
 }

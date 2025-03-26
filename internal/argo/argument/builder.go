@@ -1,13 +1,7 @@
 package argument
 
 import (
-	"errors"
-	"reflect"
-
 	"github.com/foxcapades/argonaut/v3/internal/parse"
-	"github.com/foxcapades/argonaut/v3/internal/unmarshal"
-	"github.com/foxcapades/argonaut/v3/internal/xarg"
-	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -21,22 +15,15 @@ type argumentBuilder struct {
 	name string
 	desc string
 
-	required bool
+	required   bool
+	repeatable bool
 
-	bindKind    xarg.BindKind
-	defaultKind xarg.DefaultKind
-
-	def  any
-	bind any
-
-	rootDef  reflect.Value
-	rootBind reflect.Value
+	binding Binding
+	defVal  Default
 
 	marsh argo.ValueUnmarshaler
 
 	validators []any
-
-	errors []error
 }
 
 func (a *argumentBuilder) WithName(name string) argo.ArgumentBuilder {
@@ -44,9 +31,25 @@ func (a *argumentBuilder) WithName(name string) argo.ArgumentBuilder {
 	return a
 }
 
+func (a *argumentBuilder) HasName() bool {
+	return len(a.name) > 0
+}
+
+func (a *argumentBuilder) Name() string {
+	return a.name
+}
+
 func (a *argumentBuilder) WithDescription(desc string) argo.ArgumentBuilder {
 	a.desc = desc
 	return a
+}
+
+func (a *argumentBuilder) HasDescription() bool {
+	return len(a.desc) > 0
+}
+
+func (a *argumentBuilder) Description() string {
+	return a.desc
 }
 
 func (a *argumentBuilder) Require() argo.ArgumentBuilder {
@@ -54,28 +57,34 @@ func (a *argumentBuilder) Require() argo.ArgumentBuilder {
 	return a
 }
 
-func (a *argumentBuilder) isRequired() bool {
+func (a *argumentBuilder) IsRequired() bool {
 	return a.required
 }
 
 func (a *argumentBuilder) WithBinding(binding any) argo.ArgumentBuilder {
-	a.bindKind = xarg.BindKindUnknown
-	a.bind = binding
+	a.binding = NewBinding(binding)
 	return a
 }
 
-func (a *argumentBuilder) getBinding() any {
-	return a.bind
+func (a *argumentBuilder) Binding() argo.ArgumentBinding {
+	return &a.binding
+}
+
+func (a *argumentBuilder) HasBinding() bool {
+	return a.binding.bType != argo.BindingTypeNone
 }
 
 func (a *argumentBuilder) WithDefault(def any) argo.ArgumentBuilder {
-	a.defaultKind = xarg.DefaultKindUnknown
-	a.def = def
+	a.defVal = NewDefault(def)
 	return a
 }
 
-func (a *argumentBuilder) getDefault() any {
-	return a.def
+func (a *argumentBuilder) HasDefault() bool {
+	return a.defVal.Type() != argo.DefaultTypeNone
+}
+
+func (a *argumentBuilder) Default() argo.ArgumentDefault {
+	return &a.defVal
 }
 
 func (a *argumentBuilder) WithUnmarshaler(fn argo.ValueUnmarshaler) argo.ArgumentBuilder {
@@ -83,62 +92,23 @@ func (a *argumentBuilder) WithUnmarshaler(fn argo.ValueUnmarshaler) argo.Argumen
 	return a
 }
 
+func (a *argumentBuilder) HasUnmarshaler() bool {
+	return a.marsh != nil
+}
+
+func (a *argumentBuilder) Unmarshaler() argo.ValueUnmarshaler {
+	return a.marsh
+}
+
 func (a *argumentBuilder) WithValidator(fn any) argo.ArgumentBuilder {
 	a.validators = append(a.validators, fn)
 	return a
 }
 
-func (a *argumentBuilder) Build(warnings *argo.WarningContext) (argo.Argument, error) {
-	errs := xerr.NewMultiError()
+func (a *argumentBuilder) HasValidators() bool {
+	return len(a.validators) > 0
+}
 
-	if a.bindKind != xarg.BindKindNone {
-		kind, err := xarg.DetermineBindKind(a.bind, unmarshalerType)
-		a.bindKind = kind
-		if err != nil {
-			errs.AppendError(newArgumentBindingError(err, a))
-		} else {
-			a.rootBind = unmarshal.GetRootValue(reflect.ValueOf(a.bind), unmarshalerType)
-		}
-	}
-
-	if a.defaultKind != xarg.DefaultKindNone {
-		if a.bindKind == xarg.BindKindNone {
-			errs.AppendError(errors.New("default value set with no binding"))
-		} else if a.bindKind != xarg.BindKindInvalid {
-			kind, err := xarg.DetermineDefaultKind(a.bind, a.def)
-			a.defaultKind = kind
-			if err != nil {
-				errs.AppendError(newArgumentBindingError(err, a))
-			} else {
-				a.rootDef = reflect.ValueOf(a.def)
-			}
-		}
-	}
-
-	var pre, post []any
-	var err error
-	pre, post, err = xarg.SiftValidators(a.validators, &a.rootBind, a.bindKind)
-	if err != nil {
-		errs.AppendError(err)
-	}
-
-	if len(errs.Errors()) > 0 {
-		return nil, errs
-	}
-
-	return &argument{
-		warnings:            warnings,
-		name:                a.name,
-		desc:                a.desc,
-		required:            a.required,
-		bindingKind:         a.bindKind,
-		defaultKind:         a.defaultKind,
-		bindVal:             a.bind,
-		defVal:              a.def,
-		rootBind:            a.rootBind,
-		rootDef:             a.rootDef,
-		unmarshal:           a.marsh,
-		preParseValidators:  pre,
-		postParseValidators: post,
-	}, nil
+func (a *argumentBuilder) Validators() []any {
+	return a.validators
 }

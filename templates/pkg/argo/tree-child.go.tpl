@@ -10,6 +10,9 @@ import (
 {{- end -}}
 
 type ChildNode interface {
+  // Name returns the name of the subcommand.
+  Name() string
+
   // Parent returns the parent Node for the current Node.
   //
   // If the current Node does not have a parent (meaning it is the
@@ -41,8 +44,4 @@ type ChildNodeBuilder interface {
   // If no aliases have been attached to this subcommand, the return value will
   // be nil.
   Aliases() []string
-
-  // ParentNode returns the tree command root or branch command parent of the
-  // target subcommand.
-  ParentNode() ParentNodeBuilder
 }

@@ -6,7 +6,8 @@ import (
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -26,17 +27,14 @@ type CallEndNode interface {
 	Arguments() []argo.Argument
 }
 
-const ()
-
 func RenderCommandBackHalf(com CallEndNode, options argo.Options, out *bufio.Writer) error {
-
 	// If the command has a description, append it.
 	if com.HasDescription() {
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(com.Description()); err != nil {
 			return err
 		}
@@ -61,24 +59,24 @@ func RenderCommandBackHalf(com CallEndNode, options argo.Options, out *bufio.Wri
 
 	if com.HasFlagGroups() {
 		if com.HasDescription() {
-			if err := out.WriteByte(chars.CharLF); err != nil {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 		}
 
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
-		if err := flag.RenderGroups(com.FlagGroups(), 0, out); err != nil {
+		if err := flag.RenderGroups(com.FlagGroups(), options, 0, out); err != nil {
 			return err
 		}
 	}
 
 	if writeArgs {
-		if _, err := out.WriteString(chars.ParagraphBreak); err != nil {
+		if _, err := out.WriteString(render.ParagraphBreak); err != nil {
 			return err
 		}
-		if _, err := out.WriteString(chars.HeaderPadding[0]); err != nil {
+		if _, err := out.WriteString(render.HeaderPadding[0]); err != nil {
 			return err
 		}
 		if _, err := out.WriteString(CommandRenderArgs); err != nil {
@@ -89,13 +87,15 @@ func RenderCommandBackHalf(com CallEndNode, options argo.Options, out *bufio.Wri
 
 		for i, arg := range com.Arguments() {
 			if i > 0 {
-				if err := out.WriteByte(chars.CharLF); err != nil {
+				if err := out.WriteByte(text.LineFeedByte); err != nil {
 					return err
 				}
 			}
-			if err := out.WriteByte(chars.CharLF); err != nil {
+
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
+
 			if multiArgs {
 				if err := argument.Render(arg, options, 1, out, i+1); err != nil {
 					return err
@@ -108,7 +108,7 @@ func RenderCommandBackHalf(com CallEndNode, options argo.Options, out *bufio.Wri
 		}
 	}
 
-	return out.WriteByte(chars.CharLF)
+	return out.WriteByte(text.LineFeedByte)
 }
 
 func RenderCommandUsageBackHalf(com argo.Command, out *bufio.Writer) error {
@@ -121,7 +121,7 @@ func RenderCommandUsageBackHalf(com argo.Command, out *bufio.Writer) error {
 		for _, group := range com.FlagGroups() {
 			for _, f := range group.Flags() {
 				if f.IsRequired() {
-					if err := out.WriteByte(chars.CharSpace); err != nil {
+					if err := out.WriteByte(text.SpaceByte); err != nil {
 						return err
 					}
 					if err := flag.RenderShortestLine(f, out); err != nil {
@@ -146,7 +146,7 @@ func RenderCommandUsageBackHalf(com argo.Command, out *bufio.Writer) error {
 		multiArgs := len(com.Arguments()) > 1
 
 		for i, arg := range com.Arguments() {
-			if err := out.WriteByte(chars.CharSpace); err != nil {
+			if err := out.WriteByte(text.SpaceByte); err != nil {
 				return err
 			}
 			if multiArgs {

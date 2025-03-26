@@ -5,18 +5,28 @@ import "github.com/foxcapades/argonaut/v3/pkg/argo"
 
 type CommandEndBuilderBase struct {
 {{ define "CommandEndBuilderBaseProps" -}}
-	arguments     []argo.Argument
+	arguments     []argo.ArgumentBuilder
 	unmapped      []string
 	unmappedLabel string
 {{- end }}
 }
 
 {{ define "CommandEndBuilderBaseFuncs" -}}
+func (i *{{ .ImplType }}) WithArgument(argument argo.ArgumentBuilder) {{ .BuilderType }} {
+	i.arguments = append(i.arguments, argument)
+	return i
+}
+
+func (i *{{ .ImplType }}) WithArguments(arguments ...argo.ArgumentBuilder) {{ .BuilderType }} {
+	i.arguments = append(i.arguments, arguments...)
+	return i
+}
+
 func (i *{{ .ImplType }}) HasArguments() bool {
 	return len(i.arguments) > 0
 }
 
-func (i *{{ .ImplType }}) Arguments() []argo.Argument {
+func (i *{{ .ImplType }}) Arguments() []argo.ArgumentBuilder {
 	return i.arguments
 }
 
@@ -30,6 +40,11 @@ func (i *{{ .ImplType }}) UnmappedInputs() []string {
 
 func (i *{{ .ImplType }}) AppendUnmappedInput(input string) {
 	i.unmapped = append(i.unmapped, input)
+}
+
+func (i *{{ .ImplType }}) WithUnmappedInputLabel(label string) {{ .BuilderType }} {
+	i.unmappedLabel = label
+	return i
 }
 
 func (i *{{ .ImplType }}) HasUnmappedInputLabel() bool {

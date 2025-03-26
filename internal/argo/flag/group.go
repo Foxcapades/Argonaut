@@ -4,30 +4,29 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-type group struct {
-	name     string
-	desc     string
-	flags    []argo.Flag
-	warnings *argo.WarningContext
+type Group struct {
+	name  string
+	desc  string
+	flags []argo.Flag
 }
 
-func (f group) Name() string {
+func (f Group) Name() string {
 	return f.name
 }
 
-func (f group) Description() string {
+func (f Group) Description() string {
 	return f.desc
 }
 
-func (f group) HasDescription() bool {
+func (f Group) HasDescription() bool {
 	return len(f.desc) > 0
 }
 
-func (f group) Flags() []argo.Flag {
+func (f Group) Flags() []argo.Flag {
 	return f.flags
 }
 
-func (f group) FindShortFlag(c byte) argo.Flag {
+func (f Group) FindShortFlag(c byte) argo.Flag {
 	for _, flag := range f.flags {
 		if flag.HasShortForm() && flag.ShortForm() == c {
 			return flag
@@ -37,7 +36,7 @@ func (f group) FindShortFlag(c byte) argo.Flag {
 	return nil
 }
 
-func (f group) FindLongFlag(name string) argo.Flag {
+func (f Group) FindLongFlag(name string) argo.Flag {
 	for _, flag := range f.flags {
 		if flag.HasLongForm() && flag.LongForm() == name {
 			return flag
@@ -47,6 +46,6 @@ func (f group) FindLongFlag(name string) argo.Flag {
 	return nil
 }
 
-func (f group) Size() int {
+func (f Group) Size() int {
 	return len(f.flags)
 }

@@ -7,7 +7,8 @@ import (
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -34,7 +35,7 @@ func renderCommandTree(tree argo.TreeCommand, options argo.Options, out *bufio.W
 	if err := renderTreeUsageBlock(tree, options, out); err != nil {
 		return err
 	}
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
@@ -42,35 +43,35 @@ func renderCommandTree(tree argo.TreeCommand, options argo.Options, out *bufio.W
 	hf := tree.HasFlagGroups()
 
 	if hd {
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(tree.Description()); err != nil {
 			return err
 		}
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 	}
 
 	if hf {
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
-		if err := flag.RenderGroups(tree.FlagGroups(), 0, out); err != nil {
+		if err := flag.RenderGroups(tree.FlagGroups(), options, 0, out); err != nil {
 			return err
 		}
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 	}
 
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 	if err := RenderCommandGroups(tree.CommandGroups(), options, 0, out); err != nil {
 		return err
 	}
 
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
@@ -81,7 +82,7 @@ func renderTreeUsageBlock(tree argo.TreeCommand, options argo.Options, out *bufi
 	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
 		return err
 	}
-	if _, err := out.WriteString(chars.SubLinePadding[0]); err != nil {
+	if _, err := out.WriteString(render.SubLinePadding[0]); err != nil {
 		return err
 	}
 	if _, err := out.WriteString(tree.Name()); err != nil {
@@ -94,7 +95,7 @@ func renderTreeUsageBlock(tree argo.TreeCommand, options argo.Options, out *bufi
 		for _, group := range tree.FlagGroups() {
 			for _, f := range group.Flags() {
 				if f.IsRequired() {
-					if err := out.WriteByte(chars.CharSpace); err != nil {
+					if err := out.WriteByte(text.SpaceByte); err != nil {
 						return err
 					}
 					if err := flag.RenderShortestLine(f, out); err != nil {

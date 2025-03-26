@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"slices"
 
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func RenderCommandGroups(groups []argo.CommandGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
-			if _, err := sb.WriteString(chars.ParagraphBreak); err != nil {
+			if _, err := sb.WriteString(render.ParagraphBreak); err != nil {
 				return err
 			}
 		}
@@ -25,7 +26,7 @@ func RenderCommandGroups(groups []argo.CommandGroup, options argo.Options, paddi
 }
 
 func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {
-	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
+	if _, err := sb.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
@@ -39,16 +40,16 @@ func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding u
 		}
 	}
 
-	if err := sb.WriteByte(chars.CharLF); err != nil {
+	if err := sb.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
 	if group.HasDescription() {
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
 		if err := formatter.Format(group.Description()); err != nil {
 			return err
 		}
-		if _, err := sb.WriteString(chars.ParagraphBreak); err != nil {
+		if _, err := sb.WriteString(render.ParagraphBreak); err != nil {
 			return err
 		}
 	}
@@ -60,12 +61,12 @@ func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding u
 
 	for i, name := range ordered {
 		if i > 0 {
-			if err := sb.WriteByte(chars.CharLF); err != nil {
+			if err := sb.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 		}
 
-		if _, err := sb.WriteString(chars.HeaderPadding[padding+1]); err != nil {
+		if _, err := sb.WriteString(render.HeaderPadding[padding+1]); err != nil {
 			return err
 		}
 
@@ -76,7 +77,7 @@ func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding u
 		node := lookup[name]
 
 		if node.HasAliases() {
-			if err := chars.Pad(maxLen-len(name), sb); err != nil {
+			if err := render.Pad(maxLen-len(name), sb); err != nil {
 				return err
 			}
 
@@ -105,11 +106,11 @@ func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding u
 		})
 
 		if described.HasDescription() {
-			if err := sb.WriteByte(chars.CharLF); err != nil {
+			if err := sb.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 
-			formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding+1], options.HelpTextMaxWidth, sb)
+			formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding+1], options.HelpTextMaxWidth, sb)
 			if err := formatter.Format(described.Description()); err != nil {
 				return err
 			}

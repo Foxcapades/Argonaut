@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/emit"
 	"github.com/foxcapades/argonaut/v3/internal/parse"
@@ -47,7 +46,7 @@ type CommandTreeInterpreter struct {
 	result argo.ParseResult
 }
 
-func (c *CommandTreeInterpreter) next() parse.Element {
+func (c *CommandTreeInterpreter) Next() parse.Element {
 	if c.queue.IsEmpty() {
 		c.queue.Offer(c.parser.Next())
 	}
@@ -55,12 +54,28 @@ func (c *CommandTreeInterpreter) next() parse.Element {
 	return c.queue.Poll()
 }
 
+func (c *CommandTreeInterpreter) ElementQueue() utils.Deque[parse.Element] {
+	return c.queue
+}
+
+func (c *CommandTreeInterpreter) HitBoundary() {
+	c.boundary = true
+}
+
+func (c *CommandTreeInterpreter) CurrentAsFlagGroupContainer() flag.GroupContainer {
+	return c.current.(flag.GroupContainer)
+}
+
+func (c *CommandTreeInterpreter) FlagHits() *flag.Queue {
+	return &c.flagHits
+}
+
 func (c *CommandTreeInterpreter) haveLeaf() bool {
 	return c.leaf != nil
 }
 
 func (c *CommandTreeInterpreter) Run() (argo.ParseResult, error) {
-	var argumentStream argument.Appender
+	var argumentStream argument.ValueAppender
 	var err error
 
 	unmapped := make([]string, 0, 10)
@@ -68,7 +83,7 @@ func (c *CommandTreeInterpreter) Run() (argo.ParseResult, error) {
 
 FOR:
 	for {
-		element := c.next()
+		element := c.Next()
 
 		// If we've hit the boundary marker, then everything else becomes either an
 		// argument or an unmapped input.
@@ -93,22 +108,22 @@ FOR:
 			}
 
 		case parse.ElementTypeLongFlagPair:
-			if err = c.interpretLongPair(&element, &unmapped); err != nil {
+			if err = flag.InterpretLongPair(c, &element, &unmapped, &c.result); err != nil {
 				return c.result, err
 			}
 
 		case parse.ElementTypeLongFlagSolo:
-			if err = c.interpretLongSolo(&element, &unmapped); err != nil {
+			if err = flag.InterpretLongSolo(c, &element, &unmapped, &c.result); err != nil {
 				return c.result, err
 			}
 
 		case parse.ElementTypeShortBlockSolo:
-			if err = c.interpretShortSolo(&element, &unmapped); err != nil {
+			if err = flag.InterpretShortSolo(c, &element, &unmapped, &c.result); err != nil {
 				return c.result, err
 			}
 
 		case parse.ElementTypeShortBlockPair:
-			if err = c.interpretShortPair(&element, &unmapped); err != nil {
+			if err = flag.InterpretShortPair(c, &element, &unmapped, &c.result); err != nil {
 				return c.result, err
 			}
 
@@ -136,7 +151,7 @@ FOR:
 			c.leaf.AppendUnmappedInput(value)
 		}
 
-		common.CheckRequiredArguments(c.leaf.Arguments(), errs)
+		argument.CheckRequired(c.leaf.Arguments(), errs)
 	} else {
 		if parent, ok := c.current.(argo.BranchCommandBuilder); ok {
 			onIncomplete = parent.IncompleteHandler()

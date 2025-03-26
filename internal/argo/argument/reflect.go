@@ -1,11 +1,11 @@
-package xarg
+package argument
 
 import (
 	"errors"
 	"fmt"
 	"reflect"
 
-	"github.com/Foxcapades/Argonaut/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
 )
 
 // SiftValidators iterates through all the given validators, sifting them into
@@ -17,22 +17,23 @@ import (
 // returned.
 //
 // The valid function forms that are allowed are:
-//     func(string) error
-//     // and
-//     func(T, string) error
+//
+//	func(string) error
+//	// and
+//	func(T, string) error
 //
 // In the above example, the type T must match the given binding type passed
 // as the second argument to this function.
 func SiftValidators(
 	validators []any,
-	root *reflect.Value,
-	bindKind BindKind,
+	defVal *Default,
+	bindVal *Binding,
 ) ([]any, []any, error) {
-	includePostParse := !(bindKind == BindKindNone || bindKind == BindKindInvalid)
+	includePostParse := bindVal.IsUsable() && defVal.IsUsable()
 
 	var bt reflect.Type
 	if includePostParse {
-		bt = xreflect.RootType(root.Type())
+		bt = xreflect.RootType(reflect.TypeOf(defVal.value))
 	} else {
 		bt = reflect.TypeOf(nil)
 	}
@@ -50,12 +51,7 @@ func SiftValidators(
 		case 1:
 			pre = append(pre, fn)
 		case 2:
-			if bindKind == BindKindNone {
-				return nil, nil, errors.New("cannot use a post-parse validator with no argument binding")
-			}
-			if includePostParse {
-				post = append(post, fn)
-			}
+			post = append(post, fn)
 		default:
 			panic(fmt.Errorf("illegal state: expected count to equal 1 or 2 but it was %d", count))
 		}
@@ -69,40 +65,44 @@ func SiftValidators(
 //
 // See SiftValidators for more details about what constitutes a valid validator
 // function.
+//
+// This function returns the number of arguments accepted by the given validator
+// function.  If an error is encountered, a value of 0 is returned with that
+// error.
 func ValidateValidator(
-	idx int,
+	index int,
 	validator any,
-	bt reflect.Type,
+	bindingType reflect.Type,
 	includePostParse bool,
 ) (uint8, error) {
 	rv := reflect.ValueOf(validator)
 
 	// Verify that the given value is a function.
 	if rv.Kind() != reflect.Func {
-		return 0, fmt.Errorf("given validator #%d was of invalid type '%s'", idx+1, rv.Kind())
+		return 0, fmt.Errorf("given validator #%d was of invalid type '%s'", index+1, rv.Kind())
 	}
 
 	rt := rv.Type()
 
 	// Verify that the given function returns a single param which is an error
 	if rt.NumOut() != 1 {
-		return 0, fmt.Errorf("given validator #%d returns %d values when 1 was expected", idx+1, rt.NumOut())
+		return 0, fmt.Errorf("given validator #%d returns %d values when 1 was expected", index+1, rt.NumOut())
 	}
 	if !rt.Out(0).AssignableTo(reflect.TypeOf((*error)(nil)).Elem()) {
-		return 0, fmt.Errorf("given validator #%d returns a value that is not assignable to type 'error'", idx+1)
+		return 0, fmt.Errorf("given validator #%d returns a value that is not assignable to type 'error'", index+1)
 	}
 
 	switch rt.NumIn() {
 	case 1:
-		return 1, ValidateSoloValidator(idx, rt)
+		return 1, ValidateSoloValidator(index, rt)
 	case 2:
 		if includePostParse {
-			return 2, ValidateDoubleValidator(idx, rt, bt)
+			return 2, ValidateDoubleValidator(index, rt, bindingType)
 		} else {
-			return 2, nil
+			return 0, errors.New("cannot use a post-parse validator with no argument binding")
 		}
 	default:
-		return 0, fmt.Errorf("given validator #%d accepts %d arguments when 1 or 2 were expected", idx+2, rt.NumIn())
+		return 0, fmt.Errorf("given validator #%d accepts %d arguments when 1 or 2 were expected", index+2, rt.NumIn())
 	}
 }
 

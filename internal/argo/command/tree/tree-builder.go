@@ -16,10 +16,10 @@ func NewBuilder() argo.TreeCommandBuilder {
 type TreeCommandBuilder struct {
 	comGroups    []argo.CommandGroupBuilder
 	incompleteFn argo.IncompleteCommandHandler[argo.BranchCommand]
-	disableHelp bool
-	description string
-	flagGroups  []argo.FlagGroupBuilder
-	callback    argo.CommandCallback[argo.TreeCommand]
+	disableHelp  bool
+	description  string
+	flagGroups   []argo.FlagGroupBuilder
+	callback     argo.CommandCallback[argo.TreeCommand]
 }
 
 func (i *TreeCommandBuilder) WithCommandGroup(group argo.CommandGroupBuilder) argo.TreeCommandBuilder {

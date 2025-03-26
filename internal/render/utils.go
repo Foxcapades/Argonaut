@@ -1,13 +1,15 @@
-package chars
+package render
 
 import (
 	"bufio"
 	"fmt"
+
+	"github.com/foxcapades/argonaut/v3/internal/text"
 )
 
 func Pad(size int, out *bufio.Writer) error {
 	for i := 0; i < size; i++ {
-		if err := out.WriteByte(CharSpace); err != nil {
+		if err := out.WriteByte(text.SpaceByte); err != nil {
 			return err
 		}
 	}
@@ -44,7 +46,7 @@ func IsBreakChar(b byte) bool {
 	// TODO: '-' needs to be handled differently than spaces
 	//       spaces are removed from the output, however the
 	//       dash should be maintained.
-	return b == CharSpace || b == CharTab
+	return b == text.SpaceByte || b == text.TabByte
 }
 
 type Break = [2]int
@@ -88,28 +90,28 @@ type DescriptionFormatter struct {
 	writer               *bufio.Writer
 }
 
-func (this *DescriptionFormatter) writeLineFeed() error {
-	this.currentLineWidth = 0
-	return this.writer.WriteByte(CharLF)
+func (d *DescriptionFormatter) writeLineFeed() error {
+	d.currentLineWidth = 0
+	return d.writer.WriteByte(LineFeed)
 }
 
-func (this *DescriptionFormatter) writePadding() error {
-	_, err := this.writer.WriteString(this.prefixPadding)
+func (d *DescriptionFormatter) writePadding() error {
+	_, err := d.writer.WriteString(d.prefixPadding)
 	return err
 }
 
-func (this *DescriptionFormatter) breakLine() error {
-	if err := this.writeLineFeed(); err != nil {
+func (d *DescriptionFormatter) breakLine() error {
+	if err := d.writeLineFeed(); err != nil {
 		return err
 	}
-	return this.writePadding()
+	return d.writePadding()
 }
 
 // Format is the standard entrypoint for the description formatter.
 //
 // It takes a description string and formats it to fit within the configured
 // maximum line length.
-func (this *DescriptionFormatter) Format(text string) error {
+func (d *DescriptionFormatter) Format(text string) error {
 	if len(text) == 0 {
 		return nil
 	}
@@ -123,17 +125,17 @@ func (this *DescriptionFormatter) Format(text string) error {
 
 		switch currentSegment.Type {
 		case segmentTypeBreak:
-			if err := this.BreakFormatTypeBreak(&lastSegment, &currentSegment); err != nil {
+			if err := d.BreakFormatTypeBreak(&lastSegment, &currentSegment); err != nil {
 				return err
 			}
 
 		case segmentTypeLineBreak:
-			if err := this.BreakFormatTypeLineBreak(&lastSegment, &currentSegment); err != nil {
+			if err := d.BreakFormatTypeLineBreak(&lastSegment, &currentSegment); err != nil {
 				return err
 			}
 
 		case segmentTypeWord:
-			if err := this.BreakFormatTypeWord(&lastSegment, &currentSegment); err != nil {
+			if err := d.BreakFormatTypeWord(&lastSegment, &currentSegment); err != nil {
 				return err
 			}
 
@@ -145,78 +147,78 @@ func (this *DescriptionFormatter) Format(text string) error {
 	return nil
 }
 
-func (this *DescriptionFormatter) BreakFormatTypeWord(last, current *segment) error {
+func (d *DescriptionFormatter) BreakFormatTypeWord(last, current *segment) error {
 	switch last.Type {
 	case segmentTypeBreak:
 		lastAndCurWidth := len(last.Data) + len(current.Data)
 
 		// If the break and the word can fit neatly onto the line
-		if this.currentLineWidth+lastAndCurWidth <= this.maxLineWidth {
-			if _, err := this.writer.WriteString(last.Data); err != nil {
+		if d.currentLineWidth+lastAndCurWidth <= d.maxLineWidth {
+			if _, err := d.writer.WriteString(last.Data); err != nil {
 				return err
 			}
 
-			if _, err := this.writer.WriteString(current.Data); err != nil {
+			if _, err := d.writer.WriteString(current.Data); err != nil {
 				return err
 			}
 
 			*last = *current
-			this.currentLineWidth += lastAndCurWidth
+			d.currentLineWidth += lastAndCurWidth
 
 			return nil
 		}
 
-		if this.currentLineWidth+len(last.Data) <= this.maxLineWidth/3*2 {
-			if _, err := this.writer.WriteString(last.Data); err != nil {
+		if d.currentLineWidth+len(last.Data) <= d.maxLineWidth/3*2 {
+			if _, err := d.writer.WriteString(last.Data); err != nil {
 				return err
 			}
 
 			*last = *current
-			return this.BreakFormatSplitWord(current.Data)
+			return d.BreakFormatSplitWord(current.Data)
 		}
 
-		if err := this.breakLine(); err != nil {
+		if err := d.breakLine(); err != nil {
 			return err
 		}
 
 		*last = *current
-		return this.BreakFormatSplitWord(current.Data)
+		return d.BreakFormatSplitWord(current.Data)
 
 	case segmentTypeLineBreak:
 		// If there were 2 or more line breaks, write out another one, but eat the
 		// rest.
-		if this.consecutiveLineFeeds > 1 {
-			if err := this.writeLineFeed(); err != nil {
+		if d.consecutiveLineFeeds > 1 {
+			if err := d.writeLineFeed(); err != nil {
 				return err
 			}
 		}
 
 		// Write out the line break.
-		if err := this.breakLine(); err != nil {
+		if err := d.breakLine(); err != nil {
 			return err
 		}
 
-		this.consecutiveLineFeeds = 0
+		d.consecutiveLineFeeds = 0
 
 		*last = *current
 
-		return this.BreakFormatSplitWord(current.Data)
+		return d.BreakFormatSplitWord(current.Data)
 
 	case segmentTypeStart:
-		if err := this.writePadding(); err != nil {
+		if err := d.writePadding(); err != nil {
 			return err
 		}
 
 		*last = *current
 
-		return this.BreakFormatSplitWord(current.Data)
+		return d.BreakFormatSplitWord(current.Data)
 
 	default:
 		panic(fmt.Errorf("illegal state: unexpected segment type %s", last.Type))
 	}
 }
 
-func (this *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) error {
+func (d *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) error {
 	switch last.Type {
 	// If the previous segment was the initial state, then we are going to
 	// silently ignore this segment because we eat leading spaces.
@@ -231,7 +233,7 @@ func (this *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) e
 	// If the previous segment was a break, we are going to silently ignore this
 	// segment because we eat leading spaces.
 	case segmentTypeLineBreak:
-		this.consecutiveLineFeeds = 0
+		d.consecutiveLineFeeds = 0
 
 	default:
 		panic(fmt.Errorf("illegal state: unexpected segment type %s", last.Type))
@@ -240,22 +242,22 @@ func (this *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) e
 	return nil
 }
 
-func (this *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segment) error {
+func (d *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segment) error {
 	switch last.Type {
 	case segmentTypeStart:
 		// eat the line break
 
 	case segmentTypeWord:
 		*last = *current
-		this.consecutiveLineFeeds++
+		d.consecutiveLineFeeds++
 
 	case segmentTypeBreak:
 		*last = *current
-		this.consecutiveLineFeeds++
+		d.consecutiveLineFeeds++
 
 	case segmentTypeLineBreak:
 		*last = *current
-		this.consecutiveLineFeeds++
+		d.consecutiveLineFeeds++
 
 	default:
 		panic("illegal state: invalid segment type")
@@ -274,23 +276,23 @@ func (this *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segmen
 //
 // The `curWidth` variable will be updated with the current width of the line
 // after writing is completed.
-func (this *DescriptionFormatter) BreakFormatSplitWord(word string) error {
-	breakAfter := this.maxLineWidth - this.currentLineWidth - 1
+func (d *DescriptionFormatter) BreakFormatSplitWord(word string) error {
+	breakAfter := d.maxLineWidth - d.currentLineWidth - 1
 
 	// If breakAfter is longer than 1/3 of the line length, then we will break the
 	// word.  If breakAfter is less than 1/3 of the line length, then we will
 	// insert a newline first.
-	if breakAfter > this.maxLineWidth/3 {
+	if breakAfter > d.maxLineWidth/3 {
 
 		// If the whole word can fit onto the line without breaking it up, then we
 		// can write it out in its entirety.
 		if breakAfter+1 >= len(word) {
-			if _, err := this.writer.WriteString(word); err != nil {
+			if _, err := d.writer.WriteString(word); err != nil {
 				return err
 			}
 
 			// Update the current line width to reflect our addition.
-			this.currentLineWidth += len(word)
+			d.currentLineWidth += len(word)
 
 			// Return because no further work is necessary.
 			return nil
@@ -300,19 +302,19 @@ func (this *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 		// broken up.
 
 		// Write out as much of the word as we can fit.
-		if _, err := this.writer.WriteString(word[:breakAfter]); err != nil {
+		if _, err := d.writer.WriteString(word[:breakAfter]); err != nil {
 			return err
 		}
 
 		// Write out our hyphen
-		if err := this.writer.WriteByte(CharDash); err != nil {
+		if err := d.writer.WriteByte(Dash); err != nil {
 			return err
 		}
 
 		// Chop the word down by the amount that we've written so far.
 		word = word[breakAfter:]
 	} else if breakAfter == 0 {
-		if err := this.writer.WriteByte(word[0]); err != nil {
+		if err := d.writer.WriteByte(word[0]); err != nil {
 			return err
 		}
 		word = word[1:]
@@ -322,16 +324,16 @@ func (this *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 		return nil
 	}
 
-	breakAfter = this.maxLineWidth - 1
+	breakAfter = d.maxLineWidth - 1
 
 	for {
 		// Write out the line feed
-		if err := this.writeLineFeed(); err != nil {
+		if err := d.writeLineFeed(); err != nil {
 			return err
 		}
 
 		// write out the prefix padding
-		if _, err := this.writer.WriteString(this.prefixPadding); err != nil {
+		if _, err := d.writer.WriteString(d.prefixPadding); err != nil {
 			return err
 		}
 
@@ -339,12 +341,12 @@ func (this *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 		// it without breaking it any further.
 		if breakAfter+1 >= len(word) {
 			// Write out the whole word
-			if _, err := this.writer.WriteString(word); err != nil {
+			if _, err := d.writer.WriteString(word); err != nil {
 				return err
 			}
 
 			// update the line width
-			this.currentLineWidth = len(word)
+			d.currentLineWidth = len(word)
 
 			// bail out here
 			return nil
@@ -354,18 +356,18 @@ func (this *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 
 		if breakAfter > 0 {
 			// Write out as much of the word as we can.
-			if _, err := this.writer.WriteString(word[:breakAfter]); err != nil {
+			if _, err := d.writer.WriteString(word[:breakAfter]); err != nil {
 				return err
 			}
 			// Write out the hyphen
-			if err := this.writer.WriteByte(CharDash); err != nil {
+			if err := d.writer.WriteByte(Dash); err != nil {
 				return err
 			}
 
 			// Chop down the word even further.
 			word = word[breakAfter:]
 		} else {
-			if _, err := this.writer.WriteString(word[:breakAfter+1]); err != nil {
+			if _, err := d.writer.WriteString(word[:breakAfter+1]); err != nil {
 				return err
 			}
 
@@ -446,9 +448,9 @@ func (b *breakScanner) next() segment {
 	}
 
 	// If the next character is a CR...
-	if b.text[b.pos] == CharCR {
+	if b.text[b.pos] == CarriageReturn {
 		// and there is a following LF...
-		if b.hasNext() && b.text[b.pos+1] == CharLF {
+		if b.hasNext() && b.text[b.pos+1] == LineFeed {
 			// bump up the pos by 2
 			b.pos += 2
 		} else {
@@ -456,21 +458,21 @@ func (b *breakScanner) next() segment {
 			b.pos++
 		}
 
-		return segment{segmentTypeBreak, StrLF}
+		return segment{segmentTypeBreak, string(LineFeed)}
 	}
 
 	// If the next character is an LF
-	if b.text[b.pos] == CharLF {
+	if b.text[b.pos] == LineFeed {
 		b.pos++
 
-		return segment{segmentTypeLineBreak, StrLF}
+		return segment{segmentTypeLineBreak, string(LineFeed)}
 	}
 
 	b.pos++
 
 	if b.hasNext() {
 		for b.hasNext() {
-			if IsWhitespace(b.text[b.pos]) {
+			if text.IsWhitespace(b.text[b.pos]) {
 				break
 			}
 			b.pos++

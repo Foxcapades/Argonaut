@@ -12,26 +12,11 @@ func Build(builder argo.CommandBuilder, options argo.Options) (argo.Command, err
 	errs := xerr.NewMultiError()
 	com := new(Command)
 
-	var flagGroups []argo.FlagGroupBuilder
 	if !builder.IsHelpDisabled() {
-		flagGroups = common.ConfigureHelpFlags[argo.Command](builder, RenderHelp, com)
-	} else {
-		flagGroups = builder.FlagGroups(true)
+		common.TryAddHelpFlags(builder, MakeRenderHelpCallback(com, options), options)
 	}
 
-	com.flagGroups = make([]argo.FlagGroup, 0, len(flagGroups))
-
-	flag.UniqueFlagNames(flagGroups, errs)
-
-	for _, builder := range flagGroups {
-		if builder.HasFlags() {
-			if group, err := flag.BuildGroup(builder); err != nil {
-				errs.AppendError(err)
-			} else {
-				com.flagGroups = append(com.flagGroups, group)
-			}
-		}
-	}
+	com.flagGroups = flag.BuildGroups(builder.FlagGroups(true), options, errs)
 
 	if builder.HasArguments() {
 		forceRequiredUntil := 0

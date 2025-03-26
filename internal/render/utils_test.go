@@ -1,4 +1,4 @@
-package chars_test
+package render_test
 
 import (
 	"bufio"
@@ -6,17 +6,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/chars"
-	"github.com/Foxcapades/Argonaut/internal/util"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 )
 
 func TestPad(t *testing.T) {
 	sb := new(strings.Builder)
 	wri := bufio.NewWriter(sb)
 
-	chars.Pad(10, wri)
-
-	wri.Flush()
+	utils.Must(render.Pad(10, wri))
+	utils.Must(wri.Flush())
 
 	if sb.String() != "          " {
 		t.Fail()
@@ -24,13 +23,13 @@ func TestPad(t *testing.T) {
 }
 
 func TestIsBreakChar(t *testing.T) {
-	if !chars.IsBreakChar(' ') {
+	if !render.IsBreakChar(' ') {
 		t.Error("expected true but got false")
 	}
-	if !chars.IsBreakChar('\t') {
+	if !render.IsBreakChar('\t') {
 		t.Error("expected true but got false")
 	}
-	if chars.IsBreakChar('a') {
+	if render.IsBreakChar('a') {
 		t.Error("expected false but got true")
 	}
 }
@@ -51,9 +50,9 @@ func TestDescriptionFormatter_Format01(t *testing.T) {
 
 	writer := bufio.NewWriter(sb)
 
-	formatter := chars.NewDescriptionFormatter("    ", 80, writer)
-	util.Must(formatter.Format(input))
-	util.Must(writer.Flush())
+	formatter := render.NewDescriptionFormatter("    ", 80, writer)
+	utils.Must(formatter.Format(input))
+	utils.Must(writer.Flush())
 
 	if sb.String() != expect {
 		t.Errorf("expected `%s`\ngot `%s`", expect, sb.String())
@@ -72,9 +71,9 @@ func TestDescriptionFormatter_Format02(t *testing.T) {
 
 	writer := bufio.NewWriter(sb)
 
-	formatter := chars.NewDescriptionFormatter("    ", 80, writer)
-	util.Must(formatter.Format(input))
-	util.Must(writer.Flush())
+	formatter := render.NewDescriptionFormatter("    ", 80, writer)
+	utils.Must(formatter.Format(input))
+	utils.Must(writer.Flush())
 
 	if sb.String() != expect {
 		t.Errorf("expected `%s`\ngot `%s`", expect, sb.String())
@@ -84,7 +83,7 @@ func TestDescriptionFormatter_Format02(t *testing.T) {
 func TestDescriptionFormatter_Format03(t *testing.T) {
 	defer func() { recover() }()
 
-	chars.NewDescriptionFormatter("    ", 4, nil)
+	render.NewDescriptionFormatter("    ", 4, nil)
 
 	t.Error("expected function to panic but it didn't")
 }
@@ -102,10 +101,10 @@ func TestDescriptionFormatter_Format04(t *testing.T) {
 	sb.Grow(64)
 
 	writer := bufio.NewWriter(sb)
-	formatter := chars.NewDescriptionFormatter("  ", 3, writer)
+	formatter := render.NewDescriptionFormatter("  ", 3, writer)
 
-	util.Must(formatter.Format(input))
-	util.Must(writer.Flush())
+	utils.Must(formatter.Format(input))
+	utils.Must(writer.Flush())
 
 	if expect != sb.String() {
 		t.Error("failed formatting expectation")
@@ -125,10 +124,10 @@ func TestDescriptionFormatter_Format05(t *testing.T) {
 	sb.Grow(64)
 
 	writer := bufio.NewWriter(sb)
-	formatter := chars.NewDescriptionFormatter("  ", 3, writer)
+	formatter := render.NewDescriptionFormatter("  ", 3, writer)
 
-	util.Must(formatter.Format(input))
-	util.Must(writer.Flush())
+	utils.Must(formatter.Format(input))
+	utils.Must(writer.Flush())
 
 	if expect != sb.String() {
 		t.Log(expect)
@@ -152,7 +151,7 @@ func TestDescriptionFormatter_Format06(t *testing.T) {
 		buffer := FailingWriter{FailAfter: i}
 		writer := bufio.NewWriterSize(&buffer, 1)
 
-		formatter := chars.NewDescriptionFormatter("    ", 80, writer)
+		formatter := render.NewDescriptionFormatter("    ", 80, writer)
 		if err := formatter.Format(input); err == nil {
 			if err = writer.Flush(); err == nil {
 				t.Error("expected error not to be nil but it was")
@@ -174,7 +173,7 @@ func TestDescriptionFormatter_Format07(t *testing.T) {
 		buffer := FailingWriter{FailAfter: i}
 		writer := bufio.NewWriterSize(&buffer, 1)
 
-		formatter := chars.NewDescriptionFormatter("  ", 3, writer)
+		formatter := render.NewDescriptionFormatter("  ", 3, writer)
 		if err := formatter.Format(input); err == nil {
 			if err = writer.Flush(); err == nil {
 				t.Error("expected error not to be nil but it was")
@@ -196,7 +195,7 @@ func TestDescriptionFormatter_Format08(t *testing.T) {
 		buffer := FailingWriter{FailAfter: i}
 		writer := bufio.NewWriterSize(&buffer, 1)
 
-		formatter := chars.NewDescriptionFormatter("  ", 3, writer)
+		formatter := render.NewDescriptionFormatter("  ", 3, writer)
 		if err := formatter.Format(input); err == nil {
 			if err = writer.Flush(); err == nil {
 				t.Error("expected error not to be nil but it was")

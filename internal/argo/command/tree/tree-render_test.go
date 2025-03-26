@@ -7,7 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 var commandName = filepath.Base(os.Args[0])
@@ -24,11 +28,8 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer001(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
-		MustParse([]string{"command", "leaf"})
-
-	renderOutputCheck(t, output001, com, argo.CommandTreeHelpRenderer())
+	renderTreeOutputCheck(t, output001, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")))
 }
 
 const output002 = `Usage:
@@ -45,12 +46,9 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer002(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
-		WithFlag(argo.NewFlagBuilder().WithShortForm('c')).
-		MustParse([]string{"command", "leaf"})
-
-	renderOutputCheck(t, output002, com, argo.CommandTreeHelpRenderer())
+	renderTreeOutputCheck(t, output002, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithShortForm('c')))
 }
 
 const output003 = `Usage:
@@ -67,14 +65,11 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer003(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
-		WithFlag(argo.NewFlagBuilder().
+	renderTreeOutputCheck(t, output003, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().
 			WithLongForm("hello").
-			WithDescription("Some description of the flag.")).
-		MustParse([]string{"command", "leaf"})
-
-	renderOutputCheck(t, output003, com, argo.CommandTreeHelpRenderer())
+			WithDescription("Some description of the flag.")))
 }
 
 const output004 = `Usage:
@@ -90,12 +85,9 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer004(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf").
-			WithDescription("Help text about the leaf.")).
-		MustParse([]string{"command", "leaf"})
-
-	renderOutputCheck(t, output004, com, argo.CommandTreeHelpRenderer())
+	renderTreeOutputCheck(t, output004, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf").
+			WithDescription("Help text about the leaf.")))
 }
 
 const output005 = `Usage:
@@ -111,12 +103,9 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer005(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf1")).
-		WithLeaf(argo.NewCommandLeafBuilder("leaf2")).
-		MustParse([]string{"command", "leaf1"})
-
-	renderOutputCheck(t, output005, com, argo.CommandTreeHelpRenderer())
+	renderTreeOutputCheck(t, output005, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf1")).
+		WithLeaf(tree.NewLeafBuilder("leaf2")))
 }
 
 const treeHelp006 = `Usage:
@@ -133,15 +122,12 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer006(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
-		WithFlag(argo.NewFlagBuilder().
+	renderTreeOutputCheck(t, treeHelp006, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().
 			WithShortForm('c').
 			Require().
-			WithArgument(argo.NewArgumentBuilder().Require())).
-		MustParse([]string{"command", "leaf", "-c", "foo"})
-
-	renderOutputCheck(t, treeHelp006, com, argo.CommandTreeHelpRenderer())
+			WithArgument(argument.NewBuilder().Require())))
 }
 
 const treeHelp007 = `Usage:
@@ -159,13 +145,10 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer007(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
-		WithFlagGroup(argo.NewFlagGroupBuilder("Something").
-			WithFlag(argo.NewFlagBuilder().WithShortForm('c'))).
-		MustParse([]string{"command", "leaf", "-c", "foo"})
-
-	renderOutputCheck(t, treeHelp007, com, argo.CommandTreeHelpRenderer())
+	renderTreeOutputCheck(t, treeHelp007, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlagGroup(flag.NewGroupBuilder("Something").
+			WithFlag(flag.NewBuilder().WithShortForm('c'))))
 }
 
 const treeHelp008 = `Usage:
@@ -185,33 +168,26 @@ Commands
 `
 
 func TestCommandTreeHelpRenderer008(t *testing.T) {
-	com := argo.NewCommandTreeBuilder().
-		WithLeaf(argo.NewCommandLeafBuilder("leaf")).
-		WithFlagGroup(argo.NewFlagGroupBuilder("Something").
+	renderTreeOutputCheck(t, treeHelp008, tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlagGroup(flag.NewGroupBuilder("Something").
 			WithDescription("A description of something.").
-			WithFlag(argo.NewFlagBuilder().WithShortForm('c'))).
-		MustParse([]string{"command", "leaf", "-c", "foo"})
-
-	renderOutputCheck(t, treeHelp008, com, argo.CommandTreeHelpRenderer())
+			WithFlag(flag.NewBuilder().WithShortForm('c'))))
 }
 
-func renderOutputCheck[T any](
+func renderTreeOutputCheck(
 	t *testing.T,
 	pattern string,
-	command T,
-	renderer argo.HelpRenderer[T],
+	com argo.TreeCommandBuilder,
 ) {
-	buf := new(strings.Builder)
+	sb := new(strings.Builder)
+	opts := argo.DefaultOptions()
 
-	err := renderer.RenderHelp(command, buf)
-
-	if err != nil {
-		t.Error(err)
-	}
+	utils.Must(tree.RenderHelp(utils.MustReturn(tree.Build(com, opts)), opts, sb))
 
 	expected := fmt.Sprintf(pattern, commandName)
 
-	if buf.String() != expected {
-		t.Errorf("expected: '%s'\n\ngot: '%s'", expected, buf.String())
+	if sb.String() != expected {
+		t.Errorf("expected: '%s'\n\ngot: '%s'", expected, sb.String())
 	}
 }

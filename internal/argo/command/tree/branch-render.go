@@ -8,7 +8,7 @@ import (
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -51,7 +51,7 @@ func renderCommandBranch(branch argo.BranchCommand, options argo.Options, out *b
 		return err
 	}
 
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
@@ -76,11 +76,11 @@ func renderCommandBranch(branch argo.BranchCommand, options argo.Options, out *b
 
 		for i := range inherited {
 			if i > 0 && !inherited[i-1].Flag.HasDescription() {
-				if err := out.WriteByte(chars.CharLF); err != nil {
+				if err := out.WriteByte(text.LineFeedByte); err != nil {
 					return err
 				}
 			}
-			if err := out.WriteByte(chars.CharLF); err != nil {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 			if err := flag.RenderInherited(&inherited[i], options, 1, out); err != nil {
@@ -88,12 +88,12 @@ func renderCommandBranch(branch argo.BranchCommand, options argo.Options, out *b
 			}
 		}
 
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 	}
 
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
@@ -101,7 +101,7 @@ func renderCommandBranch(branch argo.BranchCommand, options argo.Options, out *b
 		return err
 	}
 
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
@@ -124,7 +124,7 @@ func renderCommandBranchUsage(node argo.BranchCommand, out *bufio.Writer) error 
 		for _, group := range node.FlagGroups() {
 			for _, f := range group.Flags() {
 				if f.IsRequired() {
-					if err := out.WriteByte(chars.CharSpace); err != nil {
+					if err := out.WriteByte(text.SpaceByte); err != nil {
 						return err
 					}
 					if err := flag.RenderShortestLine(f, out); err != nil {

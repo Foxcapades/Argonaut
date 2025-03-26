@@ -6,9 +6,6 @@ import (
 
 type CommandCommon interface {
 {{ define "CommandCommon" }}
-  // Name returns the name of the command or subcommand.
-  Name() string
-
   // Description returns the description value assigned to this node.
   //
   // Description values are used when rendering help text.

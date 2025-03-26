@@ -24,17 +24,17 @@ func (m missingFlagError) Flag() argo.Flag {
 
 //
 
-func NewBindingError(root argo.ArgumentBindingError, arg argo.ArgumentBuilder, flag argo.FlagBuilder) argo.BindingError {
-	return &flagBindingError{root.Unwrap(), arg, flag}
+func NewBindingError(root argo.ArgumentBindingError, arg argo.ArgumentBuilder, flag argo.FlagBuilder) argo.FlagBindingError {
+	return &BindingError{root.Unwrap(), arg, flag}
 }
 
-type flagBindingError struct {
+type BindingError struct {
 	root error
 	arg  argo.ArgumentBuilder
 	flag argo.FlagBuilder
 }
 
-func (f flagBindingError) Error() string {
+func (f BindingError) Error() string {
 	if f.flag.HasLongForm() {
 		if f.flag.HasShortForm() {
 			return "BindingError (--" + f.flag.LongForm() + "|-" + string([]byte{f.flag.ShortForm()}) + "): " + f.root.Error()
@@ -48,14 +48,14 @@ func (f flagBindingError) Error() string {
 	}
 }
 
-func (f flagBindingError) ArgumentBuilder() argo.ArgumentBuilder {
+func (f BindingError) ArgumentBuilder() argo.ArgumentBuilder {
 	return f.arg
 }
 
-func (f flagBindingError) FlagBuilder() argo.FlagBuilder {
+func (f BindingError) FlagBuilder() argo.FlagBuilder {
 	return f.flag
 }
 
-func (f flagBindingError) Unwrap() error {
+func (f BindingError) Unwrap() error {
 	return f.root
 }

@@ -3,8 +3,8 @@ package parse_test
 import (
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/emit"
-	"github.com/Foxcapades/Argonaut/internal/parse"
+	"github.com/foxcapades/argonaut/v3/internal/emit"
+	"github.com/foxcapades/argonaut/v3/internal/parse"
 )
 
 func TestParser_Next01(t *testing.T) {

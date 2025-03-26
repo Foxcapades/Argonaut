@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	"github.com/foxcapades/argonaut/v3/internal/parse"
 )
 
 func TestMagicUnmarshaler001(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 
 	v001 := 0
 	must(un.Unmarshal("1", &v001))
@@ -118,7 +118,7 @@ func TestMagicUnmarshaler001(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_MapOfSlice(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo map[string][]string
 
 	must(un.Unmarshal("foo:bar,foo:fizz,foo:buzz,fizz:buzz", &foo))
@@ -149,7 +149,7 @@ func TestMagicUnmarshaler_MapOfSlice(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_MapOfBasicPointer(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo map[string]*string
 
 	must(un.Unmarshal("foo:bar,foo:fizz,foo:buzz", &foo))
@@ -164,7 +164,7 @@ func TestMagicUnmarshaler_MapOfBasicPointer(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_MapOfByteSlice(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo map[string][]byte
 
 	must(un.Unmarshal("foo:bar,fizz:buzz", &foo))
@@ -187,7 +187,7 @@ func TestMagicUnmarshaler_MapOfByteSlice(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_MapOfByteSlicePointer(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo map[string]*[]byte
 
 	must(un.Unmarshal("foo:bar,fizz:buzz", &foo))
@@ -210,7 +210,7 @@ func TestMagicUnmarshaler_MapOfByteSlicePointer(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_Interface(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo interface{}
 
 	must(un.Unmarshal("foo", &foo))
@@ -221,7 +221,7 @@ func TestMagicUnmarshaler_Interface(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_Slice(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo []string
 
 	must(un.Unmarshal("foo", &foo))
@@ -240,7 +240,7 @@ func TestMagicUnmarshaler_Slice(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_ByteSlice(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo []byte
 
 	must(un.Unmarshal("foo", &foo))
@@ -255,7 +255,7 @@ func TestMagicUnmarshaler_ByteSlice(t *testing.T) {
 }
 
 func TestMagicUnmarshaler_delimitedSliceString(t *testing.T) {
-	un := argo.NewDefaultMagicUnmarshaler()
+	un := parse.NewDefaultMagicUnmarshaler()
 	var foo []int
 
 	must(un.Unmarshal("1,2,3,4", &foo))

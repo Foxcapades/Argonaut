@@ -6,29 +6,28 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Foxcapades/Argonaut/internal/unmarshal"
-	"github.com/Foxcapades/Argonaut/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/internal/unmarshal"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
-
-var unmarshalerType = reflect.TypeOf((*Unmarshaler)(nil)).Elem()
 
 // NewDefaultMagicUnmarshaler creates a new "magic" ValueUnmarshaler instance
 // using default UnmarshalProps.
 //
 // This is the default ValueUnmarshaler used by all arguments if not otherwise
 // specified.
-func NewDefaultMagicUnmarshaler() ValueUnmarshaler {
-	return NewMagicUnmarshaler(DefaultUnmarshalProps())
+func NewDefaultMagicUnmarshaler() argo.ValueUnmarshaler {
+	return NewMagicUnmarshaler(argo.DefaultUnmarshalProps())
 }
 
 // NewMagicUnmarshaler creates a new "magic" ValueUnmarshaler instance using the
 // given UnmarshalProps.
-func NewMagicUnmarshaler(props UnmarshalProps) ValueUnmarshaler {
+func NewMagicUnmarshaler(props argo.UnmarshalProps) argo.ValueUnmarshaler {
 	return valueUnmarshaler{props: props}
 }
 
 type valueUnmarshaler struct {
-	props UnmarshalProps
+	props argo.UnmarshalProps
 }
 
 func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
@@ -39,14 +38,14 @@ func (v valueUnmarshaler) Unmarshal(raw string, val interface{}) (err error) {
 
 	ptrVal := reflect.ValueOf(val)
 
-	if ptrVal, err = unmarshal.ToUnmarshalable(raw, ptrVal, false, unmarshalerType); err != nil {
+	if ptrVal, err = unmarshal.ToUnmarshalable(raw, ptrVal, false); err != nil {
 		return err
 	}
 
 	ptrDef := ptrVal.Type()
 
-	if ptrDef.AssignableTo(unmarshalerType) {
-		return ptrVal.Interface().(Unmarshaler).Unmarshal(raw)
+	if ptrDef.AssignableTo(unmarshal.UnmarshalerType) {
+		return ptrVal.Interface().(argo.Unmarshaler).Unmarshal(raw)
 	}
 
 	switch ptrVal.Kind() {
@@ -114,7 +113,7 @@ func (v valueUnmarshaler) unmarshalTime(val reflect.Value, raw string) error {
 func (v valueUnmarshaler) unmarshalSlice(
 	val reflect.Value,
 	raw string,
-	props *UnmarshalSliceProps,
+	props *argo.UnmarshalSliceProps,
 ) error {
 	if xreflect.IsByteSlice(val.Type()) {
 		if bytes, err := props.ByteSliceParser(raw); err != nil {
@@ -141,7 +140,7 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 	parser := newMapElementParser(v.props.Maps, raw)
 
 	for parser.HasNext() {
-		key, val, err := parseMapEntry(&parser)
+		key, val, err := MapEntry(&parser)
 		if err != nil {
 			return err
 		}
@@ -164,7 +163,7 @@ func (v valueUnmarshaler) unmarshalMap(m reflect.Value, raw string) error {
 			m.Set(reflect.MakeMap(mt))
 		}
 
-		if (xreflect.IsBasicSlice(vt) && !xreflect.IsByteSlice(vt)) || xreflect.IsUnmarshalerSlice(vt, unmarshalerType) {
+		if (xreflect.IsBasicSlice(vt) && !xreflect.IsByteSlice(vt)) || unmarshal.IsUnmarshalerSlice(vt) {
 			rkv := reflect.ValueOf(kv).Elem()
 
 			tmp := m.MapIndex(rkv)
@@ -221,23 +220,23 @@ func (v valueUnmarshaler) unmarshalValue(vt reflect.Type, raw string) (reflect.V
 			return reflect.ValueOf(vv), nil
 		}
 
-		if xreflect.IsUnmarshaler(vt, unmarshalerType) {
+		if unmarshal.IsUnmarshaler(vt) {
 			vv := reflect.New(vp).Interface()
-			if err := vv.(Unmarshaler).Unmarshal(raw); err != nil {
+			if err := vv.(argo.Unmarshaler).Unmarshal(raw); err != nil {
 				return reflect.Value{}, err
 			}
 			return reflect.ValueOf(vv), nil
 		}
 	}
 
-	if xreflect.IsUnmarshalerSlice(vt, unmarshalerType) {
+	if unmarshal.IsUnmarshalerSlice(vt) {
 		return v.unmarshalValue(vt.Elem(), raw)
 	}
 
 	panic("invalid state: the given type cannot be unmarshalled")
 }
 
-func unmarshalIntoInt(v reflect.Value, raw string, size int, props *UnmarshalIntegerProps) error {
+func unmarshalIntoInt(v reflect.Value, raw string, size int, props *argo.UnmarshalIntegerProps) error {
 	if tmp, e := parseInt(raw, size, props); e != nil {
 		return formatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
 	} else {
@@ -246,7 +245,7 @@ func unmarshalIntoInt(v reflect.Value, raw string, size int, props *UnmarshalInt
 	return nil
 }
 
-func unmarshalInt64(v reflect.Value, raw string, props *UnmarshalIntegerProps) error {
+func unmarshalInt64(v reflect.Value, raw string, props *argo.UnmarshalIntegerProps) error {
 	if tmp, e := parseInt(raw, 64, props); e != nil {
 
 		// Because durations are just a wrapped int64 value, attempt to parse the
@@ -265,7 +264,7 @@ func unmarshalInt64(v reflect.Value, raw string, props *UnmarshalIntegerProps) e
 	}
 }
 
-func unmarshalUInt(v reflect.Value, raw string, size int, props *UnmarshalIntegerProps) error {
+func unmarshalUInt(v reflect.Value, raw string, size int, props *argo.UnmarshalIntegerProps) error {
 	if tmp, e := parseUInt(raw, size, props); e != nil {
 		return formatError{Value: v, Argument: raw, Kind: v.Kind(), Root: e}
 	} else {

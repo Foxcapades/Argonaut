@@ -1,10 +1,14 @@
 package tree_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
-	cli "github.com/Foxcapades/Argonaut"
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	cli "github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 const leafInput01 = `Usage:
@@ -35,7 +39,8 @@ Arguments
 `
 
 func TestRenderCommandLeaf01(t *testing.T) {
-	com := cli.Tree().
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(cli.Branch("branch").
 			WithLeaf(cli.Leaf("leaf").
 				WithAliases("l", "le").
@@ -55,8 +60,25 @@ func TestRenderCommandLeaf01(t *testing.T) {
 					WithFlag(cli.ShortFlag('d').
 						WithLongForm("doorknob").
 						WithArgument(cli.Argument().WithName("name").Require()))).
-				WithUnmappedLabel("files..."))).
-		MustParse([]string{"command", "branch", "leaf", "argument", "-a"})
+				WithUnmappedInputLabel("files..."))), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "branch", "leaf", "argument", "-a"}))
 
-	renderOutputCheck(t, leafInput01, com.SelectedCommand(), argo.CommandLeafHelpRenderer())
+	renderLeafOutputCheck(t, leafInput01, com.SelectedCommand())
+}
+
+func renderLeafOutputCheck(
+	t *testing.T,
+	pattern string,
+	com argo.LeafCommand,
+) {
+	sb := new(strings.Builder)
+	opts := argo.DefaultOptions()
+
+	utils.Must(tree.RenderLeafHelp(com, opts, sb))
+
+	expected := fmt.Sprintf(pattern, commandName)
+
+	if sb.String() != expected {
+		t.Errorf("expected: '%s'\n\ngot: '%s'", expected, sb.String())
+	}
 }

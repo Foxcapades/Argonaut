@@ -3,8 +3,8 @@ package parse
 import (
 	"strings"
 
-	"github.com/foxcapades/argonaut/v3/internal/chars"
-	"github.com/foxcapades/argonaut/v3/internal_old/emit"
+	"github.com/foxcapades/argonaut/v3/internal/emit"
+	"github.com/foxcapades/argonaut/v3/internal/utils/chars"
 )
 
 type state uint8
@@ -97,7 +97,7 @@ func (p *Parser) handleDash() Element {
 			}
 
 			for i := 0; i < dashes; i++ {
-				p.sb.WriteByte(chars.CharDash)
+				p.sb.WriteByte(text.DashByte)
 			}
 
 			tmp := p.sb.String()
@@ -140,9 +140,9 @@ func (p *Parser) consumeLongFlag(dashes int, name string) Element {
 	// If there is a whitespace in the name string, then it's not actually a flag
 	// it's just a string that happened to start with "--", which is stupid, but
 	// what are you gonna do?
-	if idx := chars.NextWhitespace(name); idx > -1 {
+	if idx := strings.IndexByte(name, text.SpaceByte); idx > -1 {
 		for i := 0; i < dashes; i++ {
-			p.sb.WriteByte(chars.CharDash)
+			p.sb.WriteByte(text.DashByte)
 		}
 
 		p.sb.WriteString(name)
@@ -208,8 +208,8 @@ func (p *Parser) consumeShortFlag(flags string) Element {
 
 	// If there is a whitespace character in the middle of this flag group then it
 	// isn't really a flag group at all.
-	if idx := chars.NextWhitespace(flags); idx > -1 {
-		p.sb.WriteByte(chars.CharDash)
+	if idx := strings.IndexByte(flags, text.SpaceByte); idx > -1 {
+		p.sb.WriteByte(text.DashByte)
 		p.sb.WriteString(flags)
 
 		for {

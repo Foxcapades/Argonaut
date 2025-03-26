@@ -4,12 +4,13 @@ import (
 	"bufio"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Writer) error {
-	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
+	if _, err := sb.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
@@ -22,7 +23,7 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 				return err
 			}
 
-			if _, err := sb.WriteString(chars.FlagDivider); err != nil {
+			if _, err := sb.WriteString(render.FlagDivider); err != nil {
 				return err
 			}
 		}
@@ -37,18 +38,18 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 	}
 
 	if flag.HasDescription() {
-		if err := sb.WriteByte(chars.CharLF); err != nil {
+		if err := sb.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
 		if err := formatter.Format(flag.Description()); err != nil {
 			return err
 		}
 	}
 
 	if flag.HasArgument() && flag.Argument().HasDescription() {
-		if err := sb.WriteByte(chars.CharLF); err != nil {
+		if err := sb.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 		if err := RenderArgument(flag.Argument(), options, padding+1, sb); err != nil {
@@ -60,7 +61,7 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 }
 
 func RenderArgument(arg argo.Argument, options argo.Options, padding uint8, out *bufio.Writer) error {
-	if _, err := out.WriteString(chars.SubLinePadding[padding]); err != nil {
+	if _, err := out.WriteString(render.SubLinePadding[padding]); err != nil {
 		return err
 	}
 
@@ -69,11 +70,11 @@ func RenderArgument(arg argo.Argument, options argo.Options, padding uint8, out 
 	}
 
 	if arg.HasDescription() {
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(arg.Description()); err != nil {
 			return err
 		}
@@ -104,7 +105,7 @@ const (
 func RenderGroups(groups []argo.FlagGroup, options argo.Options, padding uint8, out *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
-			if _, err := out.WriteString(chars.ParagraphBreak); err != nil {
+			if _, err := out.WriteString(render.ParagraphBreak); err != nil {
 				return err
 			}
 		}
@@ -124,11 +125,11 @@ func RenderGroup(
 	out *bufio.Writer,
 	multiple bool,
 ) error {
-	if _, err := out.WriteString(chars.HeaderPadding[padding]); err != nil {
+	if _, err := out.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
-	if group.Name() == chars.DefaultGroupName {
+	if group.Name() == DefaultFlagGroupName {
 		if multiple {
 			if _, err := out.WriteString(fgDefaultName); err != nil {
 				return err
@@ -146,15 +147,15 @@ func RenderGroup(
 
 	// If the group has a description, print it out.
 	if group.HasDescription() {
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(group.Description()); err != nil {
 			return err
 		}
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 	}
@@ -163,12 +164,12 @@ func RenderGroup(
 	for i, flag := range group.Flags() {
 		if i > 0 {
 			if !group.Flags()[i-1].HasDescription() {
-				if err := out.WriteByte(chars.CharLF); err != nil {
+				if err := out.WriteByte(text.LineFeedByte); err != nil {
 					return err
 				}
 			}
 		}
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
@@ -230,7 +231,7 @@ LOOP:
 }
 
 func RenderInherited(forms *Forms, options argo.Options, padding uint8, sb *bufio.Writer) error {
-	if _, err := sb.WriteString(chars.HeaderPadding[padding]); err != nil {
+	if _, err := sb.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
@@ -239,7 +240,7 @@ func RenderInherited(forms *Forms, options argo.Options, padding uint8, sb *bufi
 
 		// AND a short form character
 		if forms.Short {
-			if err := sb.WriteByte(chars.CharDash); err != nil {
+			if err := sb.WriteByte(text.DashByte); err != nil {
 				return err
 			}
 			if err := sb.WriteByte(forms.Flag.ShortForm()); err != nil {
@@ -247,7 +248,7 @@ func RenderInherited(forms *Forms, options argo.Options, padding uint8, sb *bufi
 			}
 
 			if forms.Flag.HasArgument() && argument.ShouldBeRendered(forms.Flag.Argument()) {
-				if err := sb.WriteByte(chars.CharSpace); err != nil {
+				if err := sb.WriteByte(text.SpaceByte); err != nil {
 					return err
 				}
 				if err := argument.RenderName(forms.Flag.Argument(), sb, 0); err != nil {
@@ -255,38 +256,42 @@ func RenderInherited(forms *Forms, options argo.Options, padding uint8, sb *bufi
 				}
 			}
 
-			if _, err := sb.WriteString(chars.FlagDivider); err != nil {
+			if _, err := sb.WriteString(render.FlagDivider); err != nil {
 				return err
 			}
 		}
 
-		if _, err := sb.WriteString(chars.StrDoubleDash); err != nil {
+		if _, err := sb.WriteString(text.DoubleDash); err != nil {
 			return err
 		}
+
 		if _, err := sb.WriteString(forms.Flag.LongForm()); err != nil {
 			return err
 		}
 
 		if forms.Flag.HasArgument() && argument.ShouldBeRendered(forms.Flag.Argument()) {
-			if err := sb.WriteByte(chars.CharEquals); err != nil {
+			if err := sb.WriteByte(text.EqualsByte); err != nil {
 				return err
 			}
+
 			if err := argument.RenderName(forms.Flag.Argument(), sb, 0); err != nil {
 				return err
 			}
 		}
 	} else {
-		if err := sb.WriteByte(chars.CharDash); err != nil {
+		if err := sb.WriteByte(text.DashByte); err != nil {
 			return err
 		}
+
 		if err := sb.WriteByte(forms.Flag.ShortForm()); err != nil {
 			return err
 		}
 
 		if forms.Flag.HasArgument() && argument.ShouldBeRendered(forms.Flag.Argument()) {
-			if err := sb.WriteByte(chars.CharSpace); err != nil {
+			if err := sb.WriteByte(text.SpaceByte); err != nil {
 				return err
 			}
+
 			if err := argument.RenderName(forms.Flag.Argument(), sb, 0); err != nil {
 				return err
 			}
@@ -294,18 +299,18 @@ func RenderInherited(forms *Forms, options argo.Options, padding uint8, sb *bufi
 	}
 
 	if forms.Flag.HasDescription() {
-		if err := sb.WriteByte(chars.CharLF); err != nil {
+		if err := sb.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
 		if err := formatter.Format(forms.Flag.Description()); err != nil {
 			return err
 		}
 	}
 
 	if forms.Flag.HasArgument() && forms.Flag.Argument().HasDescription() {
-		if err := sb.WriteByte(chars.CharLF); err != nil {
+		if err := sb.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 		if err := RenderArgument(forms.Flag.Argument(), options, padding+1, sb); err != nil {
@@ -317,7 +322,7 @@ func RenderInherited(forms *Forms, options argo.Options, padding uint8, sb *bufi
 }
 
 func renderShortForm(w *bufio.Writer, f argo.Flag) error {
-	if err := w.WriteByte(chars.CharDash); err != nil {
+	if err := w.WriteByte(text.DashByte); err != nil {
 		return err
 	}
 
@@ -325,11 +330,11 @@ func renderShortForm(w *bufio.Writer, f argo.Flag) error {
 		return err
 	}
 
-	return tryRenderArgument(w, f, chars.CharSpace)
+	return tryRenderArgument(w, f, text.SpaceByte)
 }
 
 func renderLongForm(w *bufio.Writer, f argo.Flag) error {
-	if _, err := w.WriteString(chars.StrDoubleDash); err != nil {
+	if _, err := w.WriteString(text.DoubleDash); err != nil {
 		return err
 	}
 
@@ -337,7 +342,7 @@ func renderLongForm(w *bufio.Writer, f argo.Flag) error {
 		return err
 	}
 
-	return tryRenderArgument(w, f, chars.CharEquals)
+	return tryRenderArgument(w, f, text.EqualsByte)
 }
 
 func tryRenderArgument(w *bufio.Writer, f argo.Flag, d byte) error {

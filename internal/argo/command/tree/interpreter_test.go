@@ -7,13 +7,18 @@ import (
 	"testing"
 
 	"github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 	"github.com/foxcapades/argonaut/v3/pkg/argotype"
 )
 
 func TestInvalidSubCommand(t *testing.T) {
-	_, err := cli.Tree().
-		WithLeaf(cli.Leaf("leaf1")).
-		Parse([]string{"command", "leaf2"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().WithLeaf(tree.NewLeafBuilder("leaf1")), opt))
+	_, err := tree.Parse(com, []string{"command", "leaf2"})
 
 	if err == nil {
 		t.Error(err)
@@ -22,77 +27,85 @@ func TestInvalidSubCommand(t *testing.T) {
 
 // expect flag, expect argument
 func TestTreeInterpretLongPair01(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf1")).
-		WithFlag(cli.Flag().WithLongForm("foo").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf1", "--foo=bar"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf1")).
+		WithFlag(flag.NewBuilder().WithLongForm("foo").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf1", "--foo=bar"}))
 
-	flag := com.FindLongFlag("foo")
+	f := com.FindLongFlag("foo")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Fail()
 	}
 
-	if !flag.Argument().WasHit() {
+	if !f.Argument().WasHit() {
 		t.Fail()
 	}
 
-	if flag.Argument().RawValue() != "bar" {
+	if f.Argument().RawValue() != "bar" {
 		t.Fail()
 	}
 }
 
 // Don't expect flag at all
 func TestTreeInterpretLongPair02(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf1")).
-		MustParse([]string{"command", "leaf1", "--foo=bar"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf1")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf1", "--foo=bar"}))
 
-	if !com.HasUnmappedInputs() {
+	sub := com.SelectedCommand()
+
+	if !sub.HasUnmappedInputs() {
 		t.Fail()
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Fail()
-	} else if com.UnmappedInputs()[0] != "--foo=bar" {
+	} else if sub.UnmappedInputs()[0] != "--foo=bar" {
 		t.Fail()
 	}
 }
 
 // Have flag, doesn't expect argument
 func TestTreeInterpretLongPair03(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf1")).
-		WithFlag(cli.Flag().WithLongForm("foo")).
-		MustParse([]string{"command", "leaf1", "--foo=bar"})
-	flag := com.FindLongFlag("foo")
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf1")).
+		WithFlag(flag.NewBuilder().WithLongForm("foo")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf1", "--foo=bar"}))
+	f := com.FindLongFlag("foo")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Fail()
 	}
 }
 
 // Unexpected solo long flag (goes to unmapped)
 func TestTreeInterpretLongSolo01(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("hello")).
-		MustParse([]string{"command", "hello", "--hello"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("hello")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "hello", "--hello"}))
 
-	if !com.HasUnmappedInputs() {
+	sub := com.SelectedCommand()
+
+	if !sub.HasUnmappedInputs() {
 		t.Fail()
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Fail()
-	} else if com.UnmappedInputs()[0] != "--hello" {
+	} else if sub.UnmappedInputs()[0] != "--hello" {
 		t.Fail()
 	}
 }
 
 // Solo flag requires argument but is followed by boundary
 func TestTreeInterpretLongSolo02(t *testing.T) {
-	_, err := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument().Require())).
-		Parse([]string{"command", "leaf", "--flag", "--"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder().Require())), opt))
+
+	_, err := tree.Parse(com, []string{"command", "leaf", "--flag", "--"})
 
 	if err == nil {
 		t.Fail()
@@ -101,36 +114,38 @@ func TestTreeInterpretLongSolo02(t *testing.T) {
 
 // Solo flag gets the required argument it craves so badly
 func TestTreeInterpretLongSolo03(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument().Require())).
-		MustParse([]string{"command", "leaf", "--flag", "argument"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder().Require())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "argument"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Fail()
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Fail()
-	} else if flag.Argument().RawValue() != "argument" {
+	} else if f.Argument().RawValue() != "argument" {
 		t.Fail()
 	}
 }
 
 // Solo flag gets a plain argument that it optionally accepts
 func TestTreeInterpretLongSolo04(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "value"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "value"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to be hit but it wasn't")
-	} else if flag.Argument().RawValue() != "value" {
+	} else if f.Argument().RawValue() != "value" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
@@ -138,51 +153,55 @@ func TestTreeInterpretLongSolo04(t *testing.T) {
 // Solo flag gets an argument that resembles a long flag, but isn't
 // Solo flag gets a plain argument that it optionally accepts
 func TestTreeInterpretLongSolo05(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "--not-a-flag"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "--not-a-flag"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to be hit but it wasn't")
-	} else if flag.Argument().RawValue() != "--not-a-flag" {
+	} else if f.Argument().RawValue() != "--not-a-flag" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
 
 // Solo flag expects an optional argument but gets end of input
 func TestTreeInterpretLongSolo06(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if flag.Argument().WasHit() {
+	} else if f.Argument().WasHit() {
 		t.Error("didn't expect argument to be hit, but it was")
 	}
 }
 
 // Solo flag expects an optional argument but gets boundary
 func TestTreeInterpretLongSolo07(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "--", "hoopla"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "--", "hoopla"}))
 
-	flag := com.FindLongFlag("flag")
+	sub := com.SelectedCommand()
 
-	if !flag.WasHit() {
+	f := sub.FindLongFlag("flag")
+
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if flag.Argument().WasHit() {
+	} else if f.Argument().WasHit() {
 		t.Error("didn't expect argument to be hit, but it was")
 	}
 }
@@ -190,18 +209,19 @@ func TestTreeInterpretLongSolo07(t *testing.T) {
 // Solo flag expects an optional argument but gets a long flag pair that isn't
 // registered.
 func TestTreeInterpretLongSolo08(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "--teddy=bear"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "--teddy=bear"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected argument to be hit but it wasn't")
-	} else if flag.Argument().RawValue() != "--teddy=bear" {
+	} else if f.Argument().RawValue() != "--teddy=bear" {
 		t.Errorf("expected argument value to match input, but it didn't")
 	}
 }
@@ -209,18 +229,19 @@ func TestTreeInterpretLongSolo08(t *testing.T) {
 // Solo flag expects an optional argument but gets a short flag that isn't
 // registered.
 func TestTreeInterpretLongSolo09(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "-g"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "-g"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected argument to be hit but it wasn't")
-	} else if flag.Argument().RawValue() != "-g" {
+	} else if f.Argument().RawValue() != "-g" {
 		t.Errorf("expected argument value to match input, but it didn't")
 	}
 }
@@ -228,18 +249,19 @@ func TestTreeInterpretLongSolo09(t *testing.T) {
 // Solo flag expects an optional argument but gets a short flag pair that isn't
 // registered.
 func TestTreeInterpretLongSolo10(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "-p=eriod"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "-p=eriod"}))
 
-	flag := com.FindLongFlag("flag")
+	f := com.FindLongFlag("flag")
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected argument to be hit but it wasn't")
-	} else if flag.Argument().RawValue() != "-p=eriod" {
+	} else if f.Argument().RawValue() != "-p=eriod" {
 		t.Errorf("expected argument value to match input, but it didn't")
 	}
 }
@@ -247,11 +269,12 @@ func TestTreeInterpretLongSolo10(t *testing.T) {
 // solo flag expects an optional argument but gets a short flag that _is_
 // registered
 func TestTreeInterpretLongSolo11(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		WithFlag(cli.Flag().WithShortForm('g')).
-		MustParse([]string{"command", "leaf", "--flag", "-g"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithShortForm('g')), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "-g"}))
 
 	longFlag := com.FindLongFlag("flag")
 	shortFlag := com.FindShortFlag('g')
@@ -270,11 +293,12 @@ func TestTreeInterpretLongSolo11(t *testing.T) {
 // Solo flag expects an optional argument but gets a short flag pair that _is_
 // registered
 func TestTreeInterpretLongSolo12(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		WithFlag(cli.Flag().WithShortForm('g').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "-g=randma"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithShortForm('g').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "-g=randma"}))
 
 	longFlag := com.FindLongFlag("flag")
 	shortFlag := com.FindShortFlag('g')
@@ -297,11 +321,12 @@ func TestTreeInterpretLongSolo12(t *testing.T) {
 // Solo flag expects an optional argument but gets a long flag that _is_
 // registered
 func TestTreeInterpretLongSolo13(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		WithFlag(cli.Flag().WithLongForm("other")).
-		MustParse([]string{"command", "leaf", "--flag", "--other"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithLongForm("other")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "--other"}))
 
 	flag1 := com.FindLongFlag("flag")
 	flag2 := com.FindLongFlag("other")
@@ -320,11 +345,12 @@ func TestTreeInterpretLongSolo13(t *testing.T) {
 // Solo flag expects an optional argument but gets a long flag pair that _is_
 // registered
 func TestTreeInterpretLongSolo14(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithLongForm("flag").WithArgument(cli.Argument())).
-		WithFlag(cli.Flag().WithLongForm("other").WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "--flag", "--other=thing"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithLongForm("other").WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--flag", "--other=thing"}))
 
 	flag1 := com.FindLongFlag("flag")
 	flag2 := com.FindLongFlag("other")
@@ -346,62 +372,70 @@ func TestTreeInterpretLongSolo14(t *testing.T) {
 
 // Short pair takes optional argument that is plain text.
 func TestTreeInterpretShortPair01(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.Flag().WithShortForm('c').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-c=for cookie"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(flag.NewBuilder().WithShortForm('c').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-c=for cookie"}))
 
-	flag := com.FindShortFlag('c')
+	f := com.FindShortFlag('c')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to be hit but it wasn't")
-	} else if flag.Argument().RawValue() != "for cookie" {
-		t.Log(flag.Argument().RawValue())
+	} else if f.Argument().RawValue() != "for cookie" {
+		t.Log(f.Argument().RawValue())
 		t.Error("expected argument value to match input but it didn't")
 	}
 }
 
 // Short pair is unregistered
 func TestTreeInterpretShortPair02(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		MustParse([]string{"command", "leaf", "-c=for cookie"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 
-	if !com.HasUnmappedInputs() {
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-c=for cookie"}))
+
+	sub := com.SelectedCommand()
+
+	if !sub.HasUnmappedInputs() {
 		t.Error("expected command to have unmapped inputs but it didn't")
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Error("expected command to have exactly 1 unmapped input but it didn't")
-	} else if com.UnmappedInputs()[0] != "-c=for cookie" {
+	} else if sub.UnmappedInputs()[0] != "-c=for cookie" {
 		t.Error("expected unmapped value to match input but it didn't")
 	}
 }
 
 // Short pair block is empty???
 func TestTreeInterpretShortPair03(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		MustParse([]string{"command", "leaf", "-=for cookie"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 
-	if !com.HasUnmappedInputs() {
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-=for cookie"}))
+
+	sub := com.SelectedCommand()
+
+	if !sub.HasUnmappedInputs() {
 		t.Error("expected command to have unmapped inputs but it didn't")
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Error("expected command to have exactly 1 unmapped input but it didn't")
-	} else if com.UnmappedInputs()[0] != "-=for cookie" {
+	} else if sub.UnmappedInputs()[0] != "-=for cookie" {
 		t.Error("expected unmapped value to match input but it didn't")
 	}
 }
 
 // multi-flag block with short pair, first flag requires argument
 func TestTreeInterpretShortPair04(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('c').WithArgument(cli.Argument().Require())).
-		WithFlag(cli.ShortFlag('d').WithArgument(cli.Argument().Require())).
-		MustParse([]string{"command", "leaf", "-cd=foo"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('c').WithArgument(argument.NewBuilder().Require())).
+		WithFlag(cli.ShortFlag('d').WithArgument(argument.NewBuilder().Require())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-cd=foo"}))
 
 	flag1 := com.FindShortFlag('c')
 	flag2 := com.FindShortFlag('d')
@@ -421,11 +455,12 @@ func TestTreeInterpretShortPair04(t *testing.T) {
 
 // multi-flag block with a short pair, last flag requires argument
 func TestTreeInterpretShortPair05(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		WithFlag(cli.ShortFlag('b').WithArgument(cli.Argument().Require())).
-		MustParse([]string{"command", "leaf", "-ab=foo"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
+		WithFlag(cli.ShortFlag('b').WithArgument(argument.NewBuilder().Require())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-ab=foo"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('b')
@@ -447,48 +482,52 @@ func TestTreeInterpretShortPair05(t *testing.T) {
 
 // multi-flag block with unknown first flag
 func TestTreeInterpretShortPair06(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('b').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-ab=value"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('b').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-ab=value"}))
+	sub := com.SelectedCommand()
 
-	flag := com.FindShortFlag('b')
+	f := com.FindShortFlag('b')
 
-	if !com.HasUnmappedInputs() {
+	if !sub.HasUnmappedInputs() {
 		t.Error("expected command to have unmapped inputs but it didn't")
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Error("expected command to have exactly 1 unmapped input but it didn't")
-	} else if com.UnmappedInputs()[0] != "-a" {
+	} else if sub.UnmappedInputs()[0] != "-a" {
 		t.Error("expected unmapped value to match input but it didn't")
 	}
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "value" {
+	} else if f.Argument().RawValue() != "value" {
 		t.Error("expected flag argument value to match input but it didn't")
 	}
 }
 
 // multi-flag block with unknown middle flag
 func TestTreeInterpretShortPair07(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a')).
-		WithFlag(cli.ShortFlag('c').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-abc=value"}).
-		SelectedCommand()
+		WithFlag(cli.ShortFlag('c').WithArgument(argument.NewBuilder())), opt))
+
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-abc=value"}))
+
+	sub := com.SelectedCommand()
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('c')
 
-	if !com.HasUnmappedInputs() {
+	if !sub.HasUnmappedInputs() {
 		t.Error("expected command to have unmapped inputs but it didn't")
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Error("expected command to have exactly 1 unmapped input but it didn't")
-	} else if com.UnmappedInputs()[0] != "-b" {
+	} else if sub.UnmappedInputs()[0] != "-b" {
 		t.Error("expected unmapped value to match input but it didn't")
 	}
 
@@ -507,15 +546,18 @@ func TestTreeInterpretShortPair07(t *testing.T) {
 
 // flag that doesn't except an argument
 func TestTreeInterpretShortPair08(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a')).
-		WithFlag(cli.ShortFlag('b')).
-		MustParse([]string{"command", "leaf", "-ab=value"}).
-		SelectedCommand()
+		WithFlag(cli.ShortFlag('b')), opt))
 
-	flag1 := com.FindShortFlag('a')
-	flag2 := com.FindShortFlag('b')
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-ab=value"}))
+
+	sub := com.SelectedCommand()
+
+	flag1 := sub.FindShortFlag('a')
+	flag2 := sub.FindShortFlag('b')
 
 	if !flag1.WasHit() {
 		t.Error("expected flag 1 to have been hit but it wasn't")
@@ -528,45 +570,53 @@ func TestTreeInterpretShortPair08(t *testing.T) {
 
 // first flag accepts an argument, second flag is unrecognized
 func TestTreeInterpretShortPair09(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-ab=value"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
 
-	flag := com.FindShortFlag('a')
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-ab=value"}))
 
-	if !flag.WasHit() {
+	sub := com.SelectedCommand()
+
+	f := sub.FindShortFlag('a')
+
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "b=value" {
+	} else if f.Argument().RawValue() != "b=value" {
 		t.Error("expected flag argument to match input value but it doesn't")
 	}
 }
 
 // short solo unknown flag
 func TestTreeInterpreterShortSolo01(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		MustParse([]string{"command", "leaf", "-c"}).
-		SelectedCommand()
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 
-	if !com.HasUnmappedInputs() {
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-c"}))
+
+	sub := com.SelectedCommand()
+
+	if !sub.HasUnmappedInputs() {
 		t.Error("expected command to have unmapped inputs but it didn't")
-	} else if len(com.UnmappedInputs()) != 1 {
+	} else if len(sub.UnmappedInputs()) != 1 {
 		t.Error("expected command to have exactly 1 unmapped input but it didn't")
-	} else if com.UnmappedInputs()[0] != "-c" {
+	} else if sub.UnmappedInputs()[0] != "-c" {
 		t.Error("expected command unmapped input to match input but it didn't")
 	}
 }
 
 // short solo requires arg, hits boundary
 func TestTreeInterpreterShortSolo02(t *testing.T) {
-	_, err := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('c').WithArgument(cli.Argument().Require())).
-		Parse([]string{"command", "leaf", "-c", "--"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('c').WithArgument(argument.NewBuilder().Require())), opt))
+
+	_, err := tree.Parse(com, []string{"command", "leaf", "-c", "--"})
 
 	if err == nil {
 		t.Error("expected parsing to error out but it didn't")
@@ -575,11 +625,12 @@ func TestTreeInterpreterShortSolo02(t *testing.T) {
 
 // solo short flag requires arg, eats rest of block
 func TestTreeInterpreterShortSolo03(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		WithFlag(cli.ShortFlag('b')).
-		MustParse([]string{"command", "leaf", "-ab"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder().Require())).
+		WithFlag(cli.ShortFlag('b')), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-ab"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('b')
@@ -599,61 +650,65 @@ func TestTreeInterpreterShortSolo03(t *testing.T) {
 
 // solo short flag expects optional argument but hits eof
 func TestTreeInterpreterShortSolo04(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if flag.Argument().WasHit() {
+	} else if f.Argument().WasHit() {
 		t.Error("expected flag argument not to have been hit but it was")
 	}
 }
 
 // solo short flag expects optional argument but hits boundary
 func TestTreeInterpreterShortSolo05(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a", "--"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "--"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if flag.Argument().WasHit() {
+	} else if f.Argument().WasHit() {
 		t.Error("expected flag argument not to have been hit but it was")
 	}
 }
 
 // solo short flag expects optional and is followed by plain text
 func TestTreeInterpreterShortSolo06(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a", "zoids"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "zoids"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "zoids" {
+	} else if f.Argument().RawValue() != "zoids" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
 
 // solo short flag expects optional and is followed by a known short flag
 func TestTreeInterpreterShortSolo07(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		WithFlag(cli.ShortFlag('b')).
-		MustParse([]string{"command", "leaf", "-a", "-b"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
+		WithFlag(cli.ShortFlag('b')), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "-b"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('b')
@@ -671,29 +726,31 @@ func TestTreeInterpreterShortSolo07(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown short flag
 func TestTreeInterpreterShortSolo08(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a", "-b"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "-b"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "-b" {
+	} else if f.Argument().RawValue() != "-b" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
 
 // solo short flag expects optional and is followed by a known short pair
 func TestTreeInterpreterShortSolo09(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		WithFlag(cli.ShortFlag('b')).
-		MustParse([]string{"command", "leaf", "-a", "-b=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
+		WithFlag(cli.ShortFlag('b')), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "-b=1"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('b')
@@ -711,29 +768,31 @@ func TestTreeInterpreterShortSolo09(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown short flag
 func TestTreeInterpreterShortSolo10(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a", "-b=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "-b=1"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "-b=1" {
+	} else if f.Argument().RawValue() != "-b=1" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
 
 // solo short flag expects optional and is followed by a known long flag
 func TestTreeInterpreterShortSolo11(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		WithFlag(cli.LongFlag("bacon")).
-		MustParse([]string{"command", "leaf", "-a", "--bacon"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
+		WithFlag(cli.LongFlag("bacon")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "--bacon"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindLongFlag("bacon")
@@ -751,29 +810,31 @@ func TestTreeInterpreterShortSolo11(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown long flag
 func TestTreeInterpreterShortSolo12(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a", "--beans"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "--beans"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "--beans" {
+	} else if f.Argument().RawValue() != "--beans" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
 
 // solo short flag expects optional and is followed by a known long pair
 func TestTreeInterpreterShortSolo13(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		WithFlag(cli.LongFlag("bees")).
-		MustParse([]string{"command", "leaf", "-a", "--bees=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
+		WithFlag(cli.LongFlag("bees")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "--bees=1"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindLongFlag("bees")
@@ -791,18 +852,19 @@ func TestTreeInterpreterShortSolo13(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown long pair
 func TestTreeInterpreterShortSolo14(t *testing.T) {
-	com := cli.Tree().
-		WithLeaf(cli.Leaf("leaf")).
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"command", "leaf", "-a", "--bang=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("leaf")).
+		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a", "--bang=1"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to be hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "--bang=1" {
+	} else if f.Argument().RawValue() != "--bang=1" {
 		t.Error("expected flag argument to match input but it didn't")
 	}
 }
@@ -810,22 +872,23 @@ func TestTreeInterpreterShortSolo14(t *testing.T) {
 // https://github.com/Foxcapades/Argonaut/issues/18
 func TestRegression18Tree(t *testing.T) {
 	bind := false
-	com := cli.Tree().
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
-		WithLeaf(cli.Leaf("leaf")).
-		MustParse([]string{"command", "leaf", "-a"})
+		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
 	if !bind {
 		t.Error("expected bind to be true, but it wasn't")
 	}
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "true" {
+	} else if f.Argument().RawValue() != "true" {
 		t.Error("expected flag argument value to be \"true\" but it wasn't")
 	}
 }
@@ -838,8 +901,9 @@ func TestRegression58Tree(t *testing.T) {
 	var printHeaders bool
 	var inputFile string
 
-	_, err := cli.Tree().
-		WithLeaf(cli.Leaf("foo").
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("foo").
 			WithFlag(cli.ComboFlag('r', "rm-na").
 				WithBinding(&removeNAValues, false)).
 			WithFlag(cli.ComboFlag('s', "sorted-inputs").
@@ -863,13 +927,13 @@ func TestRegression58Tree(t *testing.T) {
 				}, "tsv", true)).
 			WithFlag(cli.ComboFlag('t', "headers").
 				WithBinding(&printHeaders, false)).
-			WithArgument(cli.Argument().
+			WithArgument(argument.NewBuilder().
 				WithName("file").
 				WithBinding(func(path []string) (err error) {
 					inputFile = path[0]
 					return
-				}))).
-		Parse([]string{"build/linux/find-bin-width", "foo", "-s", "-f", "tsv", "some-file"})
+				}))), opt))
+	_, err := tree.Parse(com, []string{"build/linux/find-bin-width", "foo", "-s", "-f", "tsv", "some-file"})
 
 	if err != nil {
 		t.Error("expected error to be nil, but was " + err.Error())
@@ -900,12 +964,14 @@ func TestRegression58Tree(t *testing.T) {
 func TestRegression62CommandTree(t *testing.T) {
 	var value argotype.Hex8
 
-	_, err := cli.Tree().
-		WithLeaf(cli.Leaf("gen-meta").
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+		WithLeaf(tree.NewLeafBuilder("gen-meta").
 			WithFlag(cli.ComboFlag('i', "interactive").
 				WithDescription("Interactive mode: auto (0), none (1), minimal (2), full (3).  Defaults to auto").
-				WithBindingAndDefault(&value, argotype.Hex8(23), true))).
-		Parse([]string{"something", "gen-meta"})
+				WithBindingAndDefault(&value, argotype.Hex8(23), true))), opt))
+
+	_, err := tree.Parse(com, []string{"something", "gen-meta"})
 
 	if err != nil {
 		t.Error("expected err to be nil but was", err)

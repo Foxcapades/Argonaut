@@ -4,19 +4,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/foxcapades/argonaut/v3/internal/parse"
-	"github.com/foxcapades/argonaut/v3/internal/xarg"
-	"github.com/foxcapades/argonaut/v3/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/internal/unmarshal"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func New() argo.Argument {
-	return &argument{}
-}
-
 type argument struct {
-	warnings *argo.WarningContext
-
 	name string
 	desc string
 	raw  string
@@ -24,14 +16,8 @@ type argument struct {
 	required bool
 	isUsed   bool
 
-	bindingKind xarg.BindKind
-	defaultKind xarg.DefaultKind
-
-	bindVal any
-	defVal  any
-
-	rootBind reflect.Value
-	rootDef  reflect.Value
+	binding Binding
+	defVal  Default
 
 	unmarshal argo.ValueUnmarshaler
 
@@ -56,31 +42,19 @@ func (a *argument) HasDescription() bool {
 }
 
 func (a *argument) HasBinding() bool {
-	return a.bindingKind != xarg.BindKindNone
+	return a.binding.bType != argo.BindingTypeNone
 }
 
-func (a *argument) BindingType() reflect.Type {
-	if !a.HasBinding() {
-		return nil
-	} else {
-		return a.rootBind.Type()
-	}
+func (a *argument) Binding() argo.ArgumentBinding {
+	return &a.binding
+}
+
+func (a *argument) HasDefault() bool {
+	return a.defVal.dType != argo.DefaultTypeNone
 }
 
 func (a *argument) Default() any {
 	return a.defVal
-}
-
-func (a *argument) HasDefault() bool {
-	return a.defaultKind != xarg.DefaultKindNone
-}
-
-func (a *argument) DefaultType() reflect.Type {
-	if a.HasDefault() {
-		return a.rootDef.Type()
-	} else {
-		return nil
-	}
 }
 
 func (a *argument) WasHit() bool {
@@ -95,11 +69,7 @@ func (a *argument) IsRequired() bool {
 	return a.required
 }
 
-func (a *argument) AppendWarning(warning string) {
-	a.warnings.AppendWarning(warning)
-}
-
-func (a *argument) setToDefault() error {
+func (a *argument) SetToDefault() error {
 	// If there is no binding set, what are we going to set to the default value?
 	if !a.HasBinding() {
 		return nil
@@ -112,7 +82,10 @@ func (a *argument) setToDefault() error {
 
 	a.isUsed = true
 
-	defType := a.rootDef.Type()
+	rootDef := unmarshal.GetRootValue(reflect.ValueOf(a.defVal.value))
+	defType := rootDef.Type()
+
+	rootBinding := unmarshal.GetRootValue(reflect.ValueOf(a.binding.raw))
 
 	if defType.Kind() == reflect.Func {
 		defFn := reflect.ValueOf(a.defVal)
@@ -123,7 +96,7 @@ func (a *argument) setToDefault() error {
 		case 1:
 			ret := defFn.Call(nil)
 
-			a.rootBind.Set(ret[0])
+			rootBinding.Set(ret[0])
 			a.raw = ret[0].Type().String()
 
 			return nil
@@ -137,10 +110,10 @@ func (a *argument) setToDefault() error {
 				return ret[1].Interface().(error)
 			}
 
-			if xreflect.IsUnmarshaler(a.rootBind.Type(), unmarshalerType) {
-				a.rootBind.Elem().Set(ret[0])
+			if unmarshal.IsUnmarshaler(rootBinding.Type()) {
+				rootBinding.Elem().Set(ret[0])
 			} else {
-				a.rootBind.Set(ret[0])
+				rootBinding.Set(ret[0])
 			}
 
 			a.raw = ret[0].Type().String()
@@ -153,27 +126,27 @@ func (a *argument) setToDefault() error {
 	}
 
 	if defType.Kind() == reflect.String {
-		strVal := a.rootDef.String()
+		strVal := rootDef.String()
 
-		if a.rootBind.Type().Kind() == reflect.String {
-			a.rootBind.Set(a.rootDef)
+		if rootBinding.Type().Kind() == reflect.String {
+			rootBinding.Set(rootDef)
 			a.raw = strVal
 			return nil
 		}
 
-		return a.unmarshal.Unmarshal(strVal, a.bindVal)
+		return a.unmarshal.Unmarshal(strVal, a.binding.raw)
 	}
 
-	if a.rootBind.Kind() == reflect.Ptr {
-		a.rootBind.Elem().Set(a.rootDef)
+	if rootBinding.Kind() == reflect.Ptr {
+		rootBinding.Elem().Set(rootDef)
 	} else {
-		a.rootBind.Set(a.rootDef)
+		rootBinding.Set(rootDef)
 	}
 
 	return nil
 }
 
-func (a *argument) setValue(rawString string) error {
+func (a *argument) SetValue(rawString string) error {
 	a.isUsed = true
 	a.raw = rawString
 
@@ -187,33 +160,19 @@ func (a *argument) setValue(rawString string) error {
 		return nil
 	}
 
-	// TODO: why the heck is this here? what did past me know that present me doesn't?
-	if a.isBoolArg() {
-		if _, err := parse.Bool(rawString); err != nil {
-			return err
-		}
+	rootBinding := unmarshal.GetRootValue(reflect.ValueOf(a.binding.BoundTo()))
 
-		if err := a.unmarshal.Unmarshal(rawString, a.bindVal); err != nil {
-			return err
-		}
-	} else {
-		if err := a.unmarshal.Unmarshal(rawString, a.bindVal); err != nil {
-			return err
-		}
+	if err := a.unmarshal.Unmarshal(rawString, a.binding.raw); err != nil {
+		return err
 	}
 
 	for _, fn := range a.postParseValidators {
-		if err := a.callPostArgFunc(fn, rawString); err != nil {
+		if err := a.callPostArgFunc(fn, rootBinding, rawString); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func (a *argument) isBoolArg() bool {
-	bt := a.rootBind.Type().String()
-	return bt == "bool" || bt == "*bool" || bt == "[]bool" || bt == "[]*bool"
 }
 
 func (a *argument) callPreArgFunc(fn any, raw string) error {
@@ -226,8 +185,8 @@ func (a *argument) callPreArgFunc(fn any, raw string) error {
 	return nil
 }
 
-func (a *argument) callPostArgFunc(fn any, raw string) error {
-	errs := reflect.ValueOf(fn).Call([]reflect.Value{a.rootBind, reflect.ValueOf(raw)})
+func (a *argument) callPostArgFunc(fn any, root reflect.Value, raw string) error {
+	errs := reflect.ValueOf(fn).Call([]reflect.Value{root, reflect.ValueOf(raw)})
 
 	if !errs[0].IsNil() {
 		return errs[0].Interface().(error)

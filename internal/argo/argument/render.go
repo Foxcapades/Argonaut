@@ -2,28 +2,26 @@ package argument
 
 import (
 	"bufio"
-	"reflect"
 	"strconv"
 
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 const (
-	ReqPrefix = '<'
-	ReqSuffix = '>'
-	OptPrefix = '['
-	OptSuffix = ']'
+	ReqPrefix = text.OpenAngleBracket
+	ReqSuffix = text.CloseAngleBracket
+	OptPrefix = text.OpenSquareBracket
+	OptSuffix = text.CloseSquareBracket
 )
 
 func ShouldBeRendered(arg argo.Argument) bool {
-	return arg.IsRequired() ||
-		!arg.HasBinding() ||
-		arg.BindingType().Kind() != reflect.Bool
+	return arg.IsRequired() && !IsBoolean(arg)
 }
 
 func Render(arg argo.Argument, options argo.Options, padding uint8, out *bufio.Writer, argIndex int) error {
-	if _, err := out.WriteString(chars.HeaderPadding[padding]); err != nil {
+	if _, err := out.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
 	if err := RenderName(arg, out, argIndex); err != nil {
@@ -31,11 +29,11 @@ func Render(arg argo.Argument, options argo.Options, padding uint8, out *bufio.W
 	}
 
 	if arg.HasDescription() {
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(arg.Description()); err != nil {
 			return err
 		}
@@ -45,7 +43,7 @@ func Render(arg argo.Argument, options argo.Options, padding uint8, out *bufio.W
 }
 
 func RenderName(a argo.Argument, out *bufio.Writer, argIndex int) error {
-	if a.HasBinding() && a.BindingType().Kind() == reflect.Bool {
+	if IsBoolean(a) {
 		return nil
 	}
 

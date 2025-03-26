@@ -3,7 +3,7 @@ package unmarshal
 import (
 	"reflect"
 
-	"github.com/Foxcapades/Argonaut/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
 )
 
 // IsUnmarshalable tests the given reflect.Type value to see if it is something
@@ -13,11 +13,11 @@ import (
 // consumer functions.
 //
 // Arguments:
-//   1. vt = Type of the value that we are testing to ensure that it is
-//      unmarshalable.
-//   2. ut = Unmarshaler type.  This is a hacky way of getting around cyclic
-//      package imports with the argo package.
-func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
+//  1. vt = Type of the value that we are testing to ensure that it is
+//     unmarshalable.
+//  2. ut = Unmarshaler type.  This is a hacky way of getting around cyclic
+//     package imports with the argo package.
+func IsUnmarshalable(vt reflect.Type) (out bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			out = false
@@ -27,7 +27,7 @@ func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
 	// If it's a pointer, then check that it's something that can actually validly
 	// be a pointer.
 	if vt.Kind() == reflect.Ptr {
-		if xreflect.IsBasicPointer(vt) || xreflect.IsUnmarshaler(vt, ut) || xreflect.IsUnmarshaler(vt.Elem(), ut) {
+		if xreflect.IsBasicPointer(vt) || IsUnmarshaler(vt) || IsUnmarshaler(vt.Elem()) {
 			return true
 		}
 
@@ -35,7 +35,7 @@ func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
 	}
 
 	// If it's not a pointer, then maybe it's an Unmarshaler instance.
-	if xreflect.IsUnmarshaler(vt, ut) {
+	if IsUnmarshaler(vt) {
 		out = true
 		return
 	}
@@ -56,21 +56,43 @@ func IsUnmarshalable(vt, ut reflect.Type) (out bool) {
 		return
 	}
 
-	if xreflect.IsUnmarshalerMap(vt, ut) {
+	if IsUnmarshalerMap(vt) {
 		return true
 	}
 
-	if xreflect.IsUnmarshalerSlice(vt, ut) {
+	if IsUnmarshalerSlice(vt) {
 		out = true
 		return
 	}
 
-	if xreflect.IsUnmarshalerSliceMap(vt, ut) {
+	if IsUnmarshalerSliceMap(vt) {
 		return true
 	}
 
 	out = false
 	return
+}
+
+func IsUnmarshaler(t reflect.Type) bool {
+	return t.AssignableTo(UnmarshalerType)
+}
+
+func IsUnmarshalerMap(t reflect.Type) bool {
+	return t.Kind() == reflect.Map &&
+		xreflect.IsBasic(t.Key()) &&
+		IsUnmarshaler(t.Elem())
+}
+
+func IsUnmarshalerSliceMap(t reflect.Type) bool {
+	return t.Kind() == reflect.Map &&
+		xreflect.IsBasic(t.Key()) &&
+		t.Elem().Kind() == reflect.Slice &&
+		IsUnmarshaler(t.Elem().Elem())
+}
+
+func IsUnmarshalerSlice(t reflect.Type) bool {
+	return t.Kind() == reflect.Slice &&
+		IsUnmarshaler(t.Elem())
 }
 
 // IsConsumerFunc tests whether the given type represents a function that may be

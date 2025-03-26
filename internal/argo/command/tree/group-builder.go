@@ -1,6 +1,8 @@
 package tree
 
 import (
+	"iter"
+
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -38,18 +40,16 @@ func (g *CommandGroupBuilder) WithBranch(branch argo.BranchCommandBuilder) argo.
 }
 
 func (g *CommandGroupBuilder) WithBranches(branches ...argo.BranchCommandBuilder) argo.CommandGroupBuilder {
-	// TODO implement me
-	panic("implement me")
+	g.branches = append(g.branches, branches...)
+	return g
 }
 
 func (g *CommandGroupBuilder) HasBranches() bool {
-	// TODO implement me
-	panic("implement me")
+	return len(g.branches) > 0
 }
 
 func (g *CommandGroupBuilder) Branches() []argo.BranchCommandBuilder {
-	// TODO implement me
-	panic("implement me")
+	return g.branches
 }
 
 func (g *CommandGroupBuilder) WithLeaf(leaf argo.LeafCommandBuilder) argo.CommandGroupBuilder {
@@ -58,21 +58,29 @@ func (g *CommandGroupBuilder) WithLeaf(leaf argo.LeafCommandBuilder) argo.Comman
 }
 
 func (g *CommandGroupBuilder) WithLeaves(leaves ...argo.LeafCommandBuilder) argo.CommandGroupBuilder {
-	// TODO implement me
-	panic("implement me")
+	g.leaves = append(g.leaves, leaves...)
+	return g
 }
 
 func (g *CommandGroupBuilder) HasLeaves() bool {
-	// TODO implement me
-	panic("implement me")
+	return len(g.leaves) > 0
 }
 
 func (g *CommandGroupBuilder) Leaves() []argo.LeafCommandBuilder {
-	// TODO implement me
-	panic("implement me")
+	return g.leaves
 }
 
 func (g *CommandGroupBuilder) HasSubcommands() bool {
-	// TODO implement me
-	panic("implement me")
+	return len(g.leaves) > 0 || len(g.branches) > 0
+}
+
+func (g *CommandGroupBuilder) Subcommands() iter.Seq[argo.ChildNodeBuilder] {
+	return func(y func(argo.ChildNodeBuilder) bool) {
+		for _, b := range g.branches {
+			y(b)
+		}
+		for _, l := range g.leaves {
+			y(l)
+		}
+	}
 }

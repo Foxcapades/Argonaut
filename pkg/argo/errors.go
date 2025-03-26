@@ -1,7 +1,6 @@
 package argo
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -19,19 +18,11 @@ type MultiError interface {
 	AppendError(err error)
 }
 
-const (
-	unmarshalErrFormat = "Format error in input text, could not unmarshal to type %s"
-)
-
 type UnmarshallingError interface {
 	error
 
 	Value() reflect.Value
 }
-
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ //
-// ┃     Invalid Format          ┃ //
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ //
 
 type FormatError interface {
 	UnmarshallingError
@@ -41,15 +32,4 @@ type FormatError interface {
 	Kind() reflect.Kind
 
 	Root() error
-}
-
-type formatError struct {
-	Value    reflect.Value
-	Argument string
-	Kind     reflect.Kind
-	Root     error
-}
-
-func (f formatError) Error() string {
-	return fmt.Sprintf(unmarshalErrFormat, f.Kind)
 }

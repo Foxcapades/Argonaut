@@ -34,10 +34,6 @@ func IsNumeric(t reflect.Type) bool {
 	return IsNumericKind(t.Kind())
 }
 
-func IsUnmarshaler(t reflect.Type, ut reflect.Type) bool {
-	return t.AssignableTo(ut)
-}
-
 func IsInterface(t reflect.Type) bool {
 	return t.Kind() == reflect.Interface
 }
@@ -69,11 +65,6 @@ func IsByteSlice(t reflect.Type) bool {
 
 func IsBasicSlice(t reflect.Type) bool {
 	return t.Kind() == reflect.Slice && IsBasic(t.Elem())
-}
-
-func IsUnmarshalerSlice(t, ut reflect.Type) bool {
-	return t.Kind() == reflect.Slice &&
-		IsUnmarshaler(t.Elem(), ut)
 }
 
 func FuncHasReturn(t reflect.Type) bool {
@@ -109,19 +100,6 @@ func IsBasicMap(t reflect.Type) bool {
 
 func IsTime(t reflect.Type) bool {
 	return t.Kind() == reflect.Struct && t.AssignableTo(reflect.TypeOf(time.Time{}))
-}
-
-func IsUnmarshalerMap(t, ut reflect.Type) bool {
-	return t.Kind() == reflect.Map &&
-		IsBasic(t.Key()) &&
-		IsUnmarshaler(t.Elem(), ut)
-}
-
-func IsUnmarshalerSliceMap(t, ut reflect.Type) bool {
-	return t.Kind() == reflect.Map &&
-		IsBasic(t.Key()) &&
-		t.Elem().Kind() == reflect.Slice &&
-		IsUnmarshaler(t.Elem().Elem(), ut)
 }
 
 func IsNil(v *reflect.Value) bool {

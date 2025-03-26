@@ -27,57 +27,54 @@ package argo
 //	 |- ...
 type TreeCommand interface {
 	ParentNode
-	
-  // Name returns the name of the command or subcommand.
-  Name() string
 
-  // Description returns the description value assigned to this node.
-  //
-  // Description values are used when rendering help text.
-  Description() string
+	// Description returns the description value assigned to this node.
+	//
+	// Description values are used when rendering help text.
+	Description() string
 
-  // HasDescription indicates whether this Node has a description value
-  // set.
-  HasDescription() bool
+	// HasDescription indicates whether this Node has a description value
+	// set.
+	HasDescription() bool
 
-  // FlagGroups returns the flag groups assigned to this Node.
-  //
-  // This method will only return flag groups that had flags assigned to them,
-  // the rest of the flag groups will have been filtered out when the node was
-  // built.
-  FlagGroups() []FlagGroup
+	// FlagGroups returns the flag groups assigned to this Node.
+	//
+	// This method will only return flag groups that had flags assigned to them,
+	// the rest of the flag groups will have been filtered out when the node was
+	// built.
+	FlagGroups() []FlagGroup
 
-  // HasFlagGroups indicates whether this Node has at least one populated
-  // flag group.
-  HasFlagGroups() bool
+	// HasFlagGroups indicates whether this Node has at least one populated
+	// flag group.
+	HasFlagGroups() bool
 
-  // FindShortFlag looks up a target Flag instance by its short-form character.
-  //
-  // If no such flag exists on this Node or any of its parents, this
-  // method will return nil.
-  FindShortFlag(c byte) Flag
+	// FindShortFlag looks up a target Flag instance by its short-form character.
+	//
+	// If no such flag exists on this Node or any of its parents, this
+	// method will return nil.
+	FindShortFlag(c byte) Flag
 
-  // FindLongFlag looks up a target Flag instance by its long-form name.
-  //
-  // If no such flag exists on this Node or any of its parents, this
-  // method will return nil.
-  FindLongFlag(name string) Flag
+	// FindLongFlag looks up a target Flag instance by its long-form name.
+	//
+	// If no such flag exists on this Node or any of its parents, this
+	// method will return nil.
+	FindLongFlag(name string) Flag
 
-  HasCallback() bool
+	HasCallback() bool
 
-  Callback() CommandCallback[TreeCommand]
+	Callback() CommandCallback[TreeCommand]
 
-  IsHelpDisabled() bool
+	IsHelpDisabled() bool
 
-  // IncompleteHandler returns the incomplete command handler function that was
-  // attached to this TreeCommand through the TreeCommandBuilder.
-  //
-  // If no incomplete command handler function was attached, this method returns
-  // nil.
-  IncompleteHandler() IncompleteCommandHandler[TreeCommand]
-  
-  // SelectedCommand returns the leaf command that was selected in the CLI call.
-  SelectedCommand() LeafCommand
+	// IncompleteHandler returns the incomplete command handler function that was
+	// attached to this TreeCommand through the TreeCommandBuilder.
+	//
+	// If no incomplete command handler function was attached, this method returns
+	// nil.
+	IncompleteHandler() IncompleteCommandHandler[TreeCommand]
+
+	// SelectedCommand returns the leaf command that was selected in the CLI call.
+	SelectedCommand() LeafCommand
 }
 
 // A TreeCommandBuilder is a builder type used to construct a TreeCommand
@@ -101,94 +98,93 @@ type TreeCommand interface {
 //	 |- ...
 type TreeCommandBuilder interface {
 	ParentNodeBuilder
-	
-  // WithDescription sets the description value that will be used for the built
-  // cli command or subcommand.
-  //
-  // Descriptions are used when rendering help text.
-  WithDescription(desc string) TreeCommandBuilder
 
-  HasDescription() bool
+	// WithDescription sets the description value that will be used for the built
+	// cli command or subcommand.
+	//
+	// Descriptions are used when rendering help text.
+	WithDescription(desc string) TreeCommandBuilder
 
-  Description() string
+	HasDescription() bool
 
-  // WithHelpDisabled disables the automatic `-h` and `--help` flags for
-  // rendering help text.
-  WithHelpDisabled() TreeCommandBuilder
+	Description() string
 
-  IsHelpDisabled() bool
+	// WithHelpDisabled disables the automatic `-h` and `--help` flags for
+	// rendering help text.
+	WithHelpDisabled() TreeCommandBuilder
 
-  // WithFlagGroup appends the given FlagGroupBuilder to this CLI component
-  // builder.
-  WithFlagGroup(group FlagGroupBuilder) TreeCommandBuilder
+	IsHelpDisabled() bool
 
-  WithFlagGroups(groups ...FlagGroupBuilder) TreeCommandBuilder
+	// WithFlagGroup appends the given FlagGroupBuilder to this CLI component
+	// builder.
+	WithFlagGroup(group FlagGroupBuilder) TreeCommandBuilder
 
-  HasFlagGroups(includeDefault bool) bool
+	WithFlagGroups(groups ...FlagGroupBuilder) TreeCommandBuilder
 
-  FlagGroups(includeDefault bool) []FlagGroupBuilder
+	HasFlagGroups(includeDefault bool) bool
 
-  // WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
-  // instance attached to this CLI component builder.
-  WithFlag(flag FlagBuilder) TreeCommandBuilder
+	FlagGroups(includeDefault bool) []FlagGroupBuilder
 
-  WithFlags(flags ...FlagBuilder) TreeCommandBuilder
+	// WithFlag attaches the given FlagBuilder to the default FlagGroupBuilder
+	// instance attached to this CLI component builder.
+	WithFlag(flag FlagBuilder) TreeCommandBuilder
 
-  HasFlags() bool
+	WithFlags(flags ...FlagBuilder) TreeCommandBuilder
 
-  WithCallback(callback CommandCallback[TreeCommand]) TreeCommandBuilder
+	HasFlags() bool
 
-  Callback() CommandCallback[TreeCommand]
+	WithCallback(callback CommandCallback[TreeCommand]) TreeCommandBuilder
 
-  HasCallback() bool
+	Callback() CommandCallback[TreeCommand]
 
-  // WithBranch appends the given BranchCommandBuilder instance to this
-  // TreeCommandBuilder instance.
-  //
-  // Branch commands added to this TreeCommandBuilder are placed in the default
-  // CommandGroupBuilder.
-  WithBranch(branch BranchCommandBuilder) TreeCommandBuilder
+	HasCallback() bool
 
-  // WithBranches appends the given BranchCommandBuilder instances to this
-  // TreeCommandBuilder instance.
-  //
-  // Branch commands added to this TreeCommandBuilder are placed in the default
-  // CommandGroupBuilder.
-  WithBranches(branches ...BranchCommandBuilder) TreeCommandBuilder
+	// WithBranch appends the given BranchCommandBuilder instance to this
+	// TreeCommandBuilder instance.
+	//
+	// Branch commands added to this TreeCommandBuilder are placed in the default
+	// CommandGroupBuilder.
+	WithBranch(branch BranchCommandBuilder) TreeCommandBuilder
 
-  // WithLeaf appends the given LeafCommandBuilder instance to this
-  // TreeCommandBuilder instance.
-  //
-  // Leaf commands added to this TreeCommandBuilder are placed in the default
-  // CommandGroupBuilder.
-  WithLeaf(leaf LeafCommandBuilder) TreeCommandBuilder
+	// WithBranches appends the given BranchCommandBuilder instances to this
+	// TreeCommandBuilder instance.
+	//
+	// Branch commands added to this TreeCommandBuilder are placed in the default
+	// CommandGroupBuilder.
+	WithBranches(branches ...BranchCommandBuilder) TreeCommandBuilder
 
-  // WithLeaves appends the given LeafCommandBuilder instances to this
-  // TreeCommandBuilder instance.
-  //
-  // Leaf commands added to this TreeCommandBuilder are placed in the default
-  // CommandGroupBuilder.
-  WithLeaves(leaves ...LeafCommandBuilder) TreeCommandBuilder
+	// WithLeaf appends the given LeafCommandBuilder instance to this
+	// TreeCommandBuilder instance.
+	//
+	// Leaf commands added to this TreeCommandBuilder are placed in the default
+	// CommandGroupBuilder.
+	WithLeaf(leaf LeafCommandBuilder) TreeCommandBuilder
 
-  // WithCommandGroup appends the given CommandGroupBuilder instance to this
-  // TreeCommandBuilder instance.
-  //
-  // Command groups are used for organizing subcommands into named groups that
-  // are primarily used for rendering help text.
-  //
-  // Example usage:
-  //   cli.Tree().
-  //       WithCommandGroup(cli.CommandGroup("My Command Group").
-  //       WithBranch(cli.Branch("foo").
-  //           WithLeaf(cli.Leaf("bar"))))
-  //
-  // Resulting help text:
-  //
-  WithCommandGroup(group CommandGroupBuilder) TreeCommandBuilder
+	// WithLeaves appends the given LeafCommandBuilder instances to this
+	// TreeCommandBuilder instance.
+	//
+	// Leaf commands added to this TreeCommandBuilder are placed in the default
+	// CommandGroupBuilder.
+	WithLeaves(leaves ...LeafCommandBuilder) TreeCommandBuilder
 
-  WithCommandGroups(groups ...CommandGroupBuilder) TreeCommandBuilder
+	// WithCommandGroup appends the given CommandGroupBuilder instance to this
+	// TreeCommandBuilder instance.
+	//
+	// Command groups are used for organizing subcommands into named groups that
+	// are primarily used for rendering help text.
+	//
+	// Example usage:
+	//   cli.Tree().
+	//       WithCommandGroup(cli.CommandGroup("My Command Group").
+	//       WithBranch(cli.Branch("foo").
+	//           WithLeaf(cli.Leaf("bar"))))
+	//
+	// Resulting help text:
+	//
+	WithCommandGroup(group CommandGroupBuilder) TreeCommandBuilder
 
-  WithIncompleteHandler(handler IncompleteCommandHandler[TreeCommand]) TreeCommandBuilder
-  IncompleteHandler() IncompleteCommandHandler[TreeCommand]
-  
+	WithCommandGroups(groups ...CommandGroupBuilder) TreeCommandBuilder
+
+	WithIncompleteHandler(handler IncompleteCommandHandler[TreeCommand]) TreeCommandBuilder
+	IncompleteHandler() IncompleteCommandHandler[TreeCommand]
 }

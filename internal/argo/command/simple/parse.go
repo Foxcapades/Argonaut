@@ -1,11 +1,20 @@
 package command
 
 import (
-	"os"
-
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/emit"
+	"github.com/foxcapades/argonaut/v3/internal/parse"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func Parse(com argo.Command) (argo.ParseResult, error) {
-	return NewInterpreter(os.Args, com).Run()
+func Parse(command argo.Command, args []string) (argo.ParseResult, error) {
+	i := Interpreter{
+		parser:   parse.NewParser(emit.NewEmitter(args)),
+		command:  command,
+		elements: utils.NewDeque[parse.Element](2),
+		flagHits: flag.NewQueue(),
+	}
+
+	return i.Run()
 }

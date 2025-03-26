@@ -1,7 +1,9 @@
 package emit
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"strings"
+
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 )
 
@@ -38,15 +40,15 @@ func (k EventKind) String() string {
 }
 
 func endEvent() Event {
-	return Event{Kind: EventKindEnd, Data: chars.StrEmpty}
+	return Event{Kind: EventKindEnd, Data: text.EmptyString}
 }
 
 func breakEvent() Event {
-	return Event{Kind: EventKindBreak, Data: chars.StrEmpty}
+	return Event{Kind: EventKindBreak, Data: text.EmptyString}
 }
 
 func dashEvent() Event {
-	return Event{Kind: EventKindDash, Data: chars.StrDash}
+	return Event{Kind: EventKindDash, Data: text.DashString}
 }
 
 func textEvent(txt string) Event {
@@ -54,7 +56,7 @@ func textEvent(txt string) Event {
 }
 
 func equalsEvent() Event {
-	return Event{Kind: EventKindEquals, Data: chars.StrEquals}
+	return Event{Kind: EventKindEquals, Data: text.EqualsString}
 }
 
 func NewEmitter(args []string) Emitter {
@@ -94,7 +96,7 @@ func (e *Emitter) scan(arg string) {
 
 	// Consume any leading dash characters and pass them up.
 	i := 0
-	for i < len(arg) && arg[i] == chars.CharDash {
+	for i < len(arg) && arg[i] == text.DashByte {
 		e.next.Offer(dashEvent())
 		i++
 	}
@@ -109,7 +111,7 @@ func (e *Emitter) scan(arg string) {
 	sub := arg[i:]
 
 	// Find the next equals character
-	ne := chars.NextEquals(sub)
+	ne := strings.IndexByte(sub, text.EqualsByte)
 
 	// If there is no next equals character, pass up the whole substring
 	if ne == -1 {

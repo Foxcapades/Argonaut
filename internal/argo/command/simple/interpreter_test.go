@@ -6,14 +6,19 @@ import (
 	"strings"
 	"testing"
 
-	cli "github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 	"github.com/foxcapades/argonaut/v3/pkg/argotype"
 )
 
 // Unknown short solo flag.
 func TestCommandInterpreterShortSolo01(t *testing.T) {
-	com := cli.Command().MustParse([]string{"Command", "-f"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder(), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-f"}))
 
 	if !com.HasUnmappedInputs() {
 		t.Error("expected Command to have unmapped inputs but it didn't")
@@ -26,18 +31,20 @@ func TestCommandInterpreterShortSolo01(t *testing.T) {
 
 // Known short solo flag.
 func TestCommandInterpreterShortSolo02(t *testing.T) {
-	com := cli.Command().WithFlag(cli.ShortFlag('f')).MustParse([]string{"Command", "-f"})
-	flag := com.FindShortFlag('f')
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('f')), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-f"}))
 
-	if !flag.WasHit() {
-		t.Error("expected flag to have been hit but it wasn't")
+	if !com.FindShortFlag('f').WasHit() {
+		t.Error("expected flag to have been hit, but it wasn't")
 	}
 }
 
 // Unknown short solo at the start of a block
 func TestCommandInterpreterShortSolo03(t *testing.T) {
-	com := cli.Command().WithFlag(cli.ShortFlag('b')).MustParse([]string{"Command", "-ab"})
-	flag := com.FindShortFlag('b')
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('b')), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	if !com.HasUnmappedInputs() {
 		t.Error("expected Command to have unmapped inputs but it didn't")
@@ -47,15 +54,16 @@ func TestCommandInterpreterShortSolo03(t *testing.T) {
 		t.Error("expected unmapped input to match input value but it didn't")
 	}
 
-	if !flag.WasHit() {
+	if !com.FindShortFlag('b').WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
 	}
 }
 
 // Unknown short solo in the middle of a block
 func TestCommandInterpreterShortSolo04(t *testing.T) {
-	com := cli.Command().WithFlag(cli.ShortFlag('a')).MustParse([]string{"Command", "-ab"})
-	flag := com.FindShortFlag('a')
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('a')), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	if !com.HasUnmappedInputs() {
 		t.Error("expected Command to have unmapped inputs but it didn't")
@@ -65,16 +73,17 @@ func TestCommandInterpreterShortSolo04(t *testing.T) {
 		t.Error("expected unmapped input to match input value but it didn't")
 	}
 
-	if !flag.WasHit() {
+	if !com.FindShortFlag('a').WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
 	}
 }
 
 // Short solo requires arg but hits eof
 func TestCommandInterpreterShortSolo05(t *testing.T) {
-	_, err := cli.Command().
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		Parse([]string{"Command", "-a"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+	_, err := command.Parse(com, []string{"Command", "-a"})
 
 	if err == nil {
 		t.Error("expected error not to be nil, but it was")
@@ -83,9 +92,10 @@ func TestCommandInterpreterShortSolo05(t *testing.T) {
 
 // Short solo requires arg but hits boundary
 func TestCommandInterpreterShortSolo06(t *testing.T) {
-	_, err := cli.Command().
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		Parse([]string{"Command", "-a", "--"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+	_, err := command.Parse(com, []string{"Command", "-a", "--"})
 
 	if err == nil {
 		t.Error("expected error not to be nil, but it was")
@@ -94,43 +104,46 @@ func TestCommandInterpreterShortSolo06(t *testing.T) {
 
 // Short solo requires arg and hits any value
 func TestCommandInterpreterShortSolo07(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		MustParse([]string{"Command", "-a", "-b"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-b"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "-b" {
+	} else if f.Argument().RawValue() != "-b" {
 		t.Error("expected flag argument value to match input value but it didn't")
 	}
 }
 
 // Short solo requires arg and clobbers block
 func TestCommandInterpreterShortSolo08(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument().Require())).
-		MustParse([]string{"Command", "-ab"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "b" {
+	} else if f.Argument().RawValue() != "b" {
 		t.Error("expected flag argument value to match input value but it didn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo09(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		WithFlag(cli.ShortFlag('b')).
-		MustParse([]string{"Command", "-ab"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithShortForm('b')), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	flag1 := com.FindShortFlag('a')
 	flag2 := com.FindShortFlag('b')
@@ -145,9 +158,10 @@ func TestCommandInterpreterShortSolo09(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo10(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-ab"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	flag1 := com.FindShortFlag('a')
 
@@ -161,251 +175,263 @@ func TestCommandInterpreterShortSolo10(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo11(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if flag.Argument().WasHit() {
+	} else if f.Argument().WasHit() {
 		t.Error("expected flag argument not to have been hit but it was")
 	}
 }
 
 func TestCommandInterpreterShortSolo12(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a", "--"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if flag.Argument().WasHit() {
+	} else if f.Argument().WasHit() {
 		t.Error("expected flag argument not to have been hit but it was")
 	}
 }
 
 func TestCommandInterpreterShortSolo13(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a", "lamp"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "lamp"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "lamp" {
+	} else if f.Argument().RawValue() != "lamp" {
 		t.Error("expected flag argument to equal input value but it didn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo14(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a", "-l"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "-l" {
+	} else if f.Argument().RawValue() != "-l" {
 		t.Error("expected flag argument to equal input value but it didn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo15(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a", "--paul"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--paul"}))
 
-	flag := com.FindShortFlag('a')
+	f := com.FindShortFlag('a')
 
-	if !flag.WasHit() {
+	if !f.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag.Argument().WasHit() {
+	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag.Argument().RawValue() != "--paul" {
+	} else if f.Argument().RawValue() != "--paul" {
 		t.Error("expected flag argument to equal input value but it didn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo16(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		WithFlag(cli.ShortFlag('l')).
-		MustParse([]string{"Command", "-a", "-l"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithShortForm('l')), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l"}))
 
-	flag1 := com.FindShortFlag('a')
-	flag2 := com.FindShortFlag('l')
+	f1 := com.FindShortFlag('a')
+	f2 := com.FindShortFlag('l')
 
-	if !flag1.WasHit() {
+	if !f1.WasHit() {
 		t.Error("expected flag 1 to have been hit but it wasn't")
-	} else if flag1.Argument().WasHit() {
+	} else if f1.Argument().WasHit() {
 		t.Error("expected flag 1 argument to not have been hit but it was")
 	}
 
-	if !flag2.WasHit() {
+	if !f2.WasHit() {
 		t.Error("expected flag 2 to have been hit but it wasn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo17(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		WithFlag(cli.LongFlag("atom")).
-		MustParse([]string{"Command", "-a", "--atom"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithLongForm("atom")), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--atom"}))
 
-	flag1 := com.FindShortFlag('a')
-	flag2 := com.FindLongFlag("atom")
+	f1 := com.FindShortFlag('a')
+	f2 := com.FindLongFlag("atom")
 
-	if !flag1.WasHit() {
+	if !f1.WasHit() {
 		t.Error("expected flag 1 to have been hit but it wasn't")
-	} else if flag1.Argument().WasHit() {
+	} else if f1.Argument().WasHit() {
 		t.Error("expected flag 1 argument to not have been hit but it was")
 	}
 
-	if !flag2.WasHit() {
+	if !f2.WasHit() {
 		t.Error("expected flag 2 to have been hit but it wasn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo18(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		WithFlag(cli.ShortFlag('l')).
-		MustParse([]string{"Command", "-a", "-l=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithShortForm('l')), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l=1"}))
 
-	flag1 := com.FindShortFlag('a')
-	flag2 := com.FindShortFlag('l')
+	f1 := com.FindShortFlag('a')
+	f2 := com.FindShortFlag('l')
 
-	if !flag1.WasHit() {
+	if !f1.WasHit() {
 		t.Error("expected flag 1 to have been hit but it wasn't")
-	} else if flag1.Argument().WasHit() {
+	} else if f1.Argument().WasHit() {
 		t.Error("expected flag 1 argument to not have been hit but it was")
 	}
 
-	if !flag2.WasHit() {
+	if !f2.WasHit() {
 		t.Error("expected flag 2 to have been hit but it wasn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo19(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		WithFlag(cli.LongFlag("atom")).
-		MustParse([]string{"Command", "-a", "--atom=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())).
+		WithFlag(flag.NewBuilder().WithLongForm("atom")), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--atom=1"}))
 
-	flag1 := com.FindShortFlag('a')
-	flag2 := com.FindLongFlag("atom")
+	f1 := com.FindShortFlag('a')
+	f2 := com.FindLongFlag("atom")
 
-	if !flag1.WasHit() {
+	if !f1.WasHit() {
 		t.Error("expected flag 1 to have been hit but it wasn't")
-	} else if flag1.Argument().WasHit() {
+	} else if f1.Argument().WasHit() {
 		t.Error("expected flag 1 argument to not have been hit but it was")
 	}
 
-	if !flag2.WasHit() {
+	if !f2.WasHit() {
 		t.Error("expected flag 2 to have been hit but it wasn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo20(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a", "-l=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l=1"}))
 
-	flag1 := com.FindShortFlag('a')
+	f1 := com.FindShortFlag('a')
 
-	if !flag1.WasHit() {
+	if !f1.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag1.Argument().WasHit() {
+	} else if !f1.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag1.Argument().RawValue() != "-l=1" {
+	} else if f1.Argument().RawValue() != "-l=1" {
 		t.Error("expected flag argument value to match input value but it didn't")
 	}
 }
 
 func TestCommandInterpreterShortSolo21(t *testing.T) {
-	com := cli.Command().
-		WithFlag(cli.ShortFlag('a').
-			WithArgument(cli.Argument())).
-		MustParse([]string{"Command", "-a", "--atom=1"})
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('a').
+			WithArgument(argument.NewBuilder())), opt))
+	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--atom=1"}))
 
-	flag1 := com.FindShortFlag('a')
+	f1 := com.FindShortFlag('a')
 
-	if !flag1.WasHit() {
+	if !f1.WasHit() {
 		t.Error("expected flag to have been hit but it wasn't")
-	} else if !flag1.Argument().WasHit() {
+	} else if !f1.Argument().WasHit() {
 		t.Error("expected flag argument to have been hit but it wasn't")
-	} else if flag1.Argument().RawValue() != "--atom=1" {
+	} else if f1.Argument().RawValue() != "--atom=1" {
 		t.Error("expected flag argument value to match input value but it didn't")
 	}
 }
 
 // https://github.com/Foxcapades/Argonaut/issues/18
 func TestRegression18Command(t *testing.T) {
+	opt := argo.DefaultOptions()
 	{
 		bind := false
-		com := cli.Command().
-			WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
-			MustParse([]string{"Command", "-a"})
+		com := utils.MustReturn(command.Build(command.NewBuilder().
+			WithFlag(flag.NewBuilder().WithShortForm('a').WithBinding(&bind, false)), opt))
+		_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a"}))
 
-		flag := com.FindShortFlag('a')
+		f := com.FindShortFlag('a')
 
 		if !bind {
 			t.Error("expected bind to be true, but it wasn't")
 		}
 
-		if !flag.WasHit() {
+		if !f.WasHit() {
 			t.Error("expected flag to have been hit but it wasn't")
-		} else if !flag.Argument().WasHit() {
+		} else if !f.Argument().WasHit() {
 			t.Error("expected flag argument to have been hit but it wasn't")
-		} else if flag.Argument().RawValue() != "true" {
+		} else if f.Argument().RawValue() != "true" {
 			t.Error("expected flag argument value to be \"true\" but it wasn't")
 		}
 	}
 	{
 		bind := false
-		com := cli.Command().
-			WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
-			MustParse([]string{"Command", "-a", "--", "flumps"})
+		com := utils.MustReturn(command.Build(command.NewBuilder().
+			WithFlag(flag.NewBuilder().WithShortForm('a').WithBinding(&bind, false)), opt))
+		_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--", "flumps"}))
 
-		flag := com.FindShortFlag('a')
+		f := com.FindShortFlag('a')
 
 		if !bind {
 			t.Error("expected bind to be true, but it wasn't")
 		}
 
-		if !flag.WasHit() {
+		if !f.WasHit() {
 			t.Error("expected flag to have been hit but it wasn't")
-		} else if !flag.Argument().WasHit() {
+		} else if !f.Argument().WasHit() {
 			t.Error("expected flag argument to have been hit but it wasn't")
-		} else if flag.Argument().RawValue() != "true" {
+		} else if f.Argument().RawValue() != "true" {
 			t.Error("expected flag argument value to be \"true\" but it wasn't")
 		}
 
-		if !com.HasPassthroughInputs() {
+		if !com.HasUnmappedInputs() {
 			t.Error("expected flag to have passthrough arguments but it didn't")
-		} else if len(com.PassthroughInputs()) != 1 {
+		} else if len(com.UnmappedInputs()) != 1 {
 			t.Error("expected flag to have exactly 1 passthrough argument but it didn't")
-		} else if com.PassthroughInputs()[0] != "flumps" {
+		} else if com.UnmappedInputs()[0] != "flumps" {
 			t.Error("expected flag passthrough argument to match input value but it didn't")
 		}
 	}
@@ -419,12 +445,13 @@ func TestRegression58Command(t *testing.T) {
 	var printHeaders bool
 	var inputFile string
 
-	_, err := cli.Command().
-		WithFlag(cli.ComboFlag('r', "rm-na").
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('r').WithLongForm("rm-na").
 			WithBinding(&removeNAValues, false)).
-		WithFlag(cli.ComboFlag('s', "sorted-inputs").
+		WithFlag(flag.NewBuilder().WithShortForm('s').WithLongForm("sorted-inputs").
 			WithBindingAndDefault(&inputsAreSorted, false, false)).
-		WithFlag(cli.ComboFlag('f', "format").
+		WithFlag(flag.NewBuilder().WithShortForm('f').WithLongForm("format").
 			WithBindingAndDefault(func(val string) (err error) {
 				switch strings.ToLower(val) {
 				case "tsv":
@@ -441,15 +468,15 @@ func TestRegression58Command(t *testing.T) {
 
 				return
 			}, "tsv", true)).
-		WithFlag(cli.ComboFlag('t', "headers").
+		WithFlag(flag.NewBuilder().WithShortForm('t').WithLongForm("headers").
 			WithBinding(&printHeaders, false)).
-		WithArgument(cli.Argument().
+		WithArgument(argument.NewBuilder().
 			WithName("file").
 			WithBinding(func(path []string) (err error) {
 				inputFile = path[0]
 				return
-			})).
-		Parse([]string{"build/linux/find-bin-width", "-s", "-f", "tsv", "some-file"})
+			})), opt))
+	_, err := command.Parse(com, []string{"build/linux/find-bin-width", "-s", "-f", "tsv", "some-file"})
 
 	if err != nil {
 		t.Error("expected error to be nil, but was " + err.Error())
@@ -480,11 +507,12 @@ func TestRegression58Command(t *testing.T) {
 func TestRegression62Command(t *testing.T) {
 	var value argotype.Hex8
 
-	_, err := cli.Command().
-		WithFlag(cli.ComboFlag('i', "interactive").
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(command.Build(command.NewBuilder().
+		WithFlag(flag.NewBuilder().WithShortForm('i').WithLongForm("interactive").
 			WithDescription("Interactive mode: auto (0), none (1), minimal (2), full (3).  Defaults to auto").
-			WithBindingAndDefault(&value, argotype.Hex8(23), true)).
-		Parse([]string{"something", "gen-meta"})
+			WithBindingAndDefault(&value, argotype.Hex8(23), true)), opt))
+	_, err := command.Parse(com, []string{"something", "gen-meta"})
 
 	if err != nil {
 		t.Error("expected err to be nil but was", err)

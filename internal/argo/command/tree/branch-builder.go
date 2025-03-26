@@ -4,7 +4,6 @@ package tree
 //   This is a generated file!  Edits here will be lost!
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -18,13 +17,13 @@ func NewBranchBuilder(name string) argo.BranchCommandBuilder {
 type CommandBranchBuilder struct {
 	comGroups    []argo.CommandGroupBuilder
 	incompleteFn argo.IncompleteCommandHandler[argo.BranchCommand]
-	name    string
-	aliases []string
-	parent  argo.ParentNodeBuilder
-	disableHelp bool
-	description string
-	flagGroups  []argo.FlagGroupBuilder
-	callback    argo.CommandCallback[argo.BranchCommand]
+	name         string
+	aliases      []string
+	parent       argo.ParentNodeBuilder
+	disableHelp  bool
+	description  string
+	flagGroups   []argo.FlagGroupBuilder
+	callback     argo.CommandCallback[argo.BranchCommand]
 }
 
 func (i *CommandBranchBuilder) WithCommandGroup(group argo.CommandGroupBuilder) argo.BranchCommandBuilder {
@@ -181,14 +180,14 @@ func (i *CommandBranchBuilder) hasDefaultFlagGroup() bool {
 	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
-func (i *CommandBranchBuilder) WithFlag(flag argo.FlagBuilder) argo.BranchCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
-	i.flagGroups[0].WithFlag(flag)
+func (i *CommandBranchBuilder) WithFlag(f argo.FlagBuilder) argo.BranchCommandBuilder {
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
+	i.flagGroups[0].WithFlag(f)
 	return i
 }
 
 func (i *CommandBranchBuilder) WithFlags(flags ...argo.FlagBuilder) argo.BranchCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
 	i.flagGroups[0].WithFlags(flags...)
 	return i
 }

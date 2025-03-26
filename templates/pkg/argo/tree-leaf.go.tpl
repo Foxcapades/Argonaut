@@ -26,5 +26,5 @@ type LeafCommandBuilder interface {
 	ChildNodeBuilder
 	{{ template "CommandBuilderCommon" $vars }}
 	{{- template "ChildNodeBuilderCommon" $vars }}
-	{{- template "CommandEnd" $vars }}
+	{{- template "CommandEndBuilder" $vars }}
 }

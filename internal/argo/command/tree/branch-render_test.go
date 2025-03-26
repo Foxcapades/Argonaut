@@ -2,11 +2,15 @@ package tree_test
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -45,7 +49,8 @@ My Special Little Commands
 `
 
 func TestCommandBranchHelpRenderer001(t *testing.T) {
-	com := tree.NewBuilder().
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(tree.NewBranchBuilder("branch1").
 			WithAliases("branch2", "branch3").
 			WithDescription("A description of this command.").
@@ -78,14 +83,16 @@ func TestCommandBranchHelpRenderer001(t *testing.T) {
 					WithDescription("A description.").
 					WithLeaf(tree.NewLeafBuilder("dethrone"))).
 				WithLeaf(tree.NewLeafBuilder("666").
-					WithDescription("Hail Satan")))).
-		MustParse([]string{"command", "branch1", "cruise", "-a"})
+					WithDescription("Hail Satan")))), opt))
 
-	renderOutputCheck(t, branchHelp001, com.SelectedCommand().Parent().(argo.BranchCommand), tree.CommandBranchHelpRenderer())
+	_ = utils.MustReturn(tree.Parse(com, []string{"command", "branch1", "cruise", "-a"}))
+
+	renderBranchOutputCheck(t, branchHelp001, com.SelectedCommand().Parent().(argo.BranchCommand))
 }
 
 func TestCommandBranchHelpRendererFail01(t *testing.T) {
-	com := tree.NewBuilder().
+	opt := argo.DefaultOptions()
+	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(tree.NewBranchBuilder("branch1").
 			WithAliases("branch2", "branch3").
 			WithDescription("A description of this command.").
@@ -118,17 +125,48 @@ func TestCommandBranchHelpRendererFail01(t *testing.T) {
 				WithDescription("A description.").
 				WithLeaf(tree.NewLeafBuilder("dethrone"))).
 			WithLeaf(tree.NewLeafBuilder("666").
-				WithDescription("Hail Satan"))).
-		MustParse([]string{"command", "branch1", "cruise", "-a"})
-	ren := argo.CommandBranchHelpRenderer()
+				WithDescription("Hail Satan"))), opt))
+
+	utils.MustReturn(tree.Parse(com, []string{"command", "branch1", "cruise", "-a"}))
 
 	for p := 1; p <= len(branchHelp001); p++ {
 		wri := FailingWriter{FailAfter: p}
 		buf := bufio.NewWriterSize(&wri, 1)
 
-		err := ren.RenderHelp(com.SelectedCommand().Parent().(argo.CommandBranch), buf)
+		err := tree.RenderBranchHelp(com.SelectedCommand().Parent().(argo.BranchCommand), opt, buf)
 		if err == nil {
 			t.Error("expected err to not be nil but it was")
 		}
+	}
+}
+
+func renderBranchOutputCheck(
+	t *testing.T,
+	pattern string,
+	com argo.BranchCommand,
+) {
+	sb := new(strings.Builder)
+	opts := argo.DefaultOptions()
+
+	utils.Must(tree.RenderBranchHelp(com, opts, sb))
+
+	expected := fmt.Sprintf(pattern, commandName)
+
+	if sb.String() != expected {
+		t.Errorf("expected: '%s'\n\ngot: '%s'", expected, sb.String())
+	}
+}
+
+type FailingWriter struct {
+	FailAfter int
+	current   int
+}
+
+func (f *FailingWriter) Write(p []byte) (n int, err error) {
+	if f.current < f.FailAfter {
+		f.current++
+		return len(p), nil
+	} else {
+		return 0, errors.New("fake error")
 	}
 }

@@ -1,18 +1,29 @@
-package tree
+package flag
 
 import (
 	"fmt"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
-	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
 	"github.com/foxcapades/argonaut/v3/internal/parse"
+	"github.com/foxcapades/argonaut/v3/internal/text"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unmapped *[]string) error {
-	curNode := c.current.(flag.GroupContainer)
+type ContainingInterpreter interface {
+	CurrentAsFlagGroupContainer() GroupContainer
+
+	Next() parse.Element
+
+	FlagHits() *Queue
+
+	HitBoundary()
+
+	ElementQueue() utils.Deque[parse.Element]
+}
+
+func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
 	remainder := element.Data[0]
 
 	for i := 0; i < len(element.Data[0]); i++ {
@@ -23,18 +34,18 @@ func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 		remainder = remainder[1:]
 
 		// Look up the flag in the short flag map
-		f := curNode.FindShortFlag(b)
+		f := c.CurrentAsFlagGroupContainer().FindShortFlag(b)
 
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
-			common.AppendUnrecognizedShortFlag(&c.result, b)
-			*unmapped = append(*unmapped, chars.StrDash+string(b))
+			AppendUnrecognizedShortFlag(result, b)
+			*unmapped = append(*unmapped, text.DashString+string(b))
 			continue
 		}
 
 		f.IncrementHitCount()
-		c.flagHits.Append(f)
+		c.FlagHits().Append(f)
 
 		if !f.HasArgument() {
 			continue
@@ -43,14 +54,14 @@ func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 		arg := f.Argument()
 
 		// If the flag we found requires an argument, eat the rest of the block and
-		// pass it to the flag.Hit method.  Since the block will have been consumed
-		// after this, return here.
+		// pass it to the Hit method.  Since the block will have been consumed after
+		// this, return here.
 		if arg.IsRequired() {
 
 			// If we don't have any more characters in this short block, then we have
 			// to consume the next element as the argument for this flag.
 			if !h {
-				nextElement := c.next()
+				nextElement := c.Next()
 
 				// If the next element is literally the end of the cli args, then we
 				// obviously can't set an argument on this flag.  Tough luck, dude.
@@ -63,7 +74,7 @@ func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 				}
 
 				if nextElement.Type == parse.ElementTypeBoundary {
-					c.boundary = true
+					c.HitBoundary()
 
 					if f.HasArgument() && argument.IsBoolean(arg) {
 						return arg.SetValue("true")
@@ -78,7 +89,7 @@ func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 			}
 
 			if argument.IsBoolean(arg) {
-				possibleNextFlag := curNode.FindShortFlag(remainder[0])
+				possibleNextFlag := c.CurrentAsFlagGroupContainer().FindShortFlag(remainder[0])
 
 				if possibleNextFlag != nil {
 					if err := arg.SetValue("true"); err != nil {
@@ -102,7 +113,7 @@ func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 
 			// test if the next character is a flag itself.  If it is, then we
 			// prioritize the flag over an optional argument.
-			if t := curNode.FindShortFlag(n); t != nil {
+			if t := c.CurrentAsFlagGroupContainer().FindShortFlag(n); t != nil {
 				if argument.IsBoolean(arg) {
 					if err := arg.SetValue("true"); err != nil {
 						return err
@@ -118,21 +129,20 @@ func (c *CommandTreeInterpreter) interpretShortSolo(element *parse.Element, unma
 			return arg.SetValue(remainder)
 		}
 
-		return c.tryConsumeNextElementForOptionalArgument(curNode, arg)
+		return tryConsumeNextElementForOptionalArgument(c, arg)
 	}
 
 	return nil
 }
 
-// interpretShortPair tries to make sense of a pair where the first value is a
+// InterpretShortPair tries to make sense of a pair where the first value is a
 // block of one or more short flags, and the second value is an argument value
 // that was directly attached using an `=` character.
-func (c *CommandTreeInterpreter) interpretShortPair(element *parse.Element, unmapped *[]string) error {
+func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
 	block := element.Data[0]
-	curNode := c.current.(flag.GroupContainer)
 
 	if len(block) == 0 {
-		common.AppendWarning(&c.result, "blank short flag name", argo.UnrecognizedFlag)
+		xerr.AppendWarning(result, "blank short flag name", argo.UnrecognizedFlag)
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -140,8 +150,8 @@ func (c *CommandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 	// If the flag key block is a single character in length, then we can do this
 	// in a simple check.
 	if len(block) == 1 {
-		if f := curNode.FindShortFlag(block[0]); f != nil {
-			c.flagHits.Append(f)
+		if f := c.CurrentAsFlagGroupContainer().FindShortFlag(block[0]); f != nil {
+			c.FlagHits().Append(f)
 			f.IncrementHitCount()
 			if f.HasArgument() {
 				return f.Argument().SetValue(element.Data[1])
@@ -162,16 +172,16 @@ func (c *CommandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 		// current character
 		b := block[0]
 
-		f := curNode.FindShortFlag(b)
+		f := c.CurrentAsFlagGroupContainer().FindShortFlag(b)
 
 		if f == nil {
-			common.AppendUnrecognizedShortFlag(&c.result, b)
-			*unmapped = append(*unmapped, chars.StrDash+block[0:1])
+			AppendUnrecognizedShortFlag(result, b)
+			*unmapped = append(*unmapped, text.DashString+block[0:1])
 			block = block[1:]
 			continue
 		}
 
-		c.flagHits.Append(f)
+		c.FlagHits().Append(f)
 		f.IncrementHitCount()
 
 		if f.HasArgument() && f.Argument().IsRequired() {
@@ -193,7 +203,7 @@ func (c *CommandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 			// If there _is_ a next character, and it happens to be a valid short
 			// flag itself, then hit the current flag and move on to the next
 			// character in the block.
-			if curNode.FindShortFlag(block[1]) != nil {
+			if c.CurrentAsFlagGroupContainer().FindShortFlag(block[1]) != nil {
 				block = block[1:]
 				continue
 			}
@@ -207,7 +217,7 @@ func (c *CommandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 		// Well let's see what we have to say about that.  It may be, if this is the
 		// last character in the block, that it has to have one anyway.
 		if !hasNextChar {
-			common.AppendWarning(&c.result, fmt.Sprintf("flag -%c received an argument it didn't expect", b), argo.UnexpectedFlagArgument)
+			xerr.AppendWarning(result, fmt.Sprintf("flag -%c received an argument it didn't expect", b), argo.UnexpectedFlagArgument)
 			return f.Argument().SetValue(element.Data[1])
 		}
 
@@ -217,17 +227,16 @@ func (c *CommandTreeInterpreter) interpretShortPair(element *parse.Element, unma
 	panic("illegal state")
 }
 
-func (c *CommandTreeInterpreter) interpretLongSolo(element *parse.Element, unmapped *[]string) error {
-	curNode := c.current.(flag.GroupContainer)
-	f := curNode.FindLongFlag(element.Data[0])
+func InterpretLongSolo(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
+	f := c.CurrentAsFlagGroupContainer().FindLongFlag(element.Data[0])
 
 	if f == nil {
-		common.AppendUnrecognizedLongFlag(&c.result, element.Data[0])
+		AppendUnrecognizedLongFlag(result, element.Data[0])
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
 
-	c.flagHits.Append(f)
+	c.FlagHits().Append(f)
 	f.IncrementHitCount()
 
 	if !f.HasArgument() {
@@ -237,40 +246,40 @@ func (c *CommandTreeInterpreter) interpretLongSolo(element *parse.Element, unmap
 	arg := f.Argument()
 
 	if arg.IsRequired() {
-		nextElement := c.next()
+		nextElement := c.Next()
 
 		if nextElement.Type == parse.ElementTypeEnd {
 			return nil
 		}
 
 		if nextElement.Type == parse.ElementTypeBoundary {
-			c.boundary = true
+			c.HitBoundary()
 			return nil
 		}
 
 		return arg.SetValue(nextElement.String())
 	}
 
-	return c.tryConsumeNextElementForOptionalArgument(curNode, arg)
+	return tryConsumeNextElementForOptionalArgument(c, arg)
 }
 
-func (c *CommandTreeInterpreter) interpretLongPair(element *parse.Element, unmapped *[]string) error {
-	targetFlag := c.current.(flag.GroupContainer).FindLongFlag(element.Data[0])
+func InterpretLongPair(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
+	targetFlag := c.CurrentAsFlagGroupContainer().FindLongFlag(element.Data[0])
 
 	if targetFlag == nil {
-		common.AppendUnrecognizedLongFlag(&c.result, element.Data[0])
+		AppendUnrecognizedLongFlag(result, element.Data[0])
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
 
-	c.flagHits.Append(targetFlag)
+	c.FlagHits().Append(targetFlag)
 	targetFlag.IncrementHitCount()
 
 	if targetFlag.HasArgument() {
 		return targetFlag.Argument().SetValue(element.Data[1])
 	} else {
-		common.AppendWarning(
-			&c.result,
+		xerr.AppendWarning(
+			result,
 			fmt.Sprintf("flag --%s received an argument it didn't expect", element.Data[0]),
 			argo.UnexpectedFlagArgument,
 		)
@@ -279,13 +288,13 @@ func (c *CommandTreeInterpreter) interpretLongPair(element *parse.Element, unmap
 	return nil
 }
 
-func (c *CommandTreeInterpreter) tryConsumeNextElementForOptionalArgument(curNode flag.GroupContainer, arg argo.Argument) error {
-	nextElement := c.next()
+func tryConsumeNextElementForOptionalArgument(c ContainingInterpreter, arg argo.Argument) error {
+	nextElement := c.Next()
 
 	switch nextElement.Type {
 
 	case parse.ElementTypeBoundary:
-		c.boundary = true
+		c.HitBoundary()
 		fallthrough
 
 	case parse.ElementTypeEnd:
@@ -295,21 +304,21 @@ func (c *CommandTreeInterpreter) tryConsumeNextElementForOptionalArgument(curNod
 
 	case parse.ElementTypePlainText:
 		if err := arg.SetValue(nextElement.String()); err != nil {
-			c.queue.Offer(nextElement)
+			c.ElementQueue().Offer(nextElement)
 		}
 
 	case parse.ElementTypeShortBlockSolo, parse.ElementTypeShortBlockPair:
-		if len(nextElement.Data[0]) > 0 && curNode.FindShortFlag(nextElement.Data[0][0]) != nil {
-			c.queue.Offer(nextElement)
+		if len(nextElement.Data[0]) > 0 && c.CurrentAsFlagGroupContainer().FindShortFlag(nextElement.Data[0][0]) != nil {
+			c.ElementQueue().Offer(nextElement)
 		} else if err := arg.SetValue(nextElement.String()); err != nil {
-			c.queue.Offer(nextElement)
+			c.ElementQueue().Offer(nextElement)
 		}
 
 	case parse.ElementTypeLongFlagSolo, parse.ElementTypeLongFlagPair:
-		if curNode.FindLongFlag(nextElement.Data[0]) != nil {
-			c.queue.Offer(nextElement)
+		if c.CurrentAsFlagGroupContainer().FindLongFlag(nextElement.Data[0]) != nil {
+			c.ElementQueue().Offer(nextElement)
 		} else if err := arg.SetValue(nextElement.String()); err != nil {
-			c.queue.Offer(nextElement)
+			c.ElementQueue().Offer(nextElement)
 		}
 
 	default:
@@ -317,4 +326,12 @@ func (c *CommandTreeInterpreter) tryConsumeNextElementForOptionalArgument(curNod
 	}
 
 	return nil
+}
+
+func AppendUnrecognizedLongFlag(result *argo.ParseResult, name string) {
+	xerr.AppendWarning(result, fmt.Sprintf("unrecognized long flag --%s", name), argo.UnrecognizedFlag)
+}
+
+func AppendUnrecognizedShortFlag(result *argo.ParseResult, name byte) {
+	xerr.AppendWarning(result, fmt.Sprintf("unrecognized short flag -%c", name), argo.UnrecognizedFlag)
 }

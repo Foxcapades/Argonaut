@@ -1,4 +1,4 @@
-package xarg_test
+package argument_test
 
 import (
 	"reflect"

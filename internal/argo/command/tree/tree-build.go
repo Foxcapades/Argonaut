@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
@@ -17,19 +18,13 @@ func Build(builder argo.TreeCommandBuilder, options argo.Options) (argo.TreeComm
 		errs.AppendError(errors.New("command tree has no subcommands"))
 	}
 
-	var flagGroups []argo.FlagGroupBuilder
-	if !builder.IsHelpDisabled() {
-		common.TryAddHelpFlags(builder, MakeRenderTreeHelpCallback(tree, options), options)
-		flagGroups = common.ConfigureHelpFlags[argo.TreeCommand](builder, RenderHelp, tree)
-	} else {
-		flagGroups = builder.FlagGroups(true)
-	}
+	common.TryAddHelpFlags(builder, MakeRenderTreeHelpCallback(tree, options), options)
 
-	tree.flagGroups = processFlagGroups(flagGroups, errs)
-	tree.commandGroups = processCommandGroups(builder.CommandGroups(true), options, tree, errs)
+	tree.flagGroups = flag.BuildGroups(builder.FlagGroups(true), options, errs)
+	tree.commandGroups = BuildCommandGroups(builder.CommandGroups(true), options, tree, errs)
 
 	commandGroups := make([]argo.CommandGroup, 0, len(builder.CommandGroups(true)))
-	massUniqueCommandNames(builder.CommandGroups(true), errs)
+	UniqueCommandNames(builder.CommandGroups(true), errs)
 	for _, builder := range builder.CommandGroups(true) {
 		if builder.HasSubcommands() {
 			if group, err := BuildGroup(builder, options, tree); err != nil {
@@ -50,7 +45,7 @@ func Build(builder argo.TreeCommandBuilder, options argo.Options) (argo.TreeComm
 	tree.incompleteFn = utils.IfElse(
 		builder.HasIncompleteHandler(),
 		builder.IncompleteHandler(),
-		makeDefaultOnIncompleteHandler[argo.TreeCommand](options),
+		MakeDefaultOnIncompleteHandler[argo.TreeCommand](options),
 	)
 
 	return tree, nil

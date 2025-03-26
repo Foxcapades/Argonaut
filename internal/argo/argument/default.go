@@ -1,83 +1,43 @@
-package xarg
+package argument
 
 import (
 	"errors"
 	"fmt"
 	"reflect"
 
-	"github.com/Foxcapades/Argonaut/internal/unmarshal"
-	"github.com/Foxcapades/Argonaut/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-type BindKind uint8
-
-const (
-	BindKindNone BindKind = iota
-	BindKindPointer
-	BindKindUnmarshaler
-	BindKindFuncPlain
-	BindKindFuncWithErr
-	BindKindUnknown = 254
-	BindKindInvalid = 255
-)
-
-type DefaultKind uint8
-
-const (
-	DefaultKindNone DefaultKind = iota
-	DefaultKindRaw
-	DefaultKindParsed
-	DefaultKindProviderPlain
-	DefaultKindProviderWithErr
-	DefaultKindUnknown = 254
-	DefaultKindInvalid = 255
-)
-
-func DetermineBindKind(bind any, ut reflect.Type) (kind BindKind, err error) {
-	defer func() {
-		if rec := recover(); rec != nil {
-			kind = BindKindInvalid
-			err = errors.New("binding must be a pointer, a consumer func, or an argo.Unmarshaler instance")
-		}
-	}()
-
-	rt := reflect.TypeOf(bind)
-	rk := rt.Kind()
-
-	switch rk {
-	case reflect.Ptr:
-		if unmarshal.IsUnmarshalable(rt, ut) {
-			if rt.Elem().AssignableTo(ut) {
-				return BindKindUnmarshaler, nil
-			}
-
-			return BindKindPointer, nil
-		}
-
-		return BindKindInvalid, errors.New("binding is a pointer to a type that cannot be unmarshalled")
-
-	case reflect.Func:
-		if unmarshal.IsUnmarshalable(rt, ut) {
-			if xreflect.FuncHasReturn(rt) {
-				return BindKindFuncWithErr, nil
-			}
-
-			return BindKindFuncPlain, nil
-		}
-
-		return BindKindInvalid, fmt.Errorf("binding is invalid function type %s", rt)
-
-	default:
-		return BindKindInvalid, fmt.Errorf("invalid binding kind: %s", rk)
-	}
+func NewDefault(value any) Default {
+	return Default{value, argo.DefaultTypeUnknown}
 }
 
-func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
+type Default struct {
+	value any
+	dType argo.ArgumentDefaultType
+}
+
+func (d *Default) Type() argo.ArgumentDefaultType {
+	return d.dType
+}
+
+func (d *Default) Value() any {
+	return d.value
+}
+
+func (d *Default) IsUsable() bool {
+	// This method is only called internally by the default implementations, so we
+	// know that the "Unknown" type isn't a possible value.
+	return !(d.dType == argo.DefaultTypeNone || d.dType == argo.DefaultTypeInvalid)
+}
+
+func DetermineDefaultType(bind, def any) (kind argo.ArgumentDefaultType, err error) {
 	// If we encounter a panic when using the "reflect" package in this function,
 	// then the most likely scenario is that the default is a zero-valued type.
 	defer func() {
 		if rec := recover(); rec != nil {
-			kind = DefaultKindInvalid
+			kind = argo.DefaultTypeInvalid
 			err = errors.New("default must be a value, a raw string, a provider of the same time as the binding, or a value of the same type as the binding")
 		}
 	}()
@@ -98,7 +58,7 @@ func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
 		// then we have a raw value binding which needs to be parsed before it may
 		// be set to the binding pointer.
 		if xreflect.IsString(dt) && !xreflect.IsString(bt) {
-			kind = DefaultKindRaw
+			kind = argo.DefaultTypeRaw
 			err = nil
 			return
 		}
@@ -107,14 +67,14 @@ func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
 		// type, then we are in an invalid state because we will get a panic if we
 		// attempt to set the default value to the binding pointer.
 		if !dt.AssignableTo(bt) {
-			kind = DefaultKindInvalid
+			kind = argo.DefaultTypeInvalid
 			err = fmt.Errorf("expected default value of type %s but got %s instead", bt.Kind(), dt.Kind())
 			return
 		}
 
 		// If we've made it here, then the default type is compatible with the
 		// binding type.
-		kind = DefaultKindParsed
+		kind = argo.DefaultTypeParsed
 		err = nil
 		return
 	}
@@ -123,13 +83,13 @@ func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
 	if xreflect.IsBasicSlice(dt) {
 		// And it is assignable to the binding value
 		if dt.AssignableTo(bt) {
-			kind = DefaultKindParsed
+			kind = argo.DefaultTypeParsed
 			err = nil
 			return
 		}
 
 		// If it is not assignable then it is invalid.
-		kind = DefaultKindInvalid
+		kind = argo.DefaultTypeInvalid
 
 		// Try and report a helpful error about the situation
 		if xreflect.IsSlice(bt) {
@@ -146,13 +106,13 @@ func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
 		// And the binding type is also a basic map, then we can stop here as we
 		// know they are compatible.
 		if dt.AssignableTo(bt) {
-			kind = DefaultKindParsed
+			kind = argo.DefaultTypeParsed
 			err = nil
 			return
 		}
 
 		// If the binding type is not a matching basic map, then we fail.
-		kind = DefaultKindInvalid
+		kind = argo.DefaultTypeInvalid
 		err = fmt.Errorf("expected default value to be of type %s but got a value of type %s instead", bt, dt)
 	}
 
@@ -160,7 +120,7 @@ func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
 	if ResemblesProviderFunction(dt) {
 		// But the first out param is not compatible with the binding type
 		if !dt.Out(0).AssignableTo(bt) {
-			kind = DefaultKindInvalid
+			kind = argo.DefaultTypeInvalid
 			err = fmt.Errorf("default value provider does not returns type %d which is incompatible with binding type %s", dt, bt)
 			return
 		}
@@ -168,22 +128,22 @@ func DetermineDefaultKind(bind, def any) (kind DefaultKind, err error) {
 		// But the second out param is not compatible with error
 		if dt.NumOut() == 2 {
 			if !dt.Out(1).AssignableTo(xreflect.ErrorType) {
-				kind = DefaultKindInvalid
+				kind = argo.DefaultTypeInvalid
 				err = fmt.Errorf("default value provider does not return error as its second return value")
 				return
 			}
 
-			kind = DefaultKindProviderWithErr
+			kind = argo.DefaultTypeProviderWithErr
 			err = nil
 			return
 		}
 
-		kind = DefaultKindProviderPlain
+		kind = argo.DefaultTypeProviderPlain
 		err = nil
 		return
 	}
 
-	kind = DefaultKindInvalid
+	kind = argo.DefaultTypeInvalid
 	err = fmt.Errorf("invalid default value type %s", dt)
 	return
 }

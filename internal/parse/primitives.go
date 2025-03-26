@@ -2,9 +2,10 @@ package parse
 
 import (
 	"fmt"
-	"github.com/foxcapades/argonaut/v3/pkg/argo"
 	"strconv"
 	"strings"
+
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func Bool(raw string) (bool, error) {

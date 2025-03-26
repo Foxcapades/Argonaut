@@ -3,11 +3,13 @@ package tree
 import (
 	"bufio"
 	"io"
+	"os"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	"github.com/foxcapades/argonaut/v3/internal/chars"
+	"github.com/foxcapades/argonaut/v3/internal/render"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -29,16 +31,23 @@ func RenderLeafHelp(leaf argo.LeafCommand, options argo.Options, writer io.Write
 	return renderCommandLeaf(leaf, options, buf)
 }
 
+func MakeRenderLeafHelpCallback(leaf argo.LeafCommand, options argo.Options) argo.FlagCallback {
+	return func(flag argo.Flag) {
+		utils.Must(RenderLeafHelp(leaf, options, os.Stdout))
+		os.Exit(0)
+	}
+}
+
 func renderCommandLeaf(leaf argo.LeafCommand, options argo.Options, out *bufio.Writer) error {
 	if err := renderCommandLeafUsage(leaf, out); err != nil {
 		return err
 	}
 
-	if err := out.WriteByte(chars.CharLF); err != nil {
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
-	if err := tryRenderAliases(leaf, out); err != nil {
+	if err := common.TryRenderAliases(leaf, out); err != nil {
 		return err
 	}
 
@@ -59,11 +68,11 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 
 	// If the command has a description, append it.
 	if com.HasDescription() {
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := chars.NewDescriptionFormatter(chars.DescriptionPadding[0], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth, out)
 		if err := formatter.Format(com.Description()); err != nil {
 			return err
 		}
@@ -88,12 +97,12 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 
 	if com.HasFlagGroups() {
 		if com.HasDescription() {
-			if err := out.WriteByte(chars.CharLF); err != nil {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 		}
 
-		if err := out.WriteByte(chars.CharLF); err != nil {
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 		if err := flag.RenderGroups(com.FlagGroups(), options, 0, out); err != nil {
@@ -104,7 +113,7 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 	inherited := flag.FlattenInheritance(com)
 	if len(inherited) > 0 {
 		if com.HasFlagGroups() {
-			if err := out.WriteByte(chars.CharLF); err != nil {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 		}
@@ -114,7 +123,7 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 		}
 
 		for i := range inherited {
-			if err := out.WriteByte(chars.CharLF); err != nil {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 			if err := flag.RenderInherited(&inherited[i], options, 1, out); err != nil {
@@ -124,10 +133,10 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 	}
 
 	if writeArgs {
-		if _, err := out.WriteString(chars.ParagraphBreak); err != nil {
+		if _, err := out.WriteString(render.ParagraphBreak); err != nil {
 			return err
 		}
-		if _, err := out.WriteString(chars.HeaderPadding[0]); err != nil {
+		if _, err := out.WriteString(render.HeaderPadding[0]); err != nil {
 			return err
 		}
 		if _, err := out.WriteString(common.CommandRenderArgs); err != nil {
@@ -138,11 +147,11 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 
 		for i, arg := range com.Arguments() {
 			if i > 0 {
-				if err := out.WriteByte(chars.CharLF); err != nil {
+				if err := out.WriteByte(text.LineFeedByte); err != nil {
 					return err
 				}
 			}
-			if err := out.WriteByte(chars.CharLF); err != nil {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
 				return err
 			}
 			if multiArgs {
@@ -157,5 +166,5 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *
 		}
 	}
 
-	return out.WriteByte(chars.CharLF)
+	return out.WriteByte(text.LineFeedByte)
 }

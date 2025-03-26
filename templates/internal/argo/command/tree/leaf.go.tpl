@@ -34,11 +34,11 @@ func (i *Leaf) AppendUnmappedInput(input string) {
   i.unmapped = append(i.unmapped, input)
 }
 
-func (i *Leaf) HasUnmappedLabel() bool {
+func (i *Leaf) HasUnmappedInputLabel() bool {
   return len(i.unmappedLabel) > 0
 }
 
-func (i *Leaf) GetUnmappedLabel() string {
+func (i *Leaf) UnmappedInputLabel() string {
   return i.unmappedLabel
 }
 
