@@ -2,22 +2,21 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
-	cli "github.com/Foxcapades/Argonaut"
+	"github.com/foxcapades/argonaut/v3"
 )
 
 type Inputs struct {
 	Strings       []string
 	IntToBool     map[int]bool
-	StringToBytes map[string]*[]byte
+	StringToBytes map[string][]byte
 }
 
 func main() {
 	var conf Inputs
 
-	com := cli.Command().
+	com := cli.MustBuildCommand(cli.Command().
 		WithFlag(cli.Flag().
 			WithLongForm("string-slice").
 			WithShortForm('s').
@@ -29,12 +28,11 @@ func main() {
 		WithFlag(cli.Flag().
 			WithLongForm("string-bytes").
 			WithShortForm('b').
-			WithBinding(&conf.StringToBytes, true)).
-		MustParse(os.Args)
+			WithBinding(&conf.StringToBytes, true)))
 
-	fmt.Println(com.UnmappedInputs())
+	_ = cli.MustParse(com)
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	enc.Encode(conf)
+	_ = enc.Encode(conf)
 }

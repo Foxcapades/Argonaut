@@ -39,35 +39,15 @@ func renderCommandTree(tree argo.TreeCommand, options argo.Options, out *bufio.W
 		return err
 	}
 
-	hd := tree.HasDescription()
-	hf := tree.HasFlagGroups()
-
-	if hd {
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth, out)
-		if err := formatter.Format(tree.Description()); err != nil {
-			return err
-		}
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
-	}
-
-	if hf {
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
-		if err := flag.RenderGroups(tree.FlagGroups(), options, 0, out); err != nil {
-			return err
-		}
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
-	}
-
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
+	if err := TryRenderDescription(tree, options, out, false); err != nil {
 		return err
 	}
+
 	if err := RenderCommandGroups(tree.CommandGroups(), options, 0, out); err != nil {
+		return err
+	}
+
+	if err := TryRenderFlags(tree, options, out); err != nil {
 		return err
 	}
 

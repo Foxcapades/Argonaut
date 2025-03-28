@@ -2,12 +2,12 @@
 :source-highlighter: pygments
 :pygments-style: monokai
 
-CLI Example using the built in handling for complex types.
+CLI Example using the built-in handling for complex types.
 
 .Try With
 [source, bash-session]
 ----
-go run examples/complex-type/main.go \
+go run main.go \
   -s foo \
   -sbar \
   --string-slice=fizz \

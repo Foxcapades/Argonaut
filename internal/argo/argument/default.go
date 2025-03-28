@@ -114,6 +114,8 @@ func DetermineDefaultType(bind, def any) (kind argo.ArgumentDefaultType, err err
 		// If the binding type is not a matching basic map, then we fail.
 		kind = argo.DefaultTypeInvalid
 		err = fmt.Errorf("expected default value to be of type %s but got a value of type %s instead", bt, dt)
+
+		return
 	}
 
 	// If the default value resembles a provider function
@@ -149,7 +151,7 @@ func DetermineDefaultType(bind, def any) (kind argo.ArgumentDefaultType, err err
 }
 
 func ResemblesProviderFunction(dt reflect.Type) bool {
-	if dt.NumIn() != 0 {
+	if dt.Kind() != reflect.Func || dt.NumIn() != 0 {
 		return false
 	}
 

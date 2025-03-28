@@ -9,8 +9,8 @@ import (
 type MultiError interface {
 	error
 
-	// Errors returns a slice of all the errors collected into this MultiError
-	// instance.
+	// Errors returns a slice of all the distinct errors collected into this
+	// MultiError instance.
 	Errors() []error
 
 	// AppendError appends the given error to this MultiError.  If the given error

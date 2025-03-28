@@ -7,9 +7,6 @@ package argo
 // Command represents a singular, non-nested command which accepts flags and
 // arguments.
 type Command interface {
-	// Name returns the name of the command.
-	Name() string
-
 	{{ template "CommandCommon" $vars }}
 	{{- template "CommandEnd" $vars }}
 }

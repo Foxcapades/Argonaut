@@ -55,49 +55,23 @@ func renderCommandBranch(branch argo.BranchCommand, options argo.Options, out *b
 		return err
 	}
 
-	if err := tryRenderAliases(branch, out); err != nil {
+	if err := TryRenderAliases(branch, out); err != nil {
 		return err
 	}
 
-	if err := tryRenderDescription(branch, options, out); err != nil {
-		return err
-	}
-
-	if err := tryRenderFlags(branch, options, out); err != nil {
-		return err
-	}
-
-	inherited := flag.FlattenInheritance(branch)
-
-	if len(inherited) > 0 {
-		if _, err := out.WriteString("\nInherited Flags"); err != nil {
-			return err
-		}
-
-		for i := range inherited {
-			if i > 0 && !inherited[i-1].Flag.HasDescription() {
-				if err := out.WriteByte(text.LineFeedByte); err != nil {
-					return err
-				}
-			}
-			if err := out.WriteByte(text.LineFeedByte); err != nil {
-				return err
-			}
-			if err := flag.RenderInherited(&inherited[i], options, 1, out); err != nil {
-				return err
-			}
-		}
-
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
-	}
-
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
+	if err := TryRenderDescription(branch, options, out, branch.HasAliases()); err != nil {
 		return err
 	}
 
 	if err := RenderCommandGroups(branch.CommandGroups(), options, 0, out); err != nil {
+		return err
+	}
+
+	if err := TryRenderFlags(branch, options, out); err != nil {
+		return err
+	}
+
+	if err := TryRenderInheritedFlags(branch, options, out); err != nil {
 		return err
 	}
 
@@ -112,7 +86,7 @@ func renderCommandBranchUsage(node argo.BranchCommand, out *bufio.Writer) error 
 	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
 		return err
 	}
-	if err := renderSubCommandPath(node, out); err != nil {
+	if err := RenderSubCommandPath(node, out); err != nil {
 		return err
 	}
 

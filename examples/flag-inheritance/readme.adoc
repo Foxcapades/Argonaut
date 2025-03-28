@@ -1,0 +1,272 @@
+= Flag Inheritance
+:source-highlighter: highlightjs
+
+Demonstration of flag inheritance in rendered help text.
+
+== Flag Inheritance Enabled
+
+.Show help for the tree root
+[source, bash]
+----
+go run enabled.go --help
+----
+
+[source]
+----
+Usage:
+  enabled [options] <command>
+
+Commands
+  foo
+
+Flags
+  -a | --apple
+      The apple flag.
+  -b | --banana
+      The first banana flag.
+  -c | --cantaloupe
+      The cantaloupe flag.
+  -d | --durian
+      The first durian flag.
+  -h | --help
+      Prints this help text.
+----
+
+.Show help for the first level subcommand
+[source, bash]
+----
+go run enabled.go foo --help
+----
+
+[source]
+----
+Usage:
+  enabled foo [options] <command>
+
+Commands
+  bar
+
+Flags
+  -a | --acorn
+      The acorn flag.
+  -n | --banana
+      The second banana flag.
+  -h | --help
+      Prints this help text.
+
+Inherited Flags
+  --apple
+      The apple flag.
+  -b
+      The first banana flag.
+  -c | --cantaloupe
+      The cantaloupe flag.
+  -d | --durian
+      The first durian flag.
+----
+
+.Show help for the leaf subcommand
+[source, bash]
+----
+go run enabled.go foo bar --help
+----
+
+[source]
+----
+Usage:
+  enabled foo bar [options]
+
+Flags
+  -c | --cabbage
+      The cabbage flag.
+  -u | --durian
+      The second durian flag.
+  -h | --help
+      Prints this help text.
+
+Inherited Flags
+  -a | --acorn
+      The acorn flag.
+  -n | --banana
+      The second banana flag.
+  --apple
+      The apple flag.
+  -b
+      The first banana flag.
+  --cantaloupe
+      The cantaloupe flag.
+  -d
+      The first durian flag.
+----
+
+
+== Flag Inheritance Disabled
+
+.Show help for the tree root
+[source, bash]
+----
+go run disabled.go --help
+----
+
+[source]
+----
+Usage:
+  disabled [options] <command>
+
+Commands
+  foo
+
+Flags
+  -a | --apple
+      The apple flag.
+  -b | --banana
+      The first banana flag.
+  -c | --cantaloupe
+      The cantaloupe flag.
+  -d | --durian
+      The first durian flag.
+  -h | --help
+      Prints this help text.
+----
+
+.Show help for the first level subcommand
+[source, bash]
+----
+go run disabled.go foo --help
+----
+
+[source]
+----
+Usage:
+  disabled foo [options] <command>
+
+Commands
+  bar
+
+Flags
+  -a | --acorn
+      The acorn flag.
+  -n | --banana
+      The second banana flag.
+  -h | --help
+      Prints this help text.
+----
+
+.Show help for the leaf subcommand
+[source, bash]
+----
+go run disabled.go foo bar --help
+----
+
+[source]
+----
+Usage:
+  disabled foo bar [options]
+
+Flags
+  -c | --cabbage
+      The cabbage flag.
+  -u | --durian
+      The second durian flag.
+  -h | --help
+      Prints this help text.
+----
+
+
+== Flag Inheritance Grouped
+
+.Show help for the tree root
+[source, bash]
+----
+go run grouped.go --help
+----
+
+[source]
+----
+Usage:
+  grouped [options] <command>
+
+Commands
+  foo
+
+Flags
+  -a | --apple
+      The apple flag.
+  -b | --banana
+      The first banana flag.
+  -c | --cantaloupe
+      The cantaloupe flag.
+  -d | --durian
+      The first durian flag.
+  -h | --help
+      Prints this help text.
+----
+
+.Show help for the first level subcommand
+[source, bash]
+----
+go run grouped.go foo --help
+----
+
+[source]
+----
+Usage:
+  grouped foo [options] <command>
+
+Commands
+  bar
+
+Flags
+  -a | --acorn
+      The acorn flag.
+  -n | --banana
+      The second banana flag.
+  -h | --help
+      Prints this help text.
+
+Flags Inherited from Command Root
+  --apple
+      The apple flag.
+  -b
+      The first banana flag.
+  -c | --cantaloupe
+      The cantaloupe flag.
+  -d | --durian
+      The first durian flag.
+----
+
+.Show help for the leaf subcommand
+[source, bash]
+----
+go run grouped.go foo bar --help
+----
+
+[source]
+----
+Usage:
+  grouped foo bar [options]
+
+Flags
+  -c | --cabbage
+      The cabbage flag.
+  -u | --durian
+      The second durian flag.
+  -h | --help
+      Prints this help text.
+
+Flags Inherited from Parent Command "foo"
+  -a | --acorn
+      The acorn flag.
+  -n | --banana
+      The second banana flag.
+
+Flags Inherited from Command Root
+  --apple
+      The apple flag.
+  -b
+      The first banana flag.
+  --cantaloupe
+      The cantaloupe flag.
+  -d
+      The first durian flag.
+----

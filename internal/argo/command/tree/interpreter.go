@@ -37,6 +37,8 @@ type CommandTreeInterpreter struct {
 	options  argo.Options
 
 	tree     argo.TreeCommand
+
+	// branches keeps track of the branch path that was followed in the CLI call.
 	branches []argo.BranchCommand
 	leaf     argo.LeafCommand
 	queue    utils.Deque[parse.Element]
@@ -103,7 +105,7 @@ FOR:
 
 		switch element.Type {
 		case parse.ElementTypePlainText:
-			if unmapped, err = c.handlePlainText(element, argumentStream, &unmapped, errs); err != nil {
+			if unmapped, err = c.handlePlainText(element, argumentStream, unmapped, errs); err != nil {
 				return c.result, err
 			}
 
@@ -142,7 +144,7 @@ FOR:
 		}
 	}
 
-	var onIncomplete argo.IncompleteCommandHandler[any]
+	var onIncomplete argo.IncompleteCommandHandler[argo.ParentNode]
 
 	// If the last reached node was a command leaf.
 	if c.haveLeaf() {
@@ -154,15 +156,15 @@ FOR:
 		argument.CheckRequired(c.leaf.Arguments(), errs)
 	} else {
 		if parent, ok := c.current.(argo.BranchCommandBuilder); ok {
-			onIncomplete = parent.IncompleteHandler()
+			onIncomplete = utils.Cast[argo.IncompleteCommandHandler[argo.ParentNode]](parent.IncompleteHandler())
 		} else if parent, ok := c.current.(argo.TreeCommandBuilder); ok {
-			onIncomplete = parent.IncompleteHandler()
+			onIncomplete = utils.Cast[argo.IncompleteCommandHandler[argo.ParentNode]](parent.IncompleteHandler())
 		} else {
 			errs.AppendError(fmt.Errorf("command leaf was not reached"))
 		}
 	}
 
-	c.processFlags(errs)
+	c.processFlags(c.current.(flag.GroupContainer), errs)
 
 	if onIncomplete != nil {
 		onIncomplete(c.current.(argo.ParentNode))

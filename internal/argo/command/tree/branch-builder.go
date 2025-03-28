@@ -180,9 +180,9 @@ func (i *CommandBranchBuilder) hasDefaultFlagGroup() bool {
 	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
-func (i *CommandBranchBuilder) WithFlag(f argo.FlagBuilder) argo.BranchCommandBuilder {
+func (i *CommandBranchBuilder) WithFlag(fb argo.FlagBuilder) argo.BranchCommandBuilder {
 	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
-	i.flagGroups[0].WithFlag(f)
+	i.flagGroups[0].WithFlag(fb)
 	return i
 }
 

@@ -4,21 +4,21 @@ import (
 	"encoding/json"
 	"os"
 
-	cli "github.com/Foxcapades/Argonaut"
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	cli "github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/pkg/argotype"
 )
 
 type Demo struct {
 	SliceVal []string
 	IntVal   int
 	FloatVal float32
-	HexVal   argo.Hex64
+	HexVal   argotype.Hex64
 }
 
 func main() {
 	var demo Demo
 
-	cli.Command().
+	cli.MustParse(cli.Command().
 		// Normal default
 		WithFlag(cli.Flag().
 			WithLongForm("int").
@@ -39,16 +39,15 @@ func main() {
 			WithArgument(cli.Argument().
 				WithBinding(&demo.HexVal).
 				Require().
-				WithDefault(func() (argo.Hex64, error) { return argo.Hex64(17), nil }))).
+				WithDefault(func() (argotype.Hex64, error) { return argotype.Hex64(17), nil }))).
 		// Default from string (behaves like CLI)
 		WithFlag(cli.Flag().
 			WithLongForm("slice").
 			WithArgument(cli.Argument().
 				WithBinding(&demo.SliceVal).
-				WithDefault("hello"))).
-		MustParse(os.Args)
+				WithDefault("hello"))))
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	enc.Encode(demo)
+	_ = enc.Encode(demo)
 }

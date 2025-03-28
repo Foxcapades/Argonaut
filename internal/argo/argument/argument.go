@@ -54,7 +54,7 @@ func (a *argument) HasDefault() bool {
 }
 
 func (a *argument) Default() any {
-	return a.defVal
+	return a.defVal.value
 }
 
 func (a *argument) WasHit() bool {
@@ -88,7 +88,7 @@ func (a *argument) SetToDefault() error {
 	rootBinding := unmarshal.GetRootValue(reflect.ValueOf(a.binding.raw))
 
 	if defType.Kind() == reflect.Func {
-		defFn := reflect.ValueOf(a.defVal)
+		defFn := reflect.ValueOf(a.defVal.value)
 
 		switch defType.NumOut() {
 

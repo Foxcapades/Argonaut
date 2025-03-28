@@ -36,6 +36,10 @@ func (q *Queue) Iterator() iter.Seq[argo.Flag] {
 	}
 }
 
+func (q *Queue) Size() int {
+	return len(q.ordered)
+}
+
 func (q *Queue) Clear() {
 	*q = NewQueue()
 }

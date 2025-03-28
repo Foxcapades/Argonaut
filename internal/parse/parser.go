@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/foxcapades/argonaut/v3/internal/emit"
-	"github.com/foxcapades/argonaut/v3/internal/utils/chars"
+	"github.com/foxcapades/argonaut/v3/internal/text"
 )
 
 type state uint8

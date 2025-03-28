@@ -7,8 +7,8 @@ func EnsureDefaultGroup(groups []argo.FlagGroupBuilder) []argo.FlagGroupBuilder 
 		return append(make([]argo.FlagGroupBuilder, 0, 2), NewDefaultGroupBuilder())
 	}
 
-	if IsDefaultGroup(groups[0]) {
-		return append(append(make([]argo.FlagGroupBuilder, 0, len(groups)+2), NewDefaultGroupBuilder()), groups...)
+	if !IsDefaultGroup(groups[0]) {
+		return append(append(make([]argo.FlagGroupBuilder, 0, len(groups)+1), NewDefaultGroupBuilder()), groups...)
 	}
 
 	return groups

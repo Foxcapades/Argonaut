@@ -111,7 +111,12 @@ func RenderCommandBackHalf(com CallEndNode, options argo.Options, out *bufio.Wri
 	return out.WriteByte(text.LineFeedByte)
 }
 
-func RenderCommandUsageBackHalf(com argo.Command, out *bufio.Writer) error {
+type CommandBackHalf interface {
+	flag.GroupContainer
+	argument.Container
+}
+
+func RenderCommandUsageLineBackHalf(com CommandBackHalf, out *bufio.Writer) error {
 	// If the command has flag groups
 	if com.HasFlagGroups() {
 		hasOptionalFlags := false

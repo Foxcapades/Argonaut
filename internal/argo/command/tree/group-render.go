@@ -10,6 +10,14 @@ import (
 )
 
 func RenderCommandGroups(groups []argo.CommandGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {
+	if len(groups) == 0 {
+		return nil
+	}
+
+	if err := sb.WriteByte(text.LineFeedByte); err != nil {
+		return err
+	}
+
 	for i, group := range groups {
 		if i > 0 {
 			if _, err := sb.WriteString(render.ParagraphBreak); err != nil {
@@ -22,7 +30,7 @@ func RenderCommandGroups(groups []argo.CommandGroup, options argo.Options, paddi
 		}
 	}
 
-	return nil
+	return sb.WriteByte(text.LineFeedByte)
 }
 
 func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {

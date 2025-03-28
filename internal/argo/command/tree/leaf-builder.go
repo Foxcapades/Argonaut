@@ -4,7 +4,6 @@ package tree
 //   This is a generated file!  Edits here will be lost!
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -111,14 +110,14 @@ func (i *LeafCommandBuilder) hasDefaultFlagGroup() bool {
 	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
-func (i *LeafCommandBuilder) WithFlag(flag argo.FlagBuilder) argo.LeafCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
-	i.flagGroups[0].WithFlag(flag)
+func (i *LeafCommandBuilder) WithFlag(fb argo.FlagBuilder) argo.LeafCommandBuilder {
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
+	i.flagGroups[0].WithFlag(fb)
 	return i
 }
 
 func (i *LeafCommandBuilder) WithFlags(flags ...argo.FlagBuilder) argo.LeafCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
 	i.flagGroups[0].WithFlags(flags...)
 	return i
 }

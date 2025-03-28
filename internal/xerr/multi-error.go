@@ -39,12 +39,17 @@ func (m *multiError) Errors() []error {
 
 func (m *multiError) AppendError(err error) {
 	var e argo.MultiError
+
 	if errors.As(err, &e) {
 		for _, err := range e.Errors() {
 			m.AppendError(err)
 		}
 	} else {
-		m.errs = append(m.errs, err)
-		m.strings[err.Error()] = true
+		txt := err.Error()
+
+		if !m.strings[txt] {
+			m.errs = append(m.errs, err)
+			m.strings[txt] = true
+		}
 	}
 }

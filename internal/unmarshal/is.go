@@ -3,6 +3,7 @@ package unmarshal
 import (
 	"reflect"
 
+	"github.com/foxcapades/argonaut/v3/internal/log"
 	"github.com/foxcapades/argonaut/v3/internal/xreflect"
 )
 
@@ -24,53 +25,59 @@ func IsUnmarshalable(vt reflect.Type) (out bool) {
 		}
 	}()
 
+	log.DebugLn1("IsUnmarshalable(vt = %s)", vt)
+
 	// If it's a pointer, then check that it's something that can actually validly
 	// be a pointer.
 	if vt.Kind() == reflect.Ptr {
 		if xreflect.IsBasicPointer(vt) || IsUnmarshaler(vt) || IsUnmarshaler(vt.Elem()) {
+			log.DebugLn("  bail early for easy kind check")
 			return true
 		}
 
 		vt = xreflect.RootType(vt)
+		log.DebugLn1("  root type is %s", vt)
 	}
 
 	// If it's not a pointer, then maybe it's an Unmarshaler instance.
 	if IsUnmarshaler(vt) {
-		out = true
-		return
+		log.DebugLn("  root type is unmarshalable")
+		return true
 	}
 
 	// If it's not a pointer or unmarshaler, maybe it's a consumer func
 	if IsConsumerFunc(vt) {
-		out = true
-		return
+		log.DebugLn("  root type is consumer func")
+		return true
 	}
 
 	if xreflect.IsBasicMap(vt) {
-		out = true
-		return
+		log.DebugLn("  root type is is basic map")
+		return true
 	}
 
 	if xreflect.IsBasicSlice(vt) {
-		out = true
-		return
+		log.DebugLn("  root type is basic slice")
+		return true
 	}
 
 	if IsUnmarshalerMap(vt) {
+		log.DebugLn("  root type is unmarshaler map")
 		return true
 	}
 
 	if IsUnmarshalerSlice(vt) {
-		out = true
-		return
-	}
-
-	if IsUnmarshalerSliceMap(vt) {
+		log.DebugLn("  root type is unmarshaler slice")
 		return true
 	}
 
-	out = false
-	return
+	if IsUnmarshalerSliceMap(vt) {
+		log.DebugLn("  root type is unmarshaler slice map")
+		return true
+	}
+
+	log.DebugLn("  !!root type is invalid")
+	return false
 }
 
 func IsUnmarshaler(t reflect.Type) bool {

@@ -76,7 +76,7 @@ func validateLongForm(f string) error {
 	}
 
 	for i := 1; i < len(f); i++ {
-		if !text.IsAlphanumeric(f[i]) || f[i] == text.DashByte || f[i] == text.UnderscoreByte {
+		if !(text.IsWord(f[i]) || f[i] == text.DashByte) {
 			return errors.New("long-form flags must only contain alphanumeric characters, dashes, and/or underscores")
 		}
 	}

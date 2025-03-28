@@ -124,15 +124,14 @@ func (v valueUnmarshaler) unmarshalSlice(
 		}
 	}
 
-	scanner := props.Scanner(raw)
-
-	for scanner.HasNext() {
-		if tmp, err := v.unmarshalValue(val.Type().Elem(), scanner.Next()); err != nil {
+	for next := range props.Scanner(raw) {
+		if tmp, err := v.unmarshalValue(val.Type().Elem(), next); err != nil {
 			return err
 		} else {
 			val.Set(reflect.Append(val, tmp))
 		}
 	}
+
 	return nil
 }
 

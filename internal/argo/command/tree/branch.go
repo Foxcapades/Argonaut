@@ -151,6 +151,6 @@ func (i *Branch) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *Branch) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeCommand] {
+func (i *Branch) IncompleteHandler() argo.IncompleteCommandHandler[argo.BranchCommand] {
 	return i.incompleteFn
 }

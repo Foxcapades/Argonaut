@@ -1,3 +1,4 @@
+{{- /* gotype: github.com/foxcapades/argonaut/v3/scripts/generate/data.InterfaceFields */ -}}
 package argo
 
 import (

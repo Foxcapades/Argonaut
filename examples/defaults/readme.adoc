@@ -1,0 +1,50 @@
+= Argument Defaults Example
+:source-highlighter: highlightjs
+
+CLI example that provides default values for the configured arguments.
+
+.Try With No Inputs
+[source, bash]
+----
+go run main.go
+----
+
+.Expected Output
+[source, json]
+----
+{
+  "SliceVal": [
+    "hello"
+  ],
+  "IntVal": 4,
+  "FloatVal": 7.3,
+  "HexVal": 17
+}
+----
+
+
+.Try With Inputs
+[source, bash]
+----
+# Execute providing no values
+go run main.go \
+  --int 6 \
+  --float 3.2 \
+  --hex 0x56a \
+  --slice hello \
+  --slice world
+----
+
+.Expected Output
+[source, json]
+----
+{
+  "SliceVal": [
+    "hello",
+    "world"
+  ],
+  "IntVal": 6,
+  "FloatVal": 3.2,
+  "HexVal": 1386
+}
+----

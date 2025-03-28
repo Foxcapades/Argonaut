@@ -22,13 +22,6 @@ func BuildGroup(g argo.FlagGroupBuilder, o argo.Options) (argo.FlagGroup, error)
 		errs.AppendError(errors.New("flag group names must not be blank"))
 	}
 
-	var name string
-	if g.Name() == DefaultFlagGroupName {
-		name = o.MetaFlagGroupName
-	} else {
-		name = g.Name()
-	}
-
 	builders := g.Flags()
 
 	for i := range builders {
@@ -44,7 +37,7 @@ func BuildGroup(g argo.FlagGroupBuilder, o argo.Options) (argo.FlagGroup, error)
 	}
 
 	return &Group{
-		name:  name,
+		name:  g.Name(),
 		desc:  g.Description(),
 		flags: flags,
 	}, nil

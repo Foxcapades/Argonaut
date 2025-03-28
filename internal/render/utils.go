@@ -92,7 +92,7 @@ type DescriptionFormatter struct {
 
 func (d *DescriptionFormatter) writeLineFeed() error {
 	d.currentLineWidth = 0
-	return d.writer.WriteByte(LineFeed)
+	return d.writer.WriteByte(text.LineFeedByte)
 }
 
 func (d *DescriptionFormatter) writePadding() error {
@@ -307,7 +307,7 @@ func (d *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 		}
 
 		// Write out our hyphen
-		if err := d.writer.WriteByte(Dash); err != nil {
+		if err := d.writer.WriteByte(text.DashByte); err != nil {
 			return err
 		}
 
@@ -360,7 +360,7 @@ func (d *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 				return err
 			}
 			// Write out the hyphen
-			if err := d.writer.WriteByte(Dash); err != nil {
+			if err := d.writer.WriteByte(text.DashByte); err != nil {
 				return err
 			}
 
@@ -448,9 +448,9 @@ func (b *breakScanner) next() segment {
 	}
 
 	// If the next character is a CR...
-	if b.text[b.pos] == CarriageReturn {
+	if b.text[b.pos] == text.CarriageReturnByte {
 		// and there is a following LF...
-		if b.hasNext() && b.text[b.pos+1] == LineFeed {
+		if b.hasNext() && b.text[b.pos+1] == text.LineFeedByte {
 			// bump up the pos by 2
 			b.pos += 2
 		} else {
@@ -458,14 +458,14 @@ func (b *breakScanner) next() segment {
 			b.pos++
 		}
 
-		return segment{segmentTypeBreak, string(LineFeed)}
+		return segment{segmentTypeBreak, text.LineFeedString}
 	}
 
 	// If the next character is an LF
-	if b.text[b.pos] == LineFeed {
+	if b.text[b.pos] == text.LineFeedByte {
 		b.pos++
 
-		return segment{segmentTypeLineBreak, string(LineFeed)}
+		return segment{segmentTypeLineBreak, text.LineFeedString}
 	}
 
 	b.pos++

@@ -1,7 +1,6 @@
 package parse
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"

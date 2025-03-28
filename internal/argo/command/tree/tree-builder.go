@@ -4,7 +4,6 @@ package tree
 //   This is a generated file!  Edits here will be lost!
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -15,7 +14,7 @@ func NewBuilder() argo.TreeCommandBuilder {
 
 type TreeCommandBuilder struct {
 	comGroups    []argo.CommandGroupBuilder
-	incompleteFn argo.IncompleteCommandHandler[argo.BranchCommand]
+	incompleteFn argo.IncompleteCommandHandler[argo.TreeCommand]
 	disableHelp  bool
 	description  string
 	flagGroups   []argo.FlagGroupBuilder
@@ -84,7 +83,7 @@ func (i *TreeCommandBuilder) HasSubcommands() bool {
 	return false
 }
 
-func (i *TreeCommandBuilder) WithIncompleteHandler(handler argo.IncompleteCommandHandler[argo.BranchCommand]) argo.TreeCommandBuilder {
+func (i *TreeCommandBuilder) WithIncompleteHandler(handler argo.IncompleteCommandHandler[argo.TreeCommand]) argo.TreeCommandBuilder {
 	i.incompleteFn = handler
 	return i
 }
@@ -93,7 +92,7 @@ func (i *TreeCommandBuilder) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *TreeCommandBuilder) IncompleteHandler() argo.IncompleteCommandHandler[argo.BranchCommand] {
+func (i *TreeCommandBuilder) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeCommand] {
 	return i.incompleteFn
 }
 func (i *TreeCommandBuilder) WithDescription(desc string) argo.TreeCommandBuilder {
@@ -146,14 +145,14 @@ func (i *TreeCommandBuilder) hasDefaultFlagGroup() bool {
 	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
-func (i *TreeCommandBuilder) WithFlag(flag argo.FlagBuilder) argo.TreeCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
-	i.flagGroups[0].WithFlag(flag)
+func (i *TreeCommandBuilder) WithFlag(fb argo.FlagBuilder) argo.TreeCommandBuilder {
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
+	i.flagGroups[0].WithFlag(fb)
 	return i
 }
 
 func (i *TreeCommandBuilder) WithFlags(flags ...argo.FlagBuilder) argo.TreeCommandBuilder {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
 	i.flagGroups[0].WithFlags(flags...)
 	return i
 }

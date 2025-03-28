@@ -1,13 +1,11 @@
 package main
 
 import (
-	"os"
-
-	cli "github.com/Foxcapades/Argonaut"
+	cli "github.com/foxcapades/argonaut/v3"
 )
 
 func main() {
-	cli.Tree().
+	cli.MustParse(cli.Tree().
 		WithFlag(cli.ComboFlag('a', "apple").
 			WithDescription("The apple flag.")).
 		WithFlag(cli.ComboFlag('b', "banana").
@@ -25,6 +23,5 @@ func main() {
 				WithFlag(cli.ComboFlag('c', "cabbage").
 					WithDescription("The cabbage flag.")).
 				WithFlag(cli.ComboFlag('u', "durian").
-					WithDescription("The second durian flag.")))).
-		MustParse(os.Args)
+					WithDescription("The second durian flag.")))))
 }

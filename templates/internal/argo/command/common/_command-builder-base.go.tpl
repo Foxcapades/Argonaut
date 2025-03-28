@@ -62,14 +62,14 @@ func (i *{{ .ImplType }}) hasDefaultFlagGroup() bool {
 	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
-func (i *{{ .ImplType }}) WithFlag(flag argo.FlagBuilder) {{ .BuilderType }} {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
-	i.flagGroups[0].WithFlag(flag)
+func (i *{{ .ImplType }}) WithFlag(fb argo.FlagBuilder) {{ .BuilderType }} {
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
+	i.flagGroups[0].WithFlag(fb)
 	return i
 }
 
 func (i *{{ .ImplType }}) WithFlags(flags ...argo.FlagBuilder) {{ .BuilderType }} {
-	i.flagGroups = common.EnsureDefaultFlagGroup(i.flagGroups)
+	i.flagGroups = flag.EnsureDefaultGroup(i.flagGroups)
 	i.flagGroups[0].WithFlags(flags...)
 	return i
 }

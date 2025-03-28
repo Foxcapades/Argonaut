@@ -2,7 +2,6 @@ package command
 
 import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/parse"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
@@ -113,15 +112,17 @@ FOR:
 
 	errs := xerr.NewMultiError()
 
-	common.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
-	common.CheckRequiredFlags(c.command.FlagGroups(), errs)
-	common.CheckRequiredArguments(c.command.Arguments(), errs)
+	flag.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
+	flag.CheckRequired(c.command.FlagGroups(), errs)
+	argument.CheckRequired(c.command.Arguments(), errs)
 
 	if len(errs.Errors()) > 0 {
 		return xerr.AppendError(c.result, errs)
 	}
 
-	c.command.Callback()(c.command)
+	if c.command.HasCallback() {
+		c.command.Callback()(c.command)
+	}
 
 	return c.result, nil
 }

@@ -54,7 +54,7 @@ func DetermineBindType(bind any) (kind argo.ArgumentBindingType, err error) {
 			return argo.BindingTypePointer, nil
 		}
 
-		return argo.BindingTypeInvalid, errors.New("binding is a pointer to a type that cannot be unmarshalled")
+		return argo.BindingTypeInvalid, fmt.Errorf("binding is a pointer to a type that cannot be unmarshalled: %T", bind)
 
 	case reflect.Func:
 		if unmarshal.IsUnmarshalable(rt) {

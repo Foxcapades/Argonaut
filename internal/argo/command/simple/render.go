@@ -50,5 +50,5 @@ func renderCommandUsageBlock(com argo.Command, out *bufio.Writer) error {
 	if _, err := out.WriteString(com.Name()); err != nil {
 		return err
 	}
-	return common.RenderCommandUsageBackHalf(com, out)
+	return common.RenderCommandUsageLineBackHalf(com, out)
 }

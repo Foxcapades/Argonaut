@@ -8,6 +8,10 @@ import (
 	"reflect"
 )
 
+func DebugLn(line string) {
+	_, _ = fmt.Fprintf(os.Stderr, line+"\n")
+}
+
 func DebugLn1[T any](format string, arg T) {
 	var a any
 

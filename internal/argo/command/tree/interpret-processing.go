@@ -7,28 +7,39 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func (c *CommandTreeInterpreter) processFlags(errs argo.MultiError) {
-	common.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
-	c.checkRequiredFlagsWereHit(errs)
-	common.ExecuteFlagCallbacks(c.flagHits.Iterator())
+func (c *CommandTreeInterpreter) processFlags(current flag.GroupContainer, errs argo.MultiError) {
+	flag.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
+
+	// check that required flags were hit
+	for {
+		flag.CheckRequired(current.FlagGroups(), errs)
+
+		if cast, ok := current.(argo.ChildNode); ok {
+			current = cast.Parent().(flag.GroupContainer)
+		} else {
+			break
+		}
+	}
+
+	flag.ExecuteFlagCallbacks(c.flagHits.Iterator())
 }
 
-func (c *CommandTreeInterpreter) shiftFlagQueue(errs argo.MultiError) {
-	c.processFlags(errs)
+func (c *CommandTreeInterpreter) shiftFlagQueue(current flag.GroupContainer, errs argo.MultiError) {
+	flag.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
+	flag.CheckRequired(current.FlagGroups(), errs)
+	flag.ExecuteFlagCallbacks(c.flagHits.Iterator())
 	c.flagHits.Clear()
 }
 
-func (c *CommandTreeInterpreter) checkRequiredFlagsWereHit(errs argo.MultiError) {
-	var current flag.GroupContainer = c.leaf
+func (c *CommandTreeInterpreter) checkRequiredFlagsWereHit(current flag.GroupContainer, errs argo.MultiError) {
 
 	for {
-		common.CheckRequiredFlags(current.FlagGroups(), errs)
+		flag.CheckRequired(current.FlagGroups(), errs)
 
 		if cast, ok := current.(argo.ChildNode); ok {
 			current = cast.Parent().(flag.GroupContainer)

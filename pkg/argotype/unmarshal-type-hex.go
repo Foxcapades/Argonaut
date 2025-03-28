@@ -65,6 +65,12 @@ type Hex32 int32
 
 // Unmarshal implements the Unmarshaler.Unmarshal method for the Hex32 type.
 func (h *Hex32) Unmarshal(value string) error {
+	if len(value) > 1 && (value[1] == 'x' || value[1] == 'X') {
+		value = value[2:]
+	} else if len(value) > 0 && (value[0] == 'x' || value[0] == 'X') {
+		value = value[1:]
+	}
+
 	if len(value) > 1 && value[0] == '-' {
 		tmp, err := strconv.ParseInt(value, 16, 32)
 		*h = Hex32(tmp)
@@ -76,13 +82,18 @@ func (h *Hex32) Unmarshal(value string) error {
 	}
 }
 
-// Hex64 represents a signed 64 bit int value that is
-// expected to be input in hexadecimal notation and will be
-// parsed from string in base 16.
+// Hex64 represents a signed 64 bit int value that is expected to be input in
+// hexadecimal notation and will be parsed from string in base 16.
 type Hex64 int64
 
 // Unmarshal implements the Unmarshaler.Unmarshal method for the Hex64 type.
 func (h *Hex64) Unmarshal(value string) (err error) {
+	if len(value) > 1 && (value[1] == 'x' || value[1] == 'X') {
+		value = value[2:]
+	} else if len(value) > 0 && (value[0] == 'x' || value[0] == 'X') {
+		value = value[1:]
+	}
+
 	if len(value) > 1 && value[0] == '-' {
 		tmp, err := strconv.ParseInt(value, 16, 64)
 		*h = Hex64(tmp)

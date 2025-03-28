@@ -12,11 +12,14 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
+type Described interface {
+	HasDescription() bool
+	Description() string
+}
+
 type Aliased interface {
 	HasAliases() bool
 	Aliases() []string
-	HasDescription() bool
-	Description() string
 }
 
 func TryRenderAliases(node Aliased, w *bufio.Writer) (err error) {
@@ -44,12 +47,12 @@ func TryRenderAliases(node Aliased, w *bufio.Writer) (err error) {
 	return w.WriteByte(text.LineFeedByte)
 }
 
-func TryRenderDescription(node Aliased, opts argo.Options, w *bufio.Writer) (err error) {
+func TryRenderDescription(node Described, opts argo.Options, w *bufio.Writer, preNl bool) (err error) {
 	if !node.HasDescription() {
 		return
 	}
 
-	if node.HasAliases() {
+	if preNl {
 		if err = w.WriteByte(text.LineFeedByte); err != nil {
 			return
 		}
@@ -70,11 +73,8 @@ func TryRenderFlags(node flag.GroupContainer, opts argo.Options, w *bufio.Writer
 	if err = w.WriteByte(text.LineFeedByte); err != nil {
 		return
 	}
-	if err = flag.RenderGroups(node.FlagGroups(), opts, 0, w); err != nil {
-		return
-	}
 
-	return w.WriteByte(text.LineFeedByte)
+	return flag.RenderGroups(node.FlagGroups(), opts, 0, w)
 }
 
 const (
@@ -112,6 +112,71 @@ func RenderSubCommandPath(node Named, out *bufio.Writer) error {
 			}
 		}
 		if _, err := out.WriteString(segment); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+type FlagInheritor interface {
+	argo.ChildNode
+	flag.GroupContainer
+}
+
+func TryRenderInheritedFlags(node FlagInheritor, options argo.Options, out *bufio.Writer) error {
+	if options.InheritParentFlags == argo.FlagInheritanceEnabled {
+		return renderInheritedFlagsFlat(node, options, out)
+	}
+
+	if options.InheritParentFlags == argo.FlagInheritanceGrouped {
+		return renderInheritedFlagsGrouped(node, options, out)
+	}
+
+	return nil
+}
+
+func renderInheritedFlagsFlat(node FlagInheritor, options argo.Options, out *bufio.Writer) error {
+	inherited := flag.FlattenInheritance(node)
+
+	if len(inherited) == 0 {
+		return nil
+	}
+
+	if err := out.WriteByte(text.LineFeedByte); err != nil {
+		return err
+	}
+
+	if _, err := out.WriteString("\nInherited Flags"); err != nil {
+		return err
+	}
+
+	for i := range inherited {
+		if i > 0 && !inherited[i-1].Flag.HasDescription() {
+			if err := out.WriteByte(text.LineFeedByte); err != nil {
+				return err
+			}
+		}
+		if err := out.WriteByte(text.LineFeedByte); err != nil {
+			return err
+		}
+		if err := flag.RenderInheritedForms(&inherited[i], options, 1, out); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func renderInheritedFlagsGrouped(node FlagInheritor, options argo.Options, sb *bufio.Writer) error {
+	grouped := flag.GroupInheritance(node)
+
+	if len(grouped) == 0 {
+		return nil
+	}
+
+	for i := range grouped {
+		if err := flag.RenderGroupedInheritance(&grouped[i], options, 1, sb); err != nil {
 			return err
 		}
 	}

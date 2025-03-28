@@ -5,7 +5,6 @@ package tree
 //   This is a generated file!  Edits here will be lost!
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )

@@ -27,12 +27,12 @@ func Build(a argo.ArgumentBuilder) (argo.Argument, error) {
 		if bind.bType == argo.BindingTypeNone {
 			errs.AppendError(errors.New("default value set with no binding"))
 		} else if bind.bType != argo.BindingTypeInvalid {
-			def.dType, err = DetermineDefaultType(a.Binding().BoundTo(), a.Default())
+			def.dType, err = DetermineDefaultType(a.Binding().BoundTo(), a.Default().Value())
 
 			if err != nil {
 				errs.AppendError(NewBindingError(err, a))
 			} else {
-				def.value = a.Default()
+				def.value = a.Default().Value()
 			}
 		}
 	}

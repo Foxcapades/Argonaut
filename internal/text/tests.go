@@ -37,6 +37,10 @@ func IsWhitespace(c byte) bool {
 	return c == SpaceByte || c == LineFeedByte || c == TabByte || c == CarriageReturnByte
 }
 
+func IsWord(c byte) bool {
+	return IsAlpha(c) || IsNumeric(c) || c == UnderscoreByte
+}
+
 func IsAlphanumeric(c byte) bool {
 	return IsAlpha(c) || IsNumeric(c)
 }

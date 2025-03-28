@@ -1,3 +1,4 @@
+{{- /* gotype: github.com/foxcapades/argonaut/v3/scripts/generate/data.ImplementationFields */ -}}
 package tree
 
 import (
@@ -70,7 +71,7 @@ func (i *{{ .ImplType }}) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *{{ .ImplType }}) IncompleteHandler() argo.IncompleteCommandHandler[argo.TreeCommand] {
+func (i *{{ .ImplType }}) IncompleteHandler() argo.IncompleteCommandHandler[{{ .OutputType }}] {
 	return i.incompleteFn
 }
 {{- end }}

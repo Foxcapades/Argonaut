@@ -23,7 +23,11 @@ import (
 // verify that the first command group is a default command group before
 // appending ungrouped argo.ChildNodeBuilder instances to it.
 func EnsureDefaultCommandGroup(groups []argo.CommandGroupBuilder) []argo.CommandGroupBuilder {
-	if len(groups) > 0 && groups[0].Name() != DefaultCommandGroupName {
+	if len(groups) == 0 {
+		return []argo.CommandGroupBuilder{NewGroupBuilder(DefaultCommandGroupName)}
+	}
+
+	if groups[0].Name() != DefaultCommandGroupName {
 		return append(
 			append(
 				make([]argo.CommandGroupBuilder, 0, len(groups)+1),

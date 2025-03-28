@@ -1,9 +1,10 @@
+{{- /* gotype: github.com/foxcapades/argonaut/v3/scripts/generate/data.ImplementationFields */ -}}
 package tree
 
 type ParentCommandBuilder struct {
 {{ define "ParentCommandBuilderProps" -}}
 	comGroups    []argo.CommandGroupBuilder
-	incompleteFn argo.IncompleteCommandHandler[argo.BranchCommand]
+	incompleteFn argo.IncompleteCommandHandler[{{ .OutputType }}]
 {{- end }}
 }
 
@@ -70,7 +71,7 @@ func (i *{{ .ImplType }}) HasSubcommands() bool {
 	return false
 }
 
-func (i *{{ .ImplType }}) WithIncompleteHandler(handler argo.IncompleteCommandHandler[argo.BranchCommand]) {{ .BuilderType }} {
+func (i *{{ .ImplType }}) WithIncompleteHandler(handler argo.IncompleteCommandHandler[{{ .OutputType }}]) {{ .BuilderType }} {
 	i.incompleteFn = handler
 	return i
 }
@@ -79,7 +80,7 @@ func (i *{{ .ImplType }}) HasIncompleteHandler() bool {
 	return i.incompleteFn != nil
 }
 
-func (i *{{ .ImplType }}) IncompleteHandler() argo.IncompleteCommandHandler[argo.BranchCommand] {
+func (i *{{ .ImplType }}) IncompleteHandler() argo.IncompleteCommandHandler[{{ .OutputType }}] {
 	return i.incompleteFn
 }
 {{- end }}
