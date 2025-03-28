@@ -175,6 +175,12 @@ Flags
 
 == Flag Inheritance Grouped
 
+Flags inherited from parent commands in a command tree may be rendered in help
+text output in groups organized by the parent node they are inherited from.
+
+The help text output is more verbose, but may make options clearer for deep or
+complex command trees.
+
 .Show help for the tree root
 [source, bash]
 ----
