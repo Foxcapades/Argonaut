@@ -11,7 +11,6 @@ import (
 
 func (c *CommandTreeInterpreter) handlePlainText(
 	element parse.Element,
-	arguments argument.ValueAppender,
 	unmapped []string,
 	errs argo.MultiError, // Only use for execution errors!  Invalid command structure errors should be passed up!
 ) ([]string, error) {
@@ -20,7 +19,7 @@ func (c *CommandTreeInterpreter) handlePlainText(
 	// plaintext value as the name of the next node in the tree.  If no such
 	// node exists, that is an error.
 	if _, ok := c.current.(argo.LeafCommand); ok {
-		if ok, err := arguments.Append(element.String()); err != nil {
+		if ok, err := c.appender.Append(element.String()); err != nil {
 			return unmapped, err
 		} else if !ok {
 			return append(unmapped, element.String()), nil
@@ -46,6 +45,7 @@ func (c *CommandTreeInterpreter) handlePlainText(
 				c.branches = append(c.branches, branch)
 			} else if leaf, ok := child.(argo.LeafCommand); ok {
 				c.leaf = leaf
+				c.appender = argument.NewValueAppender(c.leaf.Arguments())
 			} else {
 				panic(fmt.Sprintf("unrecognized child node type %T", child))
 			}

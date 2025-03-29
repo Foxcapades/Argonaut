@@ -18,7 +18,6 @@ type Tree struct {
 	commandGroups []argo.CommandGroup
 	selectedChild argo.ChildNode
 	incompleteFn  argo.IncompleteCommandHandler[argo.TreeCommand]
-	selectedLeaf  argo.LeafCommand
 }
 
 func (_ *Tree) Name() string {
@@ -26,7 +25,14 @@ func (_ *Tree) Name() string {
 }
 
 func (i *Tree) SelectedCommand() argo.LeafCommand {
-	return i.selectedLeaf
+	c := i.selectedChild
+	for {
+		if l, ok := c.(argo.LeafCommand); ok {
+			return l
+		}
+
+		c = c.(argo.ParentNode).SelectedChild()
+	}
 }
 
 func (i *Tree) HasCommandGroups() bool {

@@ -2,6 +2,7 @@ package cli_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/foxcapades/argonaut/v3"
@@ -20,10 +21,10 @@ func (n *nmrshlr) Unmarshal(raw string) error {
 func TestFlag_withSliceOfUnmarshalable(t *testing.T) {
 	var values []*nmrshlr
 
-	cli.Command().
+	os.Args = []string{"command", "-f", "goodbye", "-fcruel", "-f=world"}
+	cli.MustParse(cli.Command().
 		WithFlag(cli.ShortFlag('f').
-			WithBinding(&values, false)).
-		MustParse([]string{"command", "-f", "goodbye", "-fcruel", "-f=world"})
+			WithBinding(&values, false)))
 
 	if len(values) != 3 {
 		t.Errorf("expected values slice to have a length of 3 but was %d instead", len(values))
@@ -45,10 +46,10 @@ func TestFlag_withSliceOfUnmarshalable(t *testing.T) {
 func TestFlag_withMapOfUnmarshalable(t *testing.T) {
 	var values map[string]*nmrshlr
 
-	cli.Command().
+	os.Args = []string{"command", "-v", "foo:bar", "-vfizz:buzz", "-v=happy:sad"}
+	cli.MustParse(cli.Command().
 		WithFlag(cli.ShortFlag('v').
-			WithBinding(&values, true)).
-		MustParse([]string{"command", "-v", "foo:bar", "-vfizz:buzz", "-v=happy:sad"})
+			WithBinding(&values, true)))
 
 	if len(values) != 3 {
 		t.Errorf("expected values map to have a length of 3 but was %d", len(values))
@@ -76,10 +77,10 @@ func TestFlag_withMapOfUnmarshalable(t *testing.T) {
 func TestFlag_withMapOfSliceOfUnmarshalable(t *testing.T) {
 	var values map[string][]*nmrshlr
 
-	cli.Command().
+	os.Args = []string{"command", "-v", "foo:bar", "-vfoo:fizz", "-v=foo:buzz"}
+	cli.MustParse(cli.Command().
 		WithFlag(cli.ShortFlag('v').
-			WithBinding(&values, true)).
-		MustParse([]string{"command", "-v", "foo:bar", "-vfoo:fizz", "-v=foo:buzz"})
+			WithBinding(&values, true)))
 
 	vals, ok := values["foo"]
 
@@ -90,32 +91,26 @@ func TestFlag_withMapOfSliceOfUnmarshalable(t *testing.T) {
 			t.Errorf("expected values map to have a length of 3 but was %d", len(vals))
 		}
 
-		if val := vals[0]; !ok {
-			t.Error("expected map key was not present")
-		} else if val.value != "bar" {
+		if val := vals[0]; val.value != "bar" {
 			t.Error("expected map value to match input")
 		}
 
-		if val := vals[1]; !ok {
-			t.Error("expected map key was not present")
-		} else if val.value != "fizz" {
+		if val := vals[1]; val.value != "fizz" {
 			t.Error("expected map value to match input")
 		}
 
-		if val := vals[2]; !ok {
-			t.Error("expected map key was not present")
-		} else if val.value != "buzz" {
+		if val := vals[2]; val.value != "buzz" {
 			t.Error("expected map value to match input")
 		}
 	}
 }
 
 func ExampleCommand() {
-	cli.Command().
+	os.Args = []string{"command", "foo", "bar", "fizz", "buzz"}
+	cli.MustParse(cli.Command().
 		WithCallback(func(command argo.Command) {
 			fmt.Println(command.UnmappedInputs())
-		}).
-		MustParse([]string{"command", "foo", "bar", "fizz", "buzz"})
+		}))
 
 	// Output: [foo bar fizz buzz]
 }
@@ -124,14 +119,14 @@ func ExampleArgument() {
 	var file string
 	var count uint
 
-	cli.Command().
+	os.Args = []string{"command", "foo.txt", "36"}
+	cli.MustParse(cli.Command().
 		WithArgument(cli.Argument().
 			WithName("file").
 			WithBinding(&file)).
 		WithArgument(cli.Argument().
 			WithName("count").
-			WithBinding(&count)).
-		MustParse([]string{"command", "foo.txt", "36"})
+			WithBinding(&count)))
 
 	fmt.Println(file, count)
 
@@ -139,14 +134,12 @@ func ExampleArgument() {
 }
 
 func ExampleFlag() {
-	cli.Command().
+	os.Args = []string{"command", "-ssss", "--selection", "--selection"}
+	cli.MustParse(cli.Command().
 		WithFlag(cli.Flag().
 			WithShortForm('s').
 			WithLongForm("selection").
-			WithCallback(func(flag argo.Flag) {
-				fmt.Println(flag.HitCount())
-			})).
-		MustParse([]string{"command", "-ssss", "--selection", "--selection"})
+			WithCallback(func(flag argo.Flag) { fmt.Println(flag.HitCount()) })))
 
 	// Output: 6
 }
@@ -156,14 +149,14 @@ func ExampleCommand_complex() {
 		NilDelim bool
 	}{}
 
-	cli.Command().
+	os.Args = []string{"command", "-0"}
+	cli.MustParse(cli.Command().
 		WithFlagGroup(cli.FlagGroup("Output Control").
 			WithFlag(cli.Flag().
 				WithShortForm('0').
 				WithLongForm("nil-delim").
 				WithDescription("End output with a null byte instead of a newline.").
-				WithBinding(&config.NilDelim, false))).
-		MustParse([]string{"command", "-0"})
+				WithBinding(&config.NilDelim, false))))
 
 	fmt.Println(config.NilDelim)
 
@@ -171,18 +164,23 @@ func ExampleCommand_complex() {
 }
 
 func ExampleTree() {
-	cli.Tree().
+	os.Args = []string{"command", "foo", "--", "bar"}
+	cli.MustParse(cli.Tree().
 		WithLeaf(cli.Leaf("foo").
 			WithCallback(func(leaf argo.LeafCommand) {
-				fmt.Println(leaf.PassthroughInputs())
+				fmt.Println(leaf.UnmappedInputs())
 			})).
-		MustParse([]string{"command", "foo", "--", "bar"})
+		WithLeaf(cli.Leaf("bar").
+			WithCallback(func(leaf argo.LeafCommand) {
+				panic(leaf)
+			})))
 
 	// Output: [bar]
 }
 
 func ExampleBranch() {
-	cli.Tree().
+	os.Args = []string{"command", "foo", "bar"}
+	cli.MustParse(cli.Tree().
 		WithBranch(cli.Branch("foo").
 			WithCallback(func(branch argo.BranchCommand) {
 				fmt.Print("hello from ")
@@ -190,8 +188,7 @@ func ExampleBranch() {
 			WithLeaf(cli.Leaf("bar").
 				WithCallback(func(leaf argo.LeafCommand) {
 					fmt.Println("a branch!")
-				}))).
-		MustParse([]string{"command", "foo", "bar"})
+				}))))
 
 	// Output: hello from a branch!
 }
@@ -199,58 +196,61 @@ func ExampleBranch() {
 func ExampleLeaf() {
 	var zone string
 
-	cli.Tree().
+	os.Args = []string{"command", "time", "UTC"}
+	cli.MustParse(cli.Tree().
 		WithLeaf(cli.Leaf("time").
 			WithArgument(cli.Argument().
 				WithName("zone").
-				WithBinding(&zone))).
-		MustParse([]string{"command", "time", "UTC"})
+				WithBinding(&zone))))
 
 	fmt.Println(zone)
+
 	// Output: UTC
 }
 
 func ExampleCommandGroup() {
-	com := cli.Tree().
+	os.Args = []string{"command", "foo"}
+	com := cli.MustBuildTree(cli.Tree().
 		WithCommandGroup(cli.CommandGroup("my commands").
 			WithDescription("a group of commands for me").
 			WithLeaf(cli.Leaf("foo")).
-			WithLeaf(cli.Leaf("bar"))).
-		MustParse([]string{"command", "foo"})
+			WithLeaf(cli.Leaf("bar"))))
+	cli.MustParse(com)
 
 	fmt.Println(com.SelectedCommand().Name())
+
 	// Output: foo
 }
 
 func ExampleFlagGroup() {
-	cli.Command().
+	os.Args = []string{"command", "-c", "--clutch"}
+	cli.MustParse(cli.Command().
 		WithFlagGroup(cli.FlagGroup("my flags").
 			WithFlag(cli.ShortFlag('c').
 				WithCallback(func(flag argo.Flag) { fmt.Print("hello ") }))).
 		WithFlagGroup(cli.FlagGroup("your flags").
 			WithFlag(cli.LongFlag("clutch").
-				WithCallback(func(flag argo.Flag) { fmt.Println("world") }))).
-		MustParse([]string{"command", "-c", "--clutch"})
+				WithCallback(func(flag argo.Flag) { fmt.Println("world") }))))
 
 	// Output: hello world
 }
 
 func ExampleLongFlag() {
-	cli.Command().
+	os.Args = []string{"command", "--hello"}
+	cli.MustParse(cli.Command().
 		WithFlag(cli.LongFlag("hello").
 			WithCallback(func(flag argo.Flag) {
 				fmt.Println(flag.WasHit())
-			})).
-		MustParse([]string{"command", "--hello"})
+			})))
 
 	// Output: true
 }
 
 func ExampleShortFlag() {
-	cli.Command().
+	os.Args = []string{"command", "-aaa", "-a", "-a"}
+	cli.MustParse(cli.Command().
 		WithFlag(cli.ShortFlag('a').
-			WithCallback(func(flag argo.Flag) { fmt.Println(flag.HitCount()) })).
-		MustParse([]string{"command", "-aaa", "-a", "-a"})
+			WithCallback(func(flag argo.Flag) { fmt.Println(flag.HitCount()) })))
 
 	// Output: 5
 }

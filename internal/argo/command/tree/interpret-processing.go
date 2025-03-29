@@ -31,8 +31,8 @@ func (c *CommandTreeInterpreter) processFlags(current flag.GroupContainer, errs 
 
 func (c *CommandTreeInterpreter) shiftFlagQueue(current flag.GroupContainer, errs argo.MultiError) {
 	flag.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
-	flag.CheckRequired(current.FlagGroups(), errs)
 	flag.ExecuteFlagCallbacks(c.flagHits.Iterator())
+	flag.CheckRequired(current.FlagGroups(), errs)
 	c.flagHits.Clear()
 }
 

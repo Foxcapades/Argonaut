@@ -75,8 +75,8 @@ FOR:
 				return xerr.AppendError(c.result, err)
 			} else if !ok {
 				unmapped = append(unmapped, element.String())
-				continue
 			}
+			continue
 
 		case parse.ElementTypeShortBlockSolo:
 			interpretFn = flag.InterpretShortSolo
@@ -113,6 +113,7 @@ FOR:
 	errs := xerr.NewMultiError()
 
 	flag.ExecuteHelpFlagCallbacks(c.flagHits.Iterator())
+	flag.ExecuteFlagCallbacks(c.flagHits.Iterator())
 	flag.CheckRequired(c.command.FlagGroups(), errs)
 	argument.CheckRequired(c.command.Arguments(), errs)
 

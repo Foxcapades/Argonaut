@@ -36,7 +36,7 @@ type CommandTreeInterpreter struct {
 	boundary bool
 	options  argo.Options
 
-	tree     argo.TreeCommand
+	tree argo.TreeCommand
 
 	// branches keeps track of the branch path that was followed in the CLI call.
 	branches []argo.BranchCommand
@@ -45,7 +45,8 @@ type CommandTreeInterpreter struct {
 
 	flagHits flag.Queue
 
-	result argo.ParseResult
+	result   argo.ParseResult
+	appender argument.ValueAppender
 }
 
 func (c *CommandTreeInterpreter) Next() parse.Element {
@@ -77,7 +78,6 @@ func (c *CommandTreeInterpreter) haveLeaf() bool {
 }
 
 func (c *CommandTreeInterpreter) Run() (argo.ParseResult, error) {
-	var argumentStream argument.ValueAppender
 	var err error
 
 	unmapped := make([]string, 0, 10)
@@ -94,7 +94,11 @@ FOR:
 				break
 			}
 
-			if ok, err := argumentStream.Append(element.String()); err != nil {
+			if !c.haveLeaf() {
+				break
+			}
+
+			if ok, err := c.appender.Append(element.String()); err != nil {
 				return c.result, err
 			} else if !ok {
 				unmapped = append(unmapped, element.String())
@@ -105,7 +109,7 @@ FOR:
 
 		switch element.Type {
 		case parse.ElementTypePlainText:
-			if unmapped, err = c.handlePlainText(element, argumentStream, unmapped, errs); err != nil {
+			if unmapped, err = c.handlePlainText(element, unmapped, errs); err != nil {
 				return c.result, err
 			}
 

@@ -142,7 +142,7 @@ func (i *TreeCommandBuilder) FlagGroups(includeDefault bool) []argo.FlagGroupBui
 }
 
 func (i *TreeCommandBuilder) hasDefaultFlagGroup() bool {
-	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
+	return len(i.flagGroups) > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
 func (i *TreeCommandBuilder) WithFlag(fb argo.FlagBuilder) argo.TreeCommandBuilder {

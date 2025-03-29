@@ -59,7 +59,7 @@ func (i *{{ .ImplType }}) FlagGroups(includeDefault bool) []argo.FlagGroupBuilde
 }
 
 func (i *{{ .ImplType }}) hasDefaultFlagGroup() bool {
-	return i.flagGroups[0].Size() > 0 && flag.IsDefaultGroup(i.flagGroups[0])
+	return len(i.flagGroups) > 0 && flag.IsDefaultGroup(i.flagGroups[0])
 }
 
 func (i *{{ .ImplType }}) WithFlag(fb argo.FlagBuilder) {{ .BuilderType }} {
