@@ -1,6 +1,8 @@
 package argo
 
-import "iter"
+import (
+	"iter"
+)
 
 type StringScannerFactory = func(input string) iter.Seq[string]
 
@@ -25,7 +27,7 @@ func DelimitedSliceScanner(input, delimiters string) iter.Seq[string] {
 		for {
 			if p := findNextToken(i, input, delimiters); p > -1 {
 				yield(input[i:p])
-				i = p
+				i = p + 1
 			} else {
 				yield(input[i:])
 				break

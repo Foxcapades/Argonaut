@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"os"
 
-	cli "github.com/Foxcapades/Argonaut"
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	cli "github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/pkg/argotype"
 )
 
 type Inputs struct {
-	Hex   []argo.Hex
-	UHex  map[string]argo.UHex
-	Octal []argo.Octal
+	Hex   []argotype.Hex
+	UHex  map[string]argotype.UHex
+	Octal []argotype.Octal
 }
 
 func main() {

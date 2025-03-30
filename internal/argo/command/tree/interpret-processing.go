@@ -3,6 +3,7 @@ package tree
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -132,5 +133,5 @@ func (c *CommandTreeInterpreter) invalidSubCommand(input string) error {
 	utils.Must(buf.Flush())
 
 	//goland:noinspection GoUnreachableCode
-	return fmt.Errorf(msg.String())
+	return errors.New(msg.String())
 }

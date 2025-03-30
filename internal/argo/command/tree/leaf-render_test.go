@@ -7,6 +7,7 @@ import (
 
 	cli "github.com/foxcapades/argonaut/v3"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
+	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -39,7 +40,7 @@ Arguments
 `
 
 func TestRenderCommandLeaf01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(cli.Branch("branch").
 			WithLeaf(cli.Leaf("leaf").
@@ -72,7 +73,8 @@ func renderLeafOutputCheck(
 	com argo.LeafCommand,
 ) {
 	sb := new(strings.Builder)
-	opts := argo.DefaultOptions()
+	opts := argo.Options{}
+	opts2.FixOptions(&opts)
 
 	utils.Must(tree.RenderLeafHelp(com, opts, sb))
 

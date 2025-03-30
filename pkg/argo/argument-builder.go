@@ -1,7 +1,7 @@
 package argo
 
 // An ArgumentBuilder instance is used to construct a CLI argument that may be
-// attached to a Flag or LeafCommand.
+// attached to a Flag, Command, or LeafCommand.
 type ArgumentBuilder interface {
 
 	// WithName sets the name for this argument.
@@ -9,21 +9,31 @@ type ArgumentBuilder interface {
 	// The name value is used when rendering help information about this argument.
 	WithName(name string) ArgumentBuilder
 
+	// HasName indicates whether a non-empty name has been set on the argument.
 	HasName() bool
 
+	// Name returns the name value for this argument.
+	//
+	// If none was set, the returned string will be empty.
 	Name() string
 
 	// WithDescription sets the description of this argument to be shown in
 	// rendered help text.
 	WithDescription(desc string) ArgumentBuilder
 
+	// HasDescription indicates whether a non-empty description has been set for
+	// the argument.
 	HasDescription() bool
 
+	// Description returns the description for this argument.
+	//
+	// If none is set, the returned string will be empty.
 	Description() string
 
 	// Require marks the output Argument as being required.
 	Require() ArgumentBuilder
 
+	// IsRequired indicates whether the argument has been marked as required.
 	IsRequired() bool
 
 	// WithBinding sets the bind value for the Argument.
@@ -56,11 +66,7 @@ type ArgumentBuilder interface {
 	//         return nil
 	//     }))
 	//
-	// Example 3 (lets get silly with it):
-	//     var myValue map[bool]**string
-	//     cli.Argument().WithBinding(&myValue)
-	//
-	// Example 4 (custom type)
+	// Example 3 (custom type)
 	//     type Foo struct {
 	//         // some fields
 	//     }
@@ -75,10 +81,10 @@ type ArgumentBuilder interface {
 	//         cli.Argument().WithBinding(&foo)
 	//     }
 	//
-	// Example 5 (plain consumer func which returns an error):
+	// Example 4 (plain consumer func which returns an error):
 	//     cli.Argument().WithBinding(func(value int) error { do something })
 	//
-	// Example 6 (plain consumer func which returns nothing):
+	// Example 5 (plain consumer func which returns nothing):
 	//     cli.Argument().WithBinding(func(value int) { do something })
 	//
 	WithBinding(pointer any) ArgumentBuilder

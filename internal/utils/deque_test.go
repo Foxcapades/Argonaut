@@ -3,15 +3,15 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/util"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 )
 
 func TestDequeImpl_IsEmpty(t *testing.T) {
-	if !util.NewDeque[int](10).IsEmpty() {
+	if !utils.NewDeque[int](10).IsEmpty() {
 		t.Error("expected new dequeue to be empty but it wasn't")
 	}
 
-	deq := util.NewDeque[int](10)
+	deq := utils.NewDeque[int](10)
 	for i := 0; i < 12; i++ {
 		deq.Offer(i)
 	}
@@ -26,7 +26,7 @@ func TestDequeImpl_IsEmpty(t *testing.T) {
 }
 
 func TestDequeImpl_LastIndex(t *testing.T) {
-	deq := util.NewDeque[int](10)
+	deq := utils.NewDeque[int](10)
 
 	if deq.LastIndex() != -1 {
 		t.Errorf("expected lastIndex to be -1 but it was %d", deq.LastIndex())
@@ -42,7 +42,7 @@ func TestDequeImpl_LastIndex(t *testing.T) {
 }
 
 func TestDequeImpl_Offer(t *testing.T) {
-	deq := util.NewDeque[int](10)
+	deq := utils.NewDeque[int](10)
 
 	for i := 0; i < 10; i++ {
 		deq.Offer(i)
@@ -60,7 +60,7 @@ func TestDequeImpl_Offer(t *testing.T) {
 func TestDequeImpl_Poll(t *testing.T) {
 	defer func() { recover() }()
 
-	deq := util.NewDeque[int](1)
+	deq := utils.NewDeque[int](1)
 
 	deq.Poll()
 

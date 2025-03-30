@@ -1,14 +1,16 @@
-package render_test
+package command_test
 
 import (
-	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	cli "github.com/foxcapades/argonaut/v3"
-	"github.com/foxcapades/argonaut/v3/internal/render"
+	command "github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
+	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -23,7 +25,7 @@ Meta Flags
   -m
       Enables so much meat.
 
-Help Flags
+General Flags
   -h | --help
       Prints this help text.
 
@@ -35,7 +37,7 @@ Arguments
 `
 
 func TestCommandHelpRenderer001(t *testing.T) {
-	com := cli.MustBuildCommand(cli.Command().
+	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithDescription("A command description.").
 		WithFlagGroup(cli.FlagGroup("Meta Flags").
 			WithDescription("Meat flags.").
@@ -46,40 +48,11 @@ func TestCommandHelpRenderer001(t *testing.T) {
 			WithName("argument").
 			WithDescription("poo")).
 		WithArgument(cli.Argument()).
-		WithUnmappedInputLabel("asteroids..."))
+		WithUnmappedInputLabel("asteroids..."), argo.Options{}))
 
-	cli.MustParseCommand(com)
+	// cli.MustParseCommand(com)
 
-	buf := new(strings.Builder)
-	renderOutputCheck(t, commandHelp001, com, render.CommandHelp(com, buf))
-}
-
-func TestCommandHelpRendererFail01(t *testing.T) {
-	com := argo.NewCommandBuilder().
-		WithDescription("A command description.").
-		WithFlagGroup(cli.FlagGroup("Meta Flags").
-			WithDescription("Meat flags.").
-			WithFlag(cli.ShortFlag('m').
-				WithDescription("Enables so much meat.").
-				Require())).
-		WithArgument(cli.Argument().
-			WithName("argument").
-			WithDescription("poo")).
-		WithArgument(cli.Argument()).
-		WithUnmappedLabel("asteroids...").
-		MustParse([]string{"command", "-m"})
-
-	ren := argo.CommandHelpRenderer()
-
-	for p := 1; p <= len(commandHelp001); p++ {
-		wri := FailingWriter{FailAfter: p}
-		buf := bufio.NewWriterSize(&wri, 1)
-
-		err := ren.RenderHelp(com, buf)
-		if err == nil {
-			t.Error("expected err to not be nil but it was")
-		}
-	}
+	renderOutputCheck(t, commandHelp001, com)
 }
 
 const regression51Expected = `Usage:
@@ -109,11 +82,12 @@ General Flags
   --version
       output version information and exit
 
-Help Flags
+General Flags
   -h | --help
       Prints this help text.
 `
 
+// https://github.com/Foxcapades/Argonaut/issues/51
 func TestCommandHelpRenderer_regression51(t *testing.T) {
 	type Config struct {
 		NumberNonBlank  bool
@@ -126,7 +100,7 @@ func TestCommandHelpRenderer_regression51(t *testing.T) {
 
 	var config Config
 
-	com, err := cli.Command().
+	com, err := command.Build(command.NewBuilder().
 		WithDescription("Concatenate FILE(s) to standard output.").
 		WithFlag(cli.ComboFlag('A', "show-all").
 			WithDescription("equivalent to -vET").
@@ -169,15 +143,16 @@ func TestCommandHelpRenderer_regression51(t *testing.T) {
 			WithDescription("output version information and exit").
 			WithCallback(func(_ argo.Flag) {
 				fmt.Println("<version information>")
-				os.Exit(0)
+				utils.Exit(0)
 			})).
-		WithUnmappedLabel("FILE...").
-		Build(nil)
+		WithUnmappedInputLabel("FILE..."), argo.Options{
+		MaxDefaultFlagGroupSizeForMetaGroup: 5,
+	})
 
 	if err != nil {
 		t.Error("expected err to be nil but was", err)
 	} else {
-		renderOutputCheck(t, regression51Expected, com, argo.CommandHelpRenderer())
+		renderOutputCheck(t, regression51Expected, com)
 	}
 }
 
@@ -193,13 +168,30 @@ Flags
 
 func TestCommandHelpRenderer_optionalArgs(t *testing.T) {
 	var bind string
-	com, err := cli.Command().
-		WithFlag(cli.ComboFlag('a', "all").WithBinding(&bind, false)).
-		Build(nil)
+	com, err := command.Build(command.NewBuilder().
+		WithFlag(cli.ComboFlag('a', "all").WithBinding(&bind, false)), argo.Options{})
 
 	if err != nil {
 		t.Error("expected err to be nil but was", err)
 	} else {
-		renderOutputCheck(t, commandHelpRendererExpectOptionalArgs, com, argo.CommandHelpRenderer())
+		renderOutputCheck(t, commandHelpRendererExpectOptionalArgs, com)
+	}
+}
+
+func renderOutputCheck(
+	t *testing.T,
+	pattern string,
+	com argo.Command,
+) {
+	sb := new(strings.Builder)
+	opts := argo.Options{}
+	opts2.FixOptions(&opts)
+
+	utils.Must(command.RenderHelp(com, opts, sb))
+
+	expected := fmt.Sprintf(pattern, filepath.Base(os.Args[0]))
+
+	if sb.String() != expected {
+		t.Errorf("expected: '%s'\n\ngot: '%s'", expected, sb.String())
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Foxcapades/Argonaut/internal/unmarshal"
+	"github.com/foxcapades/argonaut/v3/internal/unmarshal"
 )
 
 func TestGetRootValue_happyPath01(t *testing.T) {
@@ -14,7 +14,7 @@ func TestGetRootValue_happyPath01(t *testing.T) {
 	fizz := &bar
 	buzz := &fizz
 
-	val := unmarshal.GetRootValue(reflect.ValueOf(buzz), unmarshalerType)
+	val := unmarshal.GetRootValue(reflect.ValueOf(buzz))
 
 	if val.Kind() != reflect.Int {
 		t.Errorf("expected kind to be int but was %s", val.Kind())
@@ -28,7 +28,7 @@ func TestGetRootValue_happyPath01(t *testing.T) {
 func TestGetRootValue_happyPath02(t *testing.T) {
 	foo := 69
 
-	val := unmarshal.GetRootValue(reflect.ValueOf(foo), unmarshalerType)
+	val := unmarshal.GetRootValue(reflect.ValueOf(foo))
 
 	if val.Kind() != reflect.Int {
 		t.Errorf("expected kind to be int but was %s", val.Kind())
@@ -42,7 +42,7 @@ func TestGetRootValue_happyPath02(t *testing.T) {
 func TestGetRootValue_randomStruct(t *testing.T) {
 	foo := struct{ foo string }{foo: "string"}
 
-	val := unmarshal.GetRootValue(reflect.ValueOf(foo), unmarshalerType)
+	val := unmarshal.GetRootValue(reflect.ValueOf(foo))
 
 	if val.Kind() != reflect.Struct {
 		t.Errorf("expected kind to be int but was %s", val.Kind())
@@ -56,7 +56,7 @@ func TestGetRootValue_randomStruct(t *testing.T) {
 func TestGetRootValue_randomInterface(t *testing.T) {
 	var foo any
 
-	val := unmarshal.GetRootValue(reflect.ValueOf(&foo), unmarshalerType)
+	val := unmarshal.GetRootValue(reflect.ValueOf(&foo))
 
 	if val.Kind() != reflect.Interface {
 		t.Errorf("expected kind to be int but was %s", val.Kind())
@@ -66,20 +66,16 @@ func TestGetRootValue_randomInterface(t *testing.T) {
 func TestGetRootValue_randomInterfaceString(t *testing.T) {
 	var foo any = "foo"
 
-	val := unmarshal.GetRootValue(reflect.ValueOf(&foo), unmarshalerType)
+	val := unmarshal.GetRootValue(reflect.ValueOf(&foo))
 
 	if val.Kind() != reflect.Interface {
 		t.Errorf("expected kind to be int but was %s", val.Kind())
 	}
 }
 
-type nmrshlr struct{}
-
-func (nmrshlr) Unmarshal(string) error { return nil }
-
 func TestToUnmarshalable_withUnmarshalerStruct(t *testing.T) {
 	value := nmrshlr{}
-	_, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(value), false, unmarshalerType)
+	_, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(value), false)
 
 	if err == nil {
 		t.Fail()
@@ -88,7 +84,7 @@ func TestToUnmarshalable_withUnmarshalerStruct(t *testing.T) {
 
 func TestToUnmarshalable_withUnmarshalerPointer(t *testing.T) {
 	value := nmrshlr{}
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -100,7 +96,7 @@ func TestToUnmarshalable_withUnmarshalerPointer(t *testing.T) {
 
 func TestToUnmarshalable_withIntPointer(t *testing.T) {
 	value := 3
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -112,7 +108,7 @@ func TestToUnmarshalable_withIntPointer(t *testing.T) {
 
 func TestToUnmarshalable_withStringSlice(t *testing.T) {
 	var value []string
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -124,7 +120,7 @@ func TestToUnmarshalable_withStringSlice(t *testing.T) {
 
 func TestToUnmarshalable_withStringPointerSlice(t *testing.T) {
 	var value []*string
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -136,7 +132,7 @@ func TestToUnmarshalable_withStringPointerSlice(t *testing.T) {
 
 func TestToUnmarshalable_withByteSlice(t *testing.T) {
 	var value []byte
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -148,7 +144,7 @@ func TestToUnmarshalable_withByteSlice(t *testing.T) {
 
 func TestToUnmarshalable_withByteSliceSlice(t *testing.T) {
 	var value [][]byte
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -160,7 +156,7 @@ func TestToUnmarshalable_withByteSliceSlice(t *testing.T) {
 
 func TestToUnmarshalable_withByteSlicePointerSlice(t *testing.T) {
 	var value []*[]byte
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -172,7 +168,7 @@ func TestToUnmarshalable_withByteSlicePointerSlice(t *testing.T) {
 
 func TestToUnmarshalable_withStringStringMap(t *testing.T) {
 	var value map[string]string
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -184,7 +180,7 @@ func TestToUnmarshalable_withStringStringMap(t *testing.T) {
 
 func TestToUnmarshalable_withStringStringPointerMap(t *testing.T) {
 	var value map[string]*string
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -196,7 +192,7 @@ func TestToUnmarshalable_withStringStringPointerMap(t *testing.T) {
 
 func TestToUnmarshalable_withTime(t *testing.T) {
 	var value time.Time
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -208,7 +204,7 @@ func TestToUnmarshalable_withTime(t *testing.T) {
 
 func TestToUnmarshalable_withInterface(t *testing.T) {
 	var value any
-	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false, unmarshalerType)
+	val, err := unmarshal.ToUnmarshalable("hello", reflect.ValueOf(&value), false)
 
 	if err != nil {
 		t.Log(err)
@@ -221,7 +217,7 @@ func TestToUnmarshalable_withInterface(t *testing.T) {
 func TestValidateContainerValue_withMapOfStringToStringPointers(t *testing.T) {
 	var value map[string]*string
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err != nil {
 		t.Error(err)
 	}
@@ -230,7 +226,7 @@ func TestValidateContainerValue_withMapOfStringToStringPointers(t *testing.T) {
 func TestValidateContainerValue_withMapOfStringToStringPointerPointers(t *testing.T) {
 	var value map[string]**string
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err == nil {
 		t.Fail()
 	} else {
@@ -241,7 +237,7 @@ func TestValidateContainerValue_withMapOfStringToStringPointerPointers(t *testin
 func TestValidateContainerValue_withMapOfStringToInterface(t *testing.T) {
 	var value map[string]any
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -251,7 +247,7 @@ func TestValidateContainerValue_withMapOfStringToInterface(t *testing.T) {
 func TestValidateContainerValue_withMapOfStringToInterfacePointer(t *testing.T) {
 	var value map[string]*any
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -261,7 +257,7 @@ func TestValidateContainerValue_withMapOfStringToInterfacePointer(t *testing.T) 
 func TestValidateContainerValue_withMapOfStringToUnmarshaler(t *testing.T) {
 	var value map[string]nmrshlr
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -271,7 +267,7 @@ func TestValidateContainerValue_withMapOfStringToUnmarshaler(t *testing.T) {
 func TestValidateContainerValue_withMapOfStringToUnmarshalerPointer(t *testing.T) {
 	var value map[string]*nmrshlr
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -281,7 +277,7 @@ func TestValidateContainerValue_withMapOfStringToUnmarshalerPointer(t *testing.T
 func TestValidateContainerValue_withMapOfStringToStringSlice(t *testing.T) {
 	var value map[string][]string
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -291,7 +287,7 @@ func TestValidateContainerValue_withMapOfStringToStringSlice(t *testing.T) {
 func TestValidateContainerValue_withMapOfStringToStringSlicePointer(t *testing.T) {
 	var value map[string]*[]string
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err == nil {
 		t.Fail()
 	} else {
@@ -302,7 +298,7 @@ func TestValidateContainerValue_withMapOfStringToStringSlicePointer(t *testing.T
 func TestValidateContainerValue_withMapOfStringToAnonymousStruct(t *testing.T) {
 	var value map[string]struct{ foo string }
 	var vType = reflect.TypeOf(value).Elem()
-	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value), unmarshalerType)
+	err := unmarshal.ValidateContainerValue(vType, reflect.ValueOf(value))
 	if err == nil {
 		t.Fail()
 	} else {
@@ -313,7 +309,7 @@ func TestValidateContainerValue_withMapOfStringToAnonymousStruct(t *testing.T) {
 func TestToValidMap_withInvalidKey(t *testing.T) {
 	var value map[struct{ foo string }]string
 	var vType = reflect.ValueOf(value)
-	_, err := unmarshal.ToValidMap(vType, vType, unmarshalerType)
+	_, err := unmarshal.ToValidMap(vType, vType)
 	if err == nil {
 		t.Fail()
 	} else {
@@ -324,7 +320,7 @@ func TestToValidMap_withInvalidKey(t *testing.T) {
 func TestToValidMap_withInvalidValue(t *testing.T) {
 	var value map[string]struct{ foo string }
 	var vType = reflect.ValueOf(value)
-	_, err := unmarshal.ToValidMap(vType, vType, unmarshalerType)
+	_, err := unmarshal.ToValidMap(vType, vType)
 	if err == nil {
 		t.Fail()
 	} else {
@@ -335,7 +331,7 @@ func TestToValidMap_withInvalidValue(t *testing.T) {
 func TestToValidSlice_withInvalidValue(t *testing.T) {
 	var value []struct{ foo string }
 	var vType = reflect.ValueOf(value)
-	_, err := unmarshal.ToValidSlice(vType, vType, unmarshalerType)
+	_, err := unmarshal.ToValidSlice(vType, vType)
 	if err == nil {
 		t.Fail()
 	} else {
@@ -346,7 +342,7 @@ func TestToValidSlice_withInvalidValue(t *testing.T) {
 func TestToUnmarshalable_withInvalidValue(t *testing.T) {
 	var value struct{ foo string }
 	var vType = reflect.ValueOf(value)
-	_, err := unmarshal.ToUnmarshalable("", vType, true, unmarshalerType)
+	_, err := unmarshal.ToUnmarshalable("", vType, true)
 	if err == nil {
 		t.Fail()
 	} else {
@@ -359,7 +355,7 @@ func TestGetRootValue_withNilValue(t *testing.T) {
 	var bar = &foo
 	var fv = reflect.ValueOf(&bar)
 
-	val := unmarshal.GetRootValue(fv, unmarshalerType)
+	val := unmarshal.GetRootValue(fv)
 
 	if val.Kind() != reflect.String {
 		t.Fail()

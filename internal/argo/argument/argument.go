@@ -42,7 +42,7 @@ func (a *argument) HasDescription() bool {
 }
 
 func (a *argument) HasBinding() bool {
-	return a.binding.bType != argo.BindingTypeNone
+	return a.binding.BType != argo.BindingTypeNone
 }
 
 func (a *argument) Binding() argo.ArgumentBinding {
@@ -50,11 +50,11 @@ func (a *argument) Binding() argo.ArgumentBinding {
 }
 
 func (a *argument) HasDefault() bool {
-	return a.defVal.dType != argo.DefaultTypeNone
+	return a.defVal.DType != argo.DefaultTypeNone
 }
 
 func (a *argument) Default() any {
-	return a.defVal.value
+	return a.defVal.Raw
 }
 
 func (a *argument) WasHit() bool {
@@ -82,13 +82,13 @@ func (a *argument) SetToDefault() error {
 
 	a.isUsed = true
 
-	rootDef := unmarshal.GetRootValue(reflect.ValueOf(a.defVal.value))
+	rootDef := unmarshal.GetRootValue(reflect.ValueOf(a.defVal.Raw))
 	defType := rootDef.Type()
 
-	rootBinding := unmarshal.GetRootValue(reflect.ValueOf(a.binding.raw))
+	rootBinding := unmarshal.GetRootValue(reflect.ValueOf(a.binding.Raw))
 
 	if defType.Kind() == reflect.Func {
-		defFn := reflect.ValueOf(a.defVal.value)
+		defFn := reflect.ValueOf(a.defVal.Raw)
 
 		switch defType.NumOut() {
 
@@ -134,7 +134,7 @@ func (a *argument) SetToDefault() error {
 			return nil
 		}
 
-		return a.unmarshal.Unmarshal(strVal, a.binding.raw)
+		return a.unmarshal.Unmarshal(strVal, a.binding.Raw)
 	}
 
 	if rootBinding.Kind() == reflect.Ptr {
@@ -162,7 +162,7 @@ func (a *argument) SetValue(rawString string) error {
 
 	rootBinding := unmarshal.GetRootValue(reflect.ValueOf(a.binding.BoundTo()))
 
-	if err := a.unmarshal.Unmarshal(rawString, a.binding.raw); err != nil {
+	if err := a.unmarshal.Unmarshal(rawString, a.binding.Raw); err != nil {
 		return err
 	}
 

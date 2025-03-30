@@ -14,8 +14,8 @@ func Build(a argo.ArgumentBuilder) (argo.Argument, error) {
 
 	var bind Binding
 	if a.HasBinding() {
-		bind.raw = a.Binding().BoundTo()
-		bind.bType, err = DetermineBindType(bind.raw)
+		bind.Raw = a.Binding().BoundTo()
+		bind.BType, err = DetermineBindType(bind.Raw)
 
 		if err != nil {
 			errs.AppendError(NewBindingError(err, a))
@@ -24,21 +24,21 @@ func Build(a argo.ArgumentBuilder) (argo.Argument, error) {
 
 	var def Default
 	if a.HasDefault() {
-		if bind.bType == argo.BindingTypeNone {
+		if bind.BType == argo.BindingTypeNone {
 			errs.AppendError(errors.New("default value set with no binding"))
-		} else if bind.bType != argo.BindingTypeInvalid {
-			def.dType, err = DetermineDefaultType(a.Binding().BoundTo(), a.Default().Value())
+		} else if bind.BType != argo.BindingTypeInvalid {
+			def.DType, err = DetermineDefaultType(a.Binding().BoundTo(), a.Default().Value())
 
 			if err != nil {
 				errs.AppendError(NewBindingError(err, a))
 			} else {
-				def.value = a.Default().Value()
+				def.Raw = a.Default().Value()
 			}
 		}
 	}
 
 	var pre, post []any
-	pre, post, err = SiftValidators(a.Validators(), &def, &bind)
+	pre, post, err = SiftValidators(a.Validators(), &bind)
 	if err != nil {
 		errs.AppendError(err)
 	}

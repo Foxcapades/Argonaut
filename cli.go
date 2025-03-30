@@ -1,31 +1,23 @@
-// Package cli provides a convenience methods for constructing command line
-// interfaces.
+// Package cli is the entrypoint into the Argonaut library functionality. For
+// most simple cases, no other package need be imported to configure a CLI
+// interface.
 //
-// Commands may be either singular commands or command trees.  A singular
-// command has no subcommands and may take any number of flags and/or arguments.
-// A command tree is a root command that may have an arbitrary depth of
-// branching subcommands which each may take their own flags, with the leaf
-// nodes of the tree also accepting arguments.
+// This package provide methods for creating simple commands, command trees,
+// flag options, arguments, and additional organization functionality.
 //
-// An example single command:
+// CLI interfaces may be constructed with a root of either an argo.Command
+// (using the Command function), or an argo.TreeCommand (using the Tree
+// function).  Flags, arguments, and subcommands (of command trees) may then be
+// appended via builder methods to define the CLI call API.
 //
-//	tar -xf foo.tgz
+// Simple (or singular) commands have no subcommands and may take any number of
+// flags and/or positional arguments.
 //
-// Here the single command `tar` accepts the flags `-x` and -f`, with the `-f`
-// flag taking the argument `foo.tgz`.
-//
-// An example command tree:
-//
-//	docker compose -f my-docker-compose.yml up my-service
-//
-// Here the command tree is constructed of 3 levels, the root of the tree
-// (docker), the intermediary branch (compose) and the leaf command (up).  The
-// branch is taking a flag (-f) which is itself taking an argument
-// (my-docker-compose.yml).  The leaf command (up) is accepting an optional
-// argument (my-service).
-//
-// CLI interface construction starts with either the `cli.Command` function or
-// the `cli.Tree` function.
+// Tree commands have a 'root' which is the callable binary, which may be
+// followed by any number of flags, and must be followed by one or subcommands
+// in the form of branches or leaves.  Each branch may also have its own flags
+// and also must have at least one subcommand which may be another branch or a
+// leaf.  Leaf nodes may accept option flags as well as positional arguments.
 package cli
 
 import (
@@ -43,6 +35,13 @@ import (
 
 // Command returns a new argo.CommandBuilder instance which can be used to
 // construct an argo.Command instance.
+//
+// An example single command:
+//
+//	tar -xf foo.tgz
+//
+// Here the single command 'tar' accepts the flags '-x' and '-f', with the '-f'
+// flag taking the argument 'foo.tgz'.
 func Command() argo.CommandBuilder {
 	return command.NewBuilder()
 }
@@ -58,7 +57,7 @@ func Command() argo.CommandBuilder {
 // list of all the configuration errors that were encountered while attempting
 // to build the argo.Command.
 func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
-	return BuildCommandCustom(builder, argo.DefaultOptions())
+	return BuildCommandCustom(builder, argo.Options{})
 }
 
 // BuildCommandCustom attempts to build a new argo.Command instance based on the
@@ -71,7 +70,6 @@ func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
 // list of all the configuration errors that were encountered while attempting
 // to build the argo.Command.
 func BuildCommandCustom(builder argo.CommandBuilder, options argo.Options) (argo.Command, error) {
-	argo.FixOptions(&options)
 	return command.Build(builder, options)
 }
 
@@ -90,11 +88,88 @@ func MustBuildCommand(builder argo.CommandBuilder) argo.Command {
 // returned.
 //
 // See BuildCommandCustom for more information about the inputs and output.
-func MustBuildCommandCustom(builder argo.CommandBuilder, options argo.Options) argo.Command {
+func MustBuildCommandCustom(options argo.Options, builder argo.CommandBuilder) argo.Command {
 	if out, err := BuildCommandCustom(builder, options); err != nil {
 		panic(err)
 	} else {
 		return out
+	}
+}
+
+// ParseCommand attempts to parse the CLI call inputs as options and arguments
+// to an argo.Command.
+//
+// The ParseCommand method accepts as its argument one of the following types:
+// * argo.Command
+// * argo.CommandBuilder
+//
+// If a value of any other type is passed to ParseCommand, it will panic.
+//
+// For the argo.CommandBuilder type, MustBuildCommand will be called, to build
+// an argo.Command instance, meaning an invalid builder config will cause a
+// panic.
+//
+// ParseCommand returns three values, an argo.Command instance, an
+// argo.ParseResult struct, and an error value if an error occurred during the
+// parse attempt.
+//
+// If the returned error value is not nil, that same error will also be set as
+// the value of the argo.ParseResult's Error field.
+//
+// If the given argument value is an argo.Command instance, that same value will
+// be the first return output.
+func ParseCommand(com any) (out argo.Command, res argo.ParseResult, err error) {
+	switch t := com.(type) {
+	case argo.CommandBuilder:
+		out = MustBuildCommand(t)
+	case argo.Command:
+		out = t
+	default:
+		panic(fmt.Sprintf("%T does not implement argo.Command or argo.CommandBuilder", com))
+	}
+
+	res, err = command.Parse(out, os.Args)
+	return
+}
+
+// ParseCommandCustom attempts to parse the CLI call inputs as options and
+// arguments to an argo.Command built from the given input, using the given
+// argo.Options as configuration.
+//
+// MustBuildCommandCustom will be called to build the argo.Command instance,
+// meaning an invalid builder config will cause a panic.
+//
+// ParseCommandCustom returns three values, an argo.Command instance, an
+// argo.ParseResult struct, and an error value if an error occurred during the
+// parse attempt.
+//
+// If the returned error value is not nil, that same error will also be set as
+// the value of the argo.ParseResult's Error field.
+func ParseCommandCustom(options argo.Options, com argo.CommandBuilder) (out argo.Command, res argo.ParseResult, err error) {
+	out = MustBuildCommandCustom(options, com)
+	res, err = command.Parse(out, os.Args)
+	return
+}
+
+// MustParseCommand calls Parse and panics if an error is returned.
+//
+// See ParseCommand for more information about the input and output.
+func MustParseCommand(com any) (argo.Command, argo.ParseResult) {
+	if out, res, err := ParseCommand(com); err != nil {
+		panic(err)
+	} else {
+		return out, res
+	}
+}
+
+// MustParseCommandCustom calls ParseCommandCustom and panics if an error is returned.
+//
+// See ParseCommandCustom for more information about the input and outputs.
+func MustParseCommandCustom(options argo.Options, com argo.CommandBuilder) (argo.Command, argo.ParseResult) {
+	if out, res, err := ParseCommandCustom(options, com); err != nil {
+		panic(err)
+	} else {
+		return out, res
 	}
 }
 
@@ -108,6 +183,16 @@ func MustBuildCommandCustom(builder argo.CommandBuilder, options argo.Options) a
 // A command tree is a tree of nested subcommands of arbitrary depth.  The tree
 // consists of branch and leaf nodes, with the leaf nodes being the selectable
 // final commands.
+//
+// An example command tree:
+//
+//	docker compose -f my-docker-compose.yml up my-service
+//
+// Here the command tree is constructed of 3 levels, the root of the tree
+// 'docker', the intermediary branch 'compose' and the leaf command 'up'.  The
+// branch command is taking a flag '-f' which is itself taking the argument
+// 'my-docker-compose.yml'.  The leaf command 'up' is accepting the optional,
+// positional argument 'my-service'.
 func Tree() argo.TreeCommandBuilder {
 	return tree.NewBuilder()
 }
@@ -117,6 +202,10 @@ func Tree() argo.TreeCommandBuilder {
 //
 // The input value is the primary name of the branch command, additional aliases
 // may optionally be added via the argo.BranchCommandBuilder methods.
+//
+// Branch names must begin with an alphanumeric character or underscore, and be
+// followed by zero or more characters that are alphanumeric, underscores, or
+// hyphens.
 //
 // Argonaut provides no public functions for building a branch alone, they may
 // only be built as part of an argo.TreeCommandBuilder build via BuildTree.
@@ -129,6 +218,10 @@ func Branch(name string) argo.BranchCommandBuilder {
 //
 // The input value is the primary name of the leaf command, additional aliases
 // may optionally be added via the argo.LeafCommandBuilder methods.
+//
+// Leaf names must begin with an alphanumeric character or underscore, and be
+// followed by zero or more characters that are alphanumeric, underscores, or
+// hyphens.
 //
 // Argonaut provides no public functions for building a leaf alone, they may
 // only be built as part of an argo.TreeCommandBuilder build via BuildTree.
@@ -155,7 +248,7 @@ func CommandGroup(name string) argo.CommandGroupBuilder {
 // list of all the configuration errors that were encountered while attempting
 // to build the argo.TreeCommand.
 func BuildTree(builder argo.TreeCommandBuilder) (argo.TreeCommand, error) {
-	return tree.Build(builder, argo.DefaultOptions())
+	return tree.Build(builder, argo.Options{})
 }
 
 // MustBuildTree calls BuildTree and panics if an error is returned.
@@ -179,100 +272,100 @@ func MustBuildTree(builder argo.TreeCommandBuilder) argo.TreeCommand {
 // The error will likely be an instance of argo.MultiError which will contain a
 // list of all the configuration errors that were encountered while attempting
 // to build the argo.TreeCommand.
-func BuildTreeCustom(builder argo.TreeCommandBuilder, options argo.Options) (argo.TreeCommand, error) {
-	argo.FixOptions(&options)
+func BuildTreeCustom(options argo.Options, builder argo.TreeCommandBuilder) (argo.TreeCommand, error) {
 	return tree.Build(builder, options)
 }
 
 // MustBuildTreeCustom calls BuildTreeCustom and panics if an error is
 // returned.
 //
-// See BuildTreeCustom for more information about the inputs and output.
-func MustBuildTreeCustom(builder argo.TreeCommandBuilder, options argo.Options) argo.TreeCommand {
-	if out, err := BuildTreeCustom(builder, options); err != nil {
+// See BuildTreeCustom for more information about the inputs and outputs.
+func MustBuildTreeCustom(options argo.Options, builder argo.TreeCommandBuilder) argo.TreeCommand {
+	if out, err := BuildTreeCustom(options, builder); err != nil {
 		panic(err)
 	} else {
 		return out
 	}
 }
 
-// endregion Command Tree
-
-// region Parse
-
-// Parse attempts to parse the CLI call inputs as options and arguments to the
-// given command type instance.
+// ParseTree attempts to parse the CLI call inputs as options and arguments
+// to an argo.TreeCommand.
 //
-// The Parse method accepts as its argument one of the following types:
-// * argo.Command
+// The ParseTree method accepts as its argument one of the following types:
 // * argo.TreeCommand
-// * argo.CommandBuilder
 // * argo.TreeCommandBuilder
 //
-// If a value of any other type is passed to Parse, it will panic.
+// If a value of any other type is passed to ParseTree, it will panic.
 //
-// For the builder type cases, the appropriate MustBuild* function will be
-// called, meaning an invalid builder config will cause a panic.
+// For the argo.TreeCommandBuilder type, MustBuildTree will be called, to build
+// an argo.TreeCommand instance, meaning an invalid builder config will cause a
+// panic.
 //
-// Parse returns two values, an argo.ParseResult struct containing any warnings
-// and possibly an error from the attempt to parse the result, and an error
-// value if an error occurred during the parse attempt.
+// ParseTree returns three values, an argo.TreeCommand instance, an
+// argo.ParseResult struct, and an error value if an error occurred during the
+// parse attempt.
 //
 // If the returned error value is not nil, that same error will also be set as
-// the value of the result's Error field.  This enables callers to ignore one of
-// the outputs if desired and have access to any error either way.
+// the value of the argo.ParseResult's Error field.
 //
-// Example 1:
-//
-//	// Use parse result
-//	result, _ := cli.Parse(myCommand)
-//	if result.Error != nil {
-//	    panic(result.Error)
-//	}
-//
-//	for _, warning := result.Warnings {
-//	    _, _ = fmt.Fprintf(os.Stderr, "parse warning: %s", warning.Message)
-//	}
-//
-// Example 2:
-//
-//	// Disregard parse result
-//	_, err := cli.ParseCommand(myCommand)
-//	if err != nil {
-//	    panic(err)
-//	}
-func Parse(com any) (argo.ParseResult, error) {
-	if typed, ok := com.(argo.CommandBuilder); ok {
-		return command.Parse(MustBuildCommand(typed), os.Args)
+// If the given argument value is an argo.TreeCommand instance, that same value
+// will be the first return output.
+func ParseTree(com any) (out argo.TreeCommand, res argo.ParseResult, err error) {
+	switch t := com.(type) {
+	case argo.TreeCommandBuilder:
+		out = MustBuildTree(t)
+	case argo.TreeCommand:
+		out = t
+	default:
+		panic(fmt.Sprintf("%T does not implement argo.TreeCommand or argo.TreeCommandBuilder", com))
 	}
 
-	if typed, ok := com.(argo.TreeCommandBuilder); ok {
-		return tree.Parse(MustBuildTree(typed), os.Args)
-	}
-
-	if typed, ok := com.(argo.Command); ok {
-		return command.Parse(typed, os.Args)
-	}
-
-	if typed, ok := com.(argo.TreeCommand); ok {
-		return tree.Parse(typed, os.Args)
-	}
-
-	panic(fmt.Sprintf("given value %T does not implement any supported Argonaut command or command builder type", com))
+	res, err = tree.Parse(out, os.Args)
+	return
 }
 
-// MustParse calls Parse and panics if an error is returned.
+// ParseTreeCustom attempts to parse the CLI call inputs as options and
+// arguments to an argo.TreeCommand built from the given input, using the given
+// argo.Options as configuration.
 //
-// See Parse for more information about the input and output.
-func MustParse(com any) argo.ParseResult {
-	if res, err := Parse(com); err != nil {
+// MustBuildTreeCustom will be called to build the argo.TreeCommand instance,
+// meaning an invalid builder config will cause a panic.
+//
+// ParseTreeCustom returns three values, the built argo.TreeCommand instance, an
+// argo.ParseResult struct, and an error value if an error occurred during the
+// parse attempt.
+//
+// If the returned error value is not nil, that same error will also be set as
+// the value of the argo.ParseResult's Error field.
+func ParseTreeCustom(options argo.Options, com argo.TreeCommandBuilder) (out argo.TreeCommand, res argo.ParseResult, err error) {
+	out = MustBuildTreeCustom(options, com)
+	res, err = tree.Parse(out, os.Args)
+	return
+}
+
+// MustParseTree calls ParseTree and panics if an error is returned.
+//
+// See ParseTree for more information about the input and outputs.
+func MustParseTree(com any) (argo.TreeCommand, argo.ParseResult) {
+	if out, res, err := ParseTree(com); err != nil {
 		panic(err)
 	} else {
-		return res
+		return out, res
 	}
 }
 
-// endregion Parse
+// MustParseTreeCustom calls ParseTreeCustom and panics if an error is returned.
+//
+// See ParseTreeCustom for more information about the input and outputs.
+func MustParseTreeCustom(options argo.Options, com argo.TreeCommandBuilder) (argo.TreeCommand, argo.ParseResult) {
+	if out, res, err := ParseTreeCustom(options, com); err != nil {
+		panic(err)
+	} else {
+		return out, res
+	}
+}
+
+// endregion Command Tree
 
 // region Flags
 
@@ -297,9 +390,12 @@ func ShortFlag(f byte) argo.FlagBuilder {
 // LongFlag returns a new argo.FlagBuilder instance with the long form set to
 // the given value.
 //
-// This function is a shortcut for:
+// This function is a convenience shortcut for:
 //
 //	cli.Flag().WithLongForm(...)
+//
+// Input value must be a valid flag name as defined by the argo.FlagBuilder
+// WithLongForm method.
 func LongFlag(name string) argo.FlagBuilder {
 	return flag.NewBuilder().WithLongForm(name)
 }

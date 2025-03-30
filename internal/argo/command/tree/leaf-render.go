@@ -33,7 +33,7 @@ func RenderLeafHelp(leaf argo.LeafCommand, options argo.Options, writer io.Write
 func MakeRenderLeafHelpCallback(leaf argo.LeafCommand, options argo.Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
 		utils.Must(RenderLeafHelp(leaf, options, os.Stdout))
-		os.Exit(0)
+		utils.Exit(0)
 	}
 }
 

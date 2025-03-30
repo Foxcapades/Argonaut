@@ -81,7 +81,7 @@ func MakeDefaultOnIncompleteHandler[T argo.ParentNode](opts argo.Options) argo.I
 			panic("illegal state: unrecognized command parent implementation")
 		}
 
-		os.Exit(1)
+		utils.Exit(1)
 	}
 }
 

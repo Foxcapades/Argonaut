@@ -1,7 +1,5 @@
 package argo
 
-import "github.com/foxcapades/argonaut/v3/pkg/argoutil"
-
 type Options struct {
 	// MaxDefaultFlagGroupSizeForMetaGroup defines the maximum number of flags
 	// that a command's default flag group may have before automatically generated
@@ -45,7 +43,7 @@ type Options struct {
 	//
 	// This setting does nothing for Command instances.
 	//
-	// Default value is FlagInheritanceEnabled.
+	// Default value is FlagInheritanceDisabled.
 	//
 	// Example: Inherit flags enabled
 	//   // "tree"   defines the flag -a and -b
@@ -69,21 +67,6 @@ type Options struct {
 	//   // branch: -b=false
 	//   // leaf:   -c=true
 	InheritParentFlags ParentFlagInheritanceMode
-}
-
-func DefaultOptions() Options {
-	consoleWidth, _ := argoutil.GetConsoleWidth()
-	return Options{
-		MaxDefaultFlagGroupSizeForMetaGroup: 5,
-		MetaFlagGroupName:                   "General Flags",
-		DefaultCommandGroupName:             "Commands",
-		HelpTextMaxWidth:                    max(min(consoleWidth, 120), 60),
-		InheritParentFlags:                  FlagInheritanceEnabled,
-	}
-}
-
-func FixOptions(opts *Options) {
-	opts.HelpTextMaxWidth = max(60, opts.HelpTextMaxWidth)
 }
 
 // ParentFlagInheritanceMode defines the behavior of parent flag inheritance in

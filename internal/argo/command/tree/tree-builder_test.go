@@ -11,7 +11,7 @@ import (
 )
 
 func TestEmptyCommandTree(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	_, err := tree.Build(tree.NewBuilder(), opt)
 	if err == nil {
 		t.Fail()
@@ -19,7 +19,7 @@ func TestEmptyCommandTree(t *testing.T) {
 }
 
 func TestCommandTreeBuilder_WithDescription(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithDescription("hello").
 		WithLeaf(tree.NewLeafBuilder("goodbye")), opt))
@@ -36,7 +36,7 @@ func TestCommandTreeBuilder_WithDescription(t *testing.T) {
 
 func TestCommandTreeBuilder_WithCallback(t *testing.T) {
 	counter := 0
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithCallback(func(com argo.TreeCommand) { counter++ }).
 		WithLeaf(tree.NewLeafBuilder("goodbye")), opt))
@@ -49,7 +49,7 @@ func TestCommandTreeBuilder_WithCallback(t *testing.T) {
 
 func TestCommandTreeBuilder_WithFlag(t *testing.T) {
 	counter := 0
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('c').WithBinding(&counter, true)).
 		WithLeaf(tree.NewLeafBuilder("bell")), opt))
@@ -85,7 +85,7 @@ func TestCommandTreeBuilder_WithBranch(t *testing.T) {
 	a := 0
 	b := 0
 	c := 0
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithCallback(func(com argo.TreeCommand) { a++ }).
 		WithBranch(tree.NewBranchBuilder("foo").
@@ -101,7 +101,7 @@ func TestCommandTreeBuilder_WithBranch(t *testing.T) {
 
 func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
 	value := 0
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("no-thanks")).
 		WithFlagGroup(flag.NewGroupBuilder("derpy").
@@ -118,7 +118,7 @@ func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
 }
 
 func TestCommandTreeBuilder_WithLeaf(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("ass").
 			WithFlag(flag.NewBuilder().
@@ -133,7 +133,7 @@ func TestCommandTreeBuilder_WithLeaf(t *testing.T) {
 }
 
 func TestCommandTreeBuilder_Parse(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf").
 			WithFlag(flag.NewBuilder().
@@ -156,7 +156,7 @@ func TestCommandTreeBuilder_Parse(t *testing.T) {
 
 func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 	value := "hello"
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("bar").
 			WithArgument(argument.NewBuilder().
@@ -208,7 +208,7 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 
 // Unrecognized short solo flag becomes a warning.
 func TestCommandTreeBuilder_UnknownShortSoloWarning(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a"}))
@@ -222,7 +222,7 @@ func TestCommandTreeBuilder_UnknownShortSoloWarning(t *testing.T) {
 
 // Unrecognized short pair flag becomes a warning.
 func TestCommandTreeBuilder_UnknownShortPairWarning(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithShortForm('b').WithArgument(argument.NewBuilder())), opt))
@@ -239,7 +239,7 @@ func TestCommandTreeBuilder_UnknownShortPairWarning(t *testing.T) {
 // Unrecognized long solo flag becomes a warning.
 func TestCommandTreeBuilder_UnknownLongSoloWarning(t *testing.T) {
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
-		WithLeaf(tree.NewLeafBuilder("leaf")), argo.DefaultOptions()))
+		WithLeaf(tree.NewLeafBuilder("leaf")), argo.Options{}))
 
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--apple"}))
 
@@ -253,7 +253,7 @@ func TestCommandTreeBuilder_UnknownLongSoloWarning(t *testing.T) {
 // Unrecognized long pair flag becomes a warning.
 func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
-		WithLeaf(tree.NewLeafBuilder("leaf")), argo.DefaultOptions()))
+		WithLeaf(tree.NewLeafBuilder("leaf")), argo.Options{}))
 
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--apple=1"}))
 
@@ -268,7 +268,7 @@ func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
 func TestCommandTreeBuilder_Build01(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder().
 		WithBranch(tree.NewBranchBuilder("something").WithLeaf(tree.NewLeafBuilder("something-else"))).
-		WithLeaf(tree.NewLeafBuilder("something")), argo.DefaultOptions())
+		WithLeaf(tree.NewLeafBuilder("something")), argo.Options{})
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -281,7 +281,7 @@ func TestCommandTreeBuilder_Build02(t *testing.T) {
 		WithCommandGroup(tree.NewGroupBuilder("foo").
 			WithBranch(tree.NewBranchBuilder("something").WithLeaf(tree.NewLeafBuilder("something-else")))).
 		WithCommandGroup(tree.NewGroupBuilder("bar").
-			WithLeaf(tree.NewLeafBuilder("something"))), argo.DefaultOptions())
+			WithLeaf(tree.NewLeafBuilder("something"))), argo.Options{})
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -293,7 +293,7 @@ func TestCommandTreeBuilder_Build03(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder().
 		WithFlag(flag.NewBuilder().WithLongForm("hello")).
 		WithFlag(flag.NewBuilder().WithLongForm("hello")).
-		WithLeaf(tree.NewLeafBuilder("something")), argo.DefaultOptions())
+		WithLeaf(tree.NewLeafBuilder("something")), argo.Options{})
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -305,7 +305,7 @@ func TestCommandTreeBuilder_Build04(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('f')).
 		WithFlag(flag.NewBuilder().WithShortForm('f')).
-		WithLeaf(tree.NewLeafBuilder("something")), argo.DefaultOptions())
+		WithLeaf(tree.NewLeafBuilder("something")), argo.Options{})
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -318,7 +318,7 @@ func TestCommandTreeBuilder_Build05(t *testing.T) {
 		WithFlagGroup(flag.NewGroupBuilder("hoopla").
 			WithFlag(flag.NewBuilder().WithLongForm("hello"))).
 		WithFlagGroup(flag.NewGroupBuilder("wednesday").
-			WithFlag(flag.NewBuilder().WithLongForm("hello"))), argo.DefaultOptions())
+			WithFlag(flag.NewBuilder().WithLongForm("hello"))), argo.Options{})
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -333,7 +333,7 @@ func TestCommandTreeBuilder_Build06(t *testing.T) {
 		WithFlagGroup(flag.NewGroupBuilder("hoopla").
 			WithFlag(flag.NewBuilder().WithShortForm('g'))).
 		WithFlagGroup(flag.NewGroupBuilder("wednesday").
-			WithFlag(flag.NewBuilder().WithShortForm('g'))), argo.DefaultOptions())
+			WithFlag(flag.NewBuilder().WithShortForm('g'))), argo.Options{})
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")

@@ -4,11 +4,14 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func Build(builder argo.CommandBuilder, options argo.Options) (argo.Command, error) {
+	opts.FixOptions(&options)
+
 	errs := xerr.NewMultiError()
 	com := new(Command)
 

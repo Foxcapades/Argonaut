@@ -4,55 +4,66 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/unmarshal"
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	"github.com/foxcapades/argonaut/v3/internal/unmarshal"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 var unmarshalerType = reflect.TypeOf((*argo.Unmarshaler)(nil)).Elem()
 
+func TestIsUnmarshaler(t *testing.T) {
+	var in nmrshlr
+	if !unmarshal.IsUnmarshaler(reflect.TypeOf(in)) {
+		t.Fail()
+	}
+}
+
+type nmrshlr struct{}
+
+func (nmrshlr) Unmarshal(string) error { return nil }
+
 func TestIsUnmarshalable01(t *testing.T) {
 	var foo int
-	if unmarshal.IsUnmarshalable(reflect.TypeOf(foo), unmarshalerType) {
+	if unmarshal.IsUnmarshalable(reflect.TypeOf(foo)) {
 		t.Fail()
 	}
 }
 
 func TestIsUnmarshalable02(t *testing.T) {
 	var foo int
-	if !unmarshal.IsUnmarshalable(reflect.TypeOf(&foo), unmarshalerType) {
+	if !unmarshal.IsUnmarshalable(reflect.TypeOf(&foo)) {
 		t.Fail()
 	}
 }
 
 func TestIsUnmarshalable03(t *testing.T) {
-	if !unmarshal.IsUnmarshalable(unmarshalerType, unmarshalerType) {
+	if !unmarshal.IsUnmarshalable(unmarshalerType) {
 		t.Fail()
 	}
 }
 
 func TestIsUnmarshalable04(t *testing.T) {
 	var foo = func(int) {}
-	if !unmarshal.IsUnmarshalable(reflect.TypeOf(foo), unmarshalerType) {
+	if !unmarshal.IsUnmarshalable(reflect.TypeOf(foo)) {
 		t.Fail()
 	}
 }
 
 func TestIsUnmarshalable05(t *testing.T) {
-	if unmarshal.IsUnmarshalable(reflect.TypeOf(any(nil)), unmarshalerType) {
+	if unmarshal.IsUnmarshalable(reflect.TypeOf(any(nil))) {
 		t.Fail()
 	}
 }
 
 func TestIsUnmarshalable06(t *testing.T) {
 	var foo map[string]string
-	if !unmarshal.IsUnmarshalable(reflect.TypeOf(&foo), unmarshalerType) {
+	if !unmarshal.IsUnmarshalable(reflect.TypeOf(&foo)) {
 		t.Fail()
 	}
 }
 
 func TestIsUnmarshalable07(t *testing.T) {
 	var foo []string
-	if !unmarshal.IsUnmarshalable(reflect.TypeOf(&foo), unmarshalerType) {
+	if !unmarshal.IsUnmarshalable(reflect.TypeOf(&foo)) {
 		t.Fail()
 	}
 }

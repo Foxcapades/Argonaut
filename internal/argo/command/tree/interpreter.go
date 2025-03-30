@@ -2,6 +2,7 @@ package tree
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
@@ -148,7 +149,7 @@ FOR:
 		}
 	}
 
-	var onIncomplete argo.IncompleteCommandHandler[argo.ParentNode]
+	var onIncomplete reflect.Value
 
 	// If the last reached node was a command leaf.
 	if c.haveLeaf() {
@@ -159,10 +160,10 @@ FOR:
 
 		argument.CheckRequired(c.leaf.Arguments(), errs)
 	} else {
-		if parent, ok := c.current.(argo.BranchCommandBuilder); ok {
-			onIncomplete = utils.Cast[argo.IncompleteCommandHandler[argo.ParentNode]](parent.IncompleteHandler())
-		} else if parent, ok := c.current.(argo.TreeCommandBuilder); ok {
-			onIncomplete = utils.Cast[argo.IncompleteCommandHandler[argo.ParentNode]](parent.IncompleteHandler())
+		if parent, ok := c.current.(argo.BranchCommand); ok {
+			onIncomplete = reflect.ValueOf(parent.IncompleteHandler())
+		} else if parent, ok := c.current.(argo.TreeCommand); ok {
+			onIncomplete = reflect.ValueOf(parent.IncompleteHandler())
 		} else {
 			errs.AppendError(fmt.Errorf("command leaf was not reached"))
 		}
@@ -170,8 +171,12 @@ FOR:
 
 	c.processFlags(c.current.(flag.GroupContainer), errs)
 
-	if onIncomplete != nil {
-		onIncomplete(c.current.(argo.ParentNode))
+	if onIncomplete.Kind() != reflect.Invalid {
+		onIncomplete.Call([]reflect.Value{reflect.ValueOf(c.current)})
+
+		// if the incomplete handler doesn't exit, then continue as if it wasn't
+		// present.
+		errs.AppendError(fmt.Errorf("command leaf was not reached"))
 	}
 
 	if len(errs.Errors()) > 0 {

@@ -26,7 +26,7 @@ func RenderHelp(command argo.Command, opts argo.Options, writer io.Writer) error
 func MakeRenderHelpCallback(command argo.Command, options argo.Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
 		utils.Must(RenderHelp(command, options, os.Stdout))
-		os.Exit(0)
+		utils.Exit(0)
 	}
 }
 

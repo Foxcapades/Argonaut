@@ -14,7 +14,7 @@ func TestOneOfPreParseArgumentValidator(t *testing.T) {
 		command.NewBuilder().
 			WithArgument(cli.Argument().
 				WithValidator(argo.OneOfPreParseArgumentValidator([]string{"hello", "goodbye"}, "invalid value"))),
-		argo.DefaultOptions(),
+		argo.Options{},
 	))
 
 	_, err := command.Parse(com, []string{"command", "world"})
@@ -34,7 +34,7 @@ func TestOneOfPostParseArgumentValidator(t *testing.T) {
 			WithArgument(cli.Argument().
 				WithBinding(&bind).
 				WithValidator(argo.OneOfPostParseArgumentValidator([]int{1, 2}, "invalid value"))),
-		argo.DefaultOptions(),
+		argo.Options{},
 	))
 
 	_, err := command.Parse(com, []string{"command", "3"})
@@ -52,7 +52,7 @@ func TestNoneOfPreParseArgumentValidator(t *testing.T) {
 		command.NewBuilder().
 			WithArgument(cli.Argument().
 				WithValidator(argo.NoneOfPreParseArgumentValidator([]string{"hello", "goodbye"}, "invalid value"))),
-		argo.DefaultOptions(),
+		argo.Options{},
 	))
 
 	_, err := command.Parse(com, []string{"command", "hello"})
@@ -72,7 +72,7 @@ func TestNoneOfPostParseArgumentValidator(t *testing.T) {
 			WithArgument(cli.Argument().
 				WithBinding(&bind).
 				WithValidator(argo.NoneOfPostParseArgumentValidator([]int{1, 2}, "invalid value"))),
-		argo.DefaultOptions(),
+		argo.Options{},
 	))
 
 	_, err := command.Parse(com, []string{"command", "2"})

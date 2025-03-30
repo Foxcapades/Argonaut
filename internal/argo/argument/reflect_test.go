@@ -4,19 +4,20 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/xarg"
+	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func TestSiftValidators01(t *testing.T) {
-	bind := 0
 	validators := []any{
 		func(int, string) error { return nil },
 		func(string) error { return nil },
 	}
 
-	rv := reflect.ValueOf(&bind)
+	bind := 0
+	bt := argument.Binding{Raw: &bind, BType: argo.BindingTypePointer}
 
-	a, b, e := xarg.SiftValidators(validators, &rv, xarg.BindKindPointer)
+	a, b, e := argument.SiftValidators(validators, &bt)
 
 	if len(a) != 1 {
 		t.Error("expected pre-parse validator slice to have a length of 1")
@@ -37,9 +38,9 @@ func TestSiftValidators02(t *testing.T) {
 		func(string) error { return nil },
 	}
 
-	rv := reflect.ValueOf(&bind)
+	bt := argument.Binding{Raw: &bind, BType: argo.BindingTypePointer}
 
-	a, b, e := xarg.SiftValidators(validators, &rv, xarg.BindKindPointer)
+	a, b, e := argument.SiftValidators(validators, &bt)
 
 	if a != nil {
 		t.Error("expected pre-parse validator slice be nil")
@@ -55,20 +56,19 @@ func TestSiftValidators02(t *testing.T) {
 }
 
 func TestSiftValidators03(t *testing.T) {
-	bind := 0
 	validators := []any{
 		func(int, string) error { return nil },
 		func(string) error { return nil },
 	}
+	bind := 0
+	bt := argument.Binding{Raw: &bind, BType: argo.BindingTypePointer}
 
-	rv := reflect.ValueOf(&bind)
-
-	a, b, e := xarg.SiftValidators(validators, &rv, xarg.BindKindInvalid)
+	a, b, e := argument.SiftValidators(validators, &bt)
 
 	if len(a) != 1 {
 		t.Error("expected pre-parse validator slice to have a length of 1")
 	}
-	if len(b) != 0 {
+	if len(b) != 1 {
 		t.Error("expected post-parse validator slice to have a length of 1")
 	}
 	if e != nil {
@@ -80,7 +80,7 @@ func TestSiftValidators03(t *testing.T) {
 func TestValidateValidator01(t *testing.T) {
 	validator := func(string) error { return nil }
 	bindType := reflect.TypeOf(666)
-	count, err := xarg.ValidateValidator(10, validator, bindType, true)
+	count, err := argument.ValidateValidator(10, validator, bindType, true)
 
 	if count != 1 {
 		t.Errorf("expected count to equal 1 but was %d", count)
@@ -94,7 +94,7 @@ func TestValidateValidator01(t *testing.T) {
 func TestValidateValidator02(t *testing.T) {
 	validator := "hello"
 	bindType := reflect.TypeOf(666)
-	count, err := xarg.ValidateValidator(10, validator, bindType, true)
+	count, err := argument.ValidateValidator(10, validator, bindType, true)
 
 	if count != 0 {
 		t.Errorf("expected count to equal 0 but was %d", count)
@@ -109,7 +109,7 @@ func TestValidateValidator02(t *testing.T) {
 func TestValidateValidator03(t *testing.T) {
 	validator := func() int { return 0 }
 	bindType := reflect.TypeOf(666)
-	count, err := xarg.ValidateValidator(10, validator, bindType, true)
+	count, err := argument.ValidateValidator(10, validator, bindType, true)
 
 	if count != 0 {
 		t.Errorf("expected count to equal 0 but was %d", count)
@@ -124,7 +124,7 @@ func TestValidateValidator03(t *testing.T) {
 func TestValidateValidator04(t *testing.T) {
 	validator := func() (int, int) { return 0, 0 }
 	bindType := reflect.TypeOf(666)
-	count, err := xarg.ValidateValidator(10, validator, bindType, true)
+	count, err := argument.ValidateValidator(10, validator, bindType, true)
 
 	if count != 0 {
 		t.Errorf("expected count to equal 0 but was %d", count)
@@ -139,7 +139,7 @@ func TestValidateValidator04(t *testing.T) {
 func TestValidateValidator05(t *testing.T) {
 	validator := func(a, b, c int) error { return nil }
 	bindType := reflect.TypeOf(666)
-	count, err := xarg.ValidateValidator(10, validator, bindType, true)
+	count, err := argument.ValidateValidator(10, validator, bindType, true)
 
 	if count != 0 {
 		t.Errorf("expected count to equal 0 but was %d", count)
@@ -153,7 +153,7 @@ func TestValidateValidator05(t *testing.T) {
 
 func TestValidateSoloValidator_failsOnNonStringParam(t *testing.T) {
 	validator := func(int) {}
-	err := xarg.ValidateSoloValidator(0, reflect.TypeOf(validator))
+	err := argument.ValidateSoloValidator(0, reflect.TypeOf(validator))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -165,7 +165,7 @@ func TestValidateSoloValidator_failsOnNonStringParam(t *testing.T) {
 func TestValidateDoubleValidator_failsOnNonStringSecondParam(t *testing.T) {
 	validator := func(int, int) {}
 	binding := 0
-	err := xarg.ValidateDoubleValidator(0, reflect.TypeOf(validator), reflect.TypeOf(binding))
+	err := argument.ValidateDoubleValidator(0, reflect.TypeOf(validator), reflect.TypeOf(binding))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")

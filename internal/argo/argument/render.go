@@ -17,7 +17,7 @@ const (
 )
 
 func ShouldBeRendered(arg argo.Argument) bool {
-	return arg.IsRequired() && !IsBoolean(arg)
+	return arg.IsRequired() || !IsBoolean(arg)
 }
 
 func Render(arg argo.Argument, options argo.Options, padding uint8, out *bufio.Writer, argIndex int) error {

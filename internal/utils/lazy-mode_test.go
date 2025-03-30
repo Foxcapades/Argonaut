@@ -3,17 +3,17 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/util"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 )
 
 func TestIfElse01(t *testing.T) {
-	if util.IfElse(true, 1, 2) != 1 {
+	if utils.IfElse(true, 1, 2) != 1 {
 		t.Fail()
 	}
 }
 
 func TestIfElse02(t *testing.T) {
-	if util.IfElse(false, 1, 2) != 2 {
+	if utils.IfElse(false, 1, 2) != 2 {
 		t.Fail()
 	}
 }

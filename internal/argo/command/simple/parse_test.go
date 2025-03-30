@@ -1,14 +1,17 @@
-package argo_test
+package command_test
 
 import (
 	"testing"
 
 	cli "github.com/foxcapades/argonaut/v3"
+	command "github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func TestCommandBuilder_Parse(t *testing.T) {
-	com := cli.Command().
-		MustParse([]string{"hello", "--foo", "bar"})
+	com := utils.MustReturn(command.Build(command.NewBuilder(), argo.Options{}))
+	utils.MustReturn(command.Parse(com, []string{"hello", "--foo", "bar"}))
 
 	if !com.HasUnmappedInputs() {
 		t.Error("command has no unmapped inputs")
@@ -30,10 +33,10 @@ func TestCommandBuilder_Parse(t *testing.T) {
 func TestCommandBuilder_WithArgument(t *testing.T) {
 	var foo map[string]string
 
-	cli.Command().
+	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithArgument(cli.Argument().
-			WithBinding(&foo)).
-		MustParse([]string{"hello", "goober=banana"})
+			WithBinding(&foo)), argo.Options{}))
+	utils.MustReturn(command.Parse(com, []string{"hello", "goober=banana"}))
 
 	if len(foo) != 1 {
 		t.Fail()
@@ -48,16 +51,18 @@ func TestCommandBuilder_WithArgument(t *testing.T) {
 
 func TestCommandBuilder_WithUnmappedLabel(t *testing.T) {
 	var foo []string
-	cli.Command().
-		WithUnmappedInputLabel("DUCKS...").
-		WithFlag(cli.Flag().WithLongForm("value").WithBinding(&foo, true)).
-		MustParse([]string{
+
+	utils.MustReturn(command.Parse(
+		utils.MustReturn(command.Build(cli.Command().
+			WithUnmappedInputLabel("DUCKS...").
+			WithFlag(cli.Flag().WithLongForm("value").WithBinding(&foo, true)), argo.Options{})),
+		[]string{
 			"hello",
 			"goodbye",
 			"--value=flumps",
 			"--value",
 			"teddy",
-		})
+		}))
 
 	if len(foo) != 2 {
 		t.Fail()
@@ -74,45 +79,30 @@ func TestCommandBuilder_WithUnmappedLabel(t *testing.T) {
 }
 
 func TestCommandBuilder_ConflictingLongFlags(t *testing.T) {
-	com, err := cli.Command().
+	_, err := command.Build(command.NewBuilder().
 		WithFlag(cli.Flag().WithLongForm("hello")).
 		WithFlagGroup(cli.FlagGroup("nope").
-			WithFlag(cli.Flag().WithLongForm("hello"))).
-		Parse([]string{"something"})
-
-	if com != nil {
-		t.Fail()
-	}
+			WithFlag(cli.Flag().WithLongForm("hello"))), argo.Options{})
 
 	if err == nil {
-		t.Fail()
+		t.Error("expected error not to be nil, but it was")
 	}
 }
 
 func TestCommandBuilder_ConflictingShortFlags(t *testing.T) {
-	com, err := cli.Command().
+	_, err := command.Build(command.NewBuilder().
 		WithFlag(cli.Flag().WithShortForm('a')).
-		WithFlag(cli.Flag().WithShortForm('a')).
-		Parse([]string{"something"})
-
-	if com != nil {
-		t.Fail()
-	}
+		WithFlag(cli.Flag().WithShortForm('a')), argo.Options{})
 
 	if err == nil {
-		t.Fail()
+		t.Error("expected error not to be nil, but it was")
 	}
 }
 
 func TestCommandBuilder_ParseUnhitRequiredFlag(t *testing.T) {
-	com, err := cli.Command().
+	_, err := command.Parse(utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(cli.Flag().WithLongForm("apple").Require()).
-		WithFlag(cli.Flag().WithShortForm('x')).
-		Parse([]string{"hello", "-x=banana", "--banana=orange"})
-
-	if com != nil {
-		t.Fail()
-	}
+		WithFlag(cli.Flag().WithShortForm('x')), argo.Options{})), []string{"hello", "-x=banana", "--banana=orange"})
 
 	if err == nil {
 		t.Fail()
@@ -120,14 +110,14 @@ func TestCommandBuilder_ParseUnhitRequiredFlag(t *testing.T) {
 }
 
 func TestCommandBuilder_OptionalArgumentBeforeRequiredArgument(t *testing.T) {
-	com := cli.Command().
+	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithArgument(cli.Argument()).
-		WithArgument(cli.Argument().Require()).
-		MustParse([]string{"command", "value1", "value2"})
+		WithArgument(cli.Argument().Require()), argo.Options{}))
+	res := utils.MustReturn(command.Parse(com, []string{"command", "value1", "value2"}))
 
-	if len(com.Warnings()) != 1 {
+	if len(res.Warnings) != 1 {
 		t.Error("expected command to have exactly 1 warning, but it didn't")
-	} else if com.Warnings()[0] != "argument 1 was not marked as required, but preceded required argument 2" {
+	} else if res.Warnings[0].Message != "argument 1 was not marked as required, but preceded required argument 2" {
 		t.Error("expected command warning to match specific warning text but it didn't")
 	}
 

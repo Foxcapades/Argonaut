@@ -10,6 +10,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -181,7 +182,8 @@ func renderTreeOutputCheck(
 	com argo.TreeCommandBuilder,
 ) {
 	sb := new(strings.Builder)
-	opts := argo.DefaultOptions()
+	opts := argo.Options{}
+	opts2.FixOptions(&opts)
 
 	utils.Must(tree.RenderHelp(utils.MustReturn(tree.Build(com, opts)), opts, sb))
 

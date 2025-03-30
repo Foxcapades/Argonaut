@@ -15,13 +15,11 @@ func TryAddHelpFlags[T any](c flag.GroupContainerBuilder[T], fn argo.FlagCallbac
 	if c.HasFlagGroups(true) {
 		groups = c.FlagGroups(true)
 
-		// If there is no default flag group, or the default flag group already
-		// has too many flags, create a meta group.
-		if !flag.IsDefaultGroup(groups[0]) || groups[0].Size() > options.MaxDefaultFlagGroupSizeForMetaGroup {
+		if flag.IsDefaultGroup(groups[0]) && (groups[0].Size() < options.MaxDefaultFlagGroupSizeForMetaGroup || options.MaxDefaultFlagGroupSizeForMetaGroup < 1) {
+			targetGroup = groups[0]
+		} else {
 			targetGroup = flag.NewDefaultGroupBuilder()
 			c.WithFlagGroup(targetGroup)
-		} else {
-			targetGroup = groups[0]
 		}
 
 		if hasH, hasHelp = checkForHelpFlagConflicts(groups); hasH && hasHelp {

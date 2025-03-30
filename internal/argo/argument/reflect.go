@@ -24,16 +24,12 @@ import (
 //
 // In the above example, the type T must match the given binding type passed
 // as the second argument to this function.
-func SiftValidators(
-	validators []any,
-	defVal *Default,
-	bindVal *Binding,
-) ([]any, []any, error) {
-	includePostParse := bindVal.IsUsable() && defVal.IsUsable()
+func SiftValidators(validators []any, bindVal *Binding) ([]any, []any, error) {
+	includePostParse := bindVal.IsUsable()
 
 	var bt reflect.Type
 	if includePostParse {
-		bt = xreflect.RootType(reflect.TypeOf(defVal.value))
+		bt = xreflect.RootType(reflect.TypeOf(bindVal.Raw))
 	} else {
 		bt = reflect.TypeOf(nil)
 	}

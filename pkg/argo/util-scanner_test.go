@@ -10,11 +10,10 @@ func ExampleDelimitedSliceScanner_commaSeparatedValues() {
 	scanner := argo.DelimitedSliceScanner("goodbye,cruel,world", ",")
 	values := make([]string, 0, 3)
 
-	for scanner.HasNext() {
-		values = append(values, scanner.Next())
+	for v := range scanner {
+		values = append(values, v)
 	}
 
 	fmt.Println(values)
-
 	// Output: [goodbye cruel world]
 }

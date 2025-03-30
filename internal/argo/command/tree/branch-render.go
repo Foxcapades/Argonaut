@@ -42,7 +42,7 @@ func RenderBranchHelp(branch argo.BranchCommand, options argo.Options, writer io
 func MakeRenderBranchHelpCallback(branch argo.BranchCommand, options argo.Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
 		utils.Must(RenderBranchHelp(branch, options, os.Stdout))
-		os.Exit(0)
+		utils.Exit(0)
 	}
 }
 

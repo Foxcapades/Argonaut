@@ -16,7 +16,7 @@ import (
 )
 
 func TestInvalidSubCommand(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().WithLeaf(tree.NewLeafBuilder("leaf1")), opt))
 	_, err := tree.Parse(com, []string{"command", "leaf2"})
 
@@ -27,7 +27,7 @@ func TestInvalidSubCommand(t *testing.T) {
 
 // expect flag, expect argument
 func TestTreeInterpretLongPair01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf1")).
 		WithFlag(flag.NewBuilder().WithLongForm("foo").WithArgument(argument.NewBuilder())), opt))
@@ -50,7 +50,7 @@ func TestTreeInterpretLongPair01(t *testing.T) {
 
 // Don't expect flag at all
 func TestTreeInterpretLongPair02(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf1")), opt))
 	_ = utils.MustReturn(tree.Parse(com, []string{"command", "leaf1", "--foo=bar"}))
@@ -68,7 +68,7 @@ func TestTreeInterpretLongPair02(t *testing.T) {
 
 // Have flag, doesn't expect argument
 func TestTreeInterpretLongPair03(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf1")).
 		WithFlag(flag.NewBuilder().WithLongForm("foo")), opt))
@@ -82,7 +82,7 @@ func TestTreeInterpretLongPair03(t *testing.T) {
 
 // Unexpected solo long flag (goes to unmapped)
 func TestTreeInterpretLongSolo01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("hello")), opt))
 	_ = utils.MustReturn(tree.Parse(com, []string{"command", "hello", "--hello"}))
@@ -100,7 +100,7 @@ func TestTreeInterpretLongSolo01(t *testing.T) {
 
 // Solo flag requires argument but is followed by boundary
 func TestTreeInterpretLongSolo02(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder().Require())), opt))
@@ -114,7 +114,7 @@ func TestTreeInterpretLongSolo02(t *testing.T) {
 
 // Solo flag gets the required argument it craves so badly
 func TestTreeInterpretLongSolo03(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder().Require())), opt))
@@ -133,7 +133,7 @@ func TestTreeInterpretLongSolo03(t *testing.T) {
 
 // Solo flag gets a plain argument that it optionally accepts
 func TestTreeInterpretLongSolo04(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -153,7 +153,7 @@ func TestTreeInterpretLongSolo04(t *testing.T) {
 // Solo flag gets an argument that resembles a long flag, but isn't
 // Solo flag gets a plain argument that it optionally accepts
 func TestTreeInterpretLongSolo05(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -172,7 +172,7 @@ func TestTreeInterpretLongSolo05(t *testing.T) {
 
 // Solo flag expects an optional argument but gets end of input
 func TestTreeInterpretLongSolo06(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -189,7 +189,7 @@ func TestTreeInterpretLongSolo06(t *testing.T) {
 
 // Solo flag expects an optional argument but gets boundary
 func TestTreeInterpretLongSolo07(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -209,7 +209,7 @@ func TestTreeInterpretLongSolo07(t *testing.T) {
 // Solo flag expects an optional argument but gets a long flag pair that isn't
 // registered.
 func TestTreeInterpretLongSolo08(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -229,7 +229,7 @@ func TestTreeInterpretLongSolo08(t *testing.T) {
 // Solo flag expects an optional argument but gets a short flag that isn't
 // registered.
 func TestTreeInterpretLongSolo09(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -249,7 +249,7 @@ func TestTreeInterpretLongSolo09(t *testing.T) {
 // Solo flag expects an optional argument but gets a short flag pair that isn't
 // registered.
 func TestTreeInterpretLongSolo10(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())), opt))
@@ -269,7 +269,7 @@ func TestTreeInterpretLongSolo10(t *testing.T) {
 // solo flag expects an optional argument but gets a short flag that _is_
 // registered
 func TestTreeInterpretLongSolo11(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
@@ -293,7 +293,7 @@ func TestTreeInterpretLongSolo11(t *testing.T) {
 // Solo flag expects an optional argument but gets a short flag pair that _is_
 // registered
 func TestTreeInterpretLongSolo12(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
@@ -321,7 +321,7 @@ func TestTreeInterpretLongSolo12(t *testing.T) {
 // Solo flag expects an optional argument but gets a long flag that _is_
 // registered
 func TestTreeInterpretLongSolo13(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
@@ -345,7 +345,7 @@ func TestTreeInterpretLongSolo13(t *testing.T) {
 // Solo flag expects an optional argument but gets a long flag pair that _is_
 // registered
 func TestTreeInterpretLongSolo14(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder())).
@@ -372,7 +372,7 @@ func TestTreeInterpretLongSolo14(t *testing.T) {
 
 // Short pair takes optional argument that is plain text.
 func TestTreeInterpretShortPair01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithShortForm('c').WithArgument(argument.NewBuilder())), opt))
@@ -392,7 +392,7 @@ func TestTreeInterpretShortPair01(t *testing.T) {
 
 // Short pair is unregistered
 func TestTreeInterpretShortPair02(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 
@@ -411,7 +411,7 @@ func TestTreeInterpretShortPair02(t *testing.T) {
 
 // Short pair block is empty???
 func TestTreeInterpretShortPair03(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 
@@ -430,7 +430,7 @@ func TestTreeInterpretShortPair03(t *testing.T) {
 
 // multi-flag block with short pair, first flag requires argument
 func TestTreeInterpretShortPair04(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('c').WithArgument(argument.NewBuilder().Require())).
@@ -455,7 +455,7 @@ func TestTreeInterpretShortPair04(t *testing.T) {
 
 // multi-flag block with a short pair, last flag requires argument
 func TestTreeInterpretShortPair05(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
@@ -482,7 +482,7 @@ func TestTreeInterpretShortPair05(t *testing.T) {
 
 // multi-flag block with unknown first flag
 func TestTreeInterpretShortPair06(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('b').WithArgument(argument.NewBuilder())), opt))
@@ -510,7 +510,7 @@ func TestTreeInterpretShortPair06(t *testing.T) {
 
 // multi-flag block with unknown middle flag
 func TestTreeInterpretShortPair07(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a')).
@@ -546,7 +546,7 @@ func TestTreeInterpretShortPair07(t *testing.T) {
 
 // flag that doesn't except an argument
 func TestTreeInterpretShortPair08(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a')).
@@ -570,7 +570,7 @@ func TestTreeInterpretShortPair08(t *testing.T) {
 
 // first flag accepts an argument, second flag is unrecognized
 func TestTreeInterpretShortPair09(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -592,7 +592,7 @@ func TestTreeInterpretShortPair09(t *testing.T) {
 
 // short solo unknown flag
 func TestTreeInterpreterShortSolo01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
 
@@ -611,7 +611,7 @@ func TestTreeInterpreterShortSolo01(t *testing.T) {
 
 // short solo requires arg, hits boundary
 func TestTreeInterpreterShortSolo02(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('c').WithArgument(argument.NewBuilder().Require())), opt))
@@ -625,7 +625,7 @@ func TestTreeInterpreterShortSolo02(t *testing.T) {
 
 // solo short flag requires arg, eats rest of block
 func TestTreeInterpreterShortSolo03(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder().Require())).
@@ -650,7 +650,7 @@ func TestTreeInterpreterShortSolo03(t *testing.T) {
 
 // solo short flag expects optional argument but hits eof
 func TestTreeInterpreterShortSolo04(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -667,7 +667,7 @@ func TestTreeInterpreterShortSolo04(t *testing.T) {
 
 // solo short flag expects optional argument but hits boundary
 func TestTreeInterpreterShortSolo05(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -684,7 +684,7 @@ func TestTreeInterpreterShortSolo05(t *testing.T) {
 
 // solo short flag expects optional and is followed by plain text
 func TestTreeInterpreterShortSolo06(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -703,7 +703,7 @@ func TestTreeInterpreterShortSolo06(t *testing.T) {
 
 // solo short flag expects optional and is followed by a known short flag
 func TestTreeInterpreterShortSolo07(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
@@ -726,7 +726,7 @@ func TestTreeInterpreterShortSolo07(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown short flag
 func TestTreeInterpreterShortSolo08(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -745,7 +745,7 @@ func TestTreeInterpreterShortSolo08(t *testing.T) {
 
 // solo short flag expects optional and is followed by a known short pair
 func TestTreeInterpreterShortSolo09(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
@@ -768,7 +768,7 @@ func TestTreeInterpreterShortSolo09(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown short flag
 func TestTreeInterpreterShortSolo10(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -787,7 +787,7 @@ func TestTreeInterpreterShortSolo10(t *testing.T) {
 
 // solo short flag expects optional and is followed by a known long flag
 func TestTreeInterpreterShortSolo11(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
@@ -810,7 +810,7 @@ func TestTreeInterpreterShortSolo11(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown long flag
 func TestTreeInterpreterShortSolo12(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -829,7 +829,7 @@ func TestTreeInterpreterShortSolo12(t *testing.T) {
 
 // solo short flag expects optional and is followed by a known long pair
 func TestTreeInterpreterShortSolo13(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())).
@@ -852,7 +852,7 @@ func TestTreeInterpreterShortSolo13(t *testing.T) {
 
 // solo short flag expects optional and is followed by an unknown long pair
 func TestTreeInterpreterShortSolo14(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(cli.ShortFlag('a').WithArgument(argument.NewBuilder())), opt))
@@ -872,7 +872,7 @@ func TestTreeInterpreterShortSolo14(t *testing.T) {
 // https://github.com/Foxcapades/Argonaut/issues/18
 func TestRegression18Tree(t *testing.T) {
 	bind := false
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithFlag(cli.ShortFlag('a').WithBinding(&bind, false)).
 		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
@@ -901,7 +901,7 @@ func TestRegression58Tree(t *testing.T) {
 	var printHeaders bool
 	var inputFile string
 
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("foo").
 			WithFlag(cli.ComboFlag('r', "rm-na").
@@ -964,7 +964,7 @@ func TestRegression58Tree(t *testing.T) {
 func TestRegression62CommandTree(t *testing.T) {
 	var value argotype.Hex8
 
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("gen-meta").
 			WithFlag(cli.ComboFlag('i', "interactive").

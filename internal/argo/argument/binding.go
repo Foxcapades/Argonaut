@@ -15,22 +15,22 @@ func NewBinding(value any) Binding {
 }
 
 type Binding struct {
-	raw   any
-	bType argo.ArgumentBindingType
+	Raw   any
+	BType argo.ArgumentBindingType
 }
 
 func (b *Binding) Type() argo.ArgumentBindingType {
-	return b.bType
+	return b.BType
 }
 
 func (b *Binding) BoundTo() any {
-	return b.raw
+	return b.Raw
 }
 
 func (b *Binding) IsUsable() bool {
 	// This method is only called internally by the default implementations, so we
 	// know that the "Unknown" type isn't a possible value.
-	return !(b.bType == argo.BindingTypeNone || b.bType == argo.BindingTypeInvalid)
+	return !(b.BType == argo.BindingTypeNone || b.BType == argo.BindingTypeInvalid)
 }
 
 func DetermineBindType(bind any) (kind argo.ArgumentBindingType, err error) {

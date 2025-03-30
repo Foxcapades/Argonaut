@@ -5,12 +5,15 @@ import (
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func Build(builder argo.TreeCommandBuilder, options argo.Options) (argo.TreeCommand, error) {
+	opts.FixOptions(&options)
+
 	errs := xerr.NewMultiError()
 	tree := new(Tree)
 

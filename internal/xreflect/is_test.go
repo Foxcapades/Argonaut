@@ -4,8 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/xreflect"
-	"github.com/Foxcapades/Argonaut/pkg/argo"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
 )
 
 func TestIsPointer(t *testing.T) {
@@ -91,17 +90,6 @@ func TestIsNumeric12(t *testing.T) {
 		t.Fail()
 	}
 }
-
-func TestIsUnmarshaler(t *testing.T) {
-	var in nmrshlr
-	if !xreflect.IsUnmarshaler(reflect.TypeOf(in), reflect.TypeOf((*argo.Unmarshaler)(nil)).Elem()) {
-		t.Fail()
-	}
-}
-
-type nmrshlr struct{}
-
-func (nmrshlr) Unmarshal(string) error { return nil }
 
 func TestIsInterface(t *testing.T) {
 	var foo any

@@ -16,7 +16,7 @@ import (
 
 // Unknown short solo flag.
 func TestCommandInterpreterShortSolo01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder(), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-f"}))
 
@@ -31,7 +31,7 @@ func TestCommandInterpreterShortSolo01(t *testing.T) {
 
 // Known short solo flag.
 func TestCommandInterpreterShortSolo02(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('f')), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-f"}))
 
@@ -42,7 +42,7 @@ func TestCommandInterpreterShortSolo02(t *testing.T) {
 
 // Unknown short solo at the start of a block
 func TestCommandInterpreterShortSolo03(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('b')), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
@@ -61,7 +61,7 @@ func TestCommandInterpreterShortSolo03(t *testing.T) {
 
 // Unknown short solo in the middle of a block
 func TestCommandInterpreterShortSolo04(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('a')), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
@@ -80,7 +80,7 @@ func TestCommandInterpreterShortSolo04(t *testing.T) {
 
 // Short solo requires arg but hits eof
 func TestCommandInterpreterShortSolo05(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
 	_, err := command.Parse(com, []string{"Command", "-a"})
@@ -92,7 +92,7 @@ func TestCommandInterpreterShortSolo05(t *testing.T) {
 
 // Short solo requires arg but hits boundary
 func TestCommandInterpreterShortSolo06(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
 	_, err := command.Parse(com, []string{"Command", "-a", "--"})
@@ -104,7 +104,7 @@ func TestCommandInterpreterShortSolo06(t *testing.T) {
 
 // Short solo requires arg and hits any value
 func TestCommandInterpreterShortSolo07(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-b"}))
@@ -122,7 +122,7 @@ func TestCommandInterpreterShortSolo07(t *testing.T) {
 
 // Short solo requires arg and clobbers block
 func TestCommandInterpreterShortSolo08(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
@@ -139,7 +139,7 @@ func TestCommandInterpreterShortSolo08(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo09(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder())).
 		WithFlag(flag.NewBuilder().WithShortForm('b')), opt))
@@ -158,7 +158,7 @@ func TestCommandInterpreterShortSolo09(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo10(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder())), opt))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
@@ -175,7 +175,7 @@ func TestCommandInterpreterShortSolo10(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo11(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -191,7 +191,7 @@ func TestCommandInterpreterShortSolo11(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo12(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -207,7 +207,7 @@ func TestCommandInterpreterShortSolo12(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo13(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -225,7 +225,7 @@ func TestCommandInterpreterShortSolo13(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo14(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -243,7 +243,7 @@ func TestCommandInterpreterShortSolo14(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo15(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -261,7 +261,7 @@ func TestCommandInterpreterShortSolo15(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo16(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
@@ -283,7 +283,7 @@ func TestCommandInterpreterShortSolo16(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo17(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
@@ -305,7 +305,7 @@ func TestCommandInterpreterShortSolo17(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo18(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
@@ -327,7 +327,7 @@ func TestCommandInterpreterShortSolo18(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo19(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
@@ -349,7 +349,7 @@ func TestCommandInterpreterShortSolo19(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo20(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -367,7 +367,7 @@ func TestCommandInterpreterShortSolo20(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo21(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())), opt))
@@ -386,7 +386,7 @@ func TestCommandInterpreterShortSolo21(t *testing.T) {
 
 // https://github.com/Foxcapades/Argonaut/issues/18
 func TestRegression18Command(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	{
 		bind := false
 		com := utils.MustReturn(command.Build(command.NewBuilder().
@@ -445,7 +445,7 @@ func TestRegression58Command(t *testing.T) {
 	var printHeaders bool
 	var inputFile string
 
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('r').WithLongForm("rm-na").
 			WithBinding(&removeNAValues, false)).
@@ -507,7 +507,7 @@ func TestRegression58Command(t *testing.T) {
 func TestRegression62Command(t *testing.T) {
 	var value argotype.Hex8
 
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('i').WithLongForm("interactive").
 			WithDescription("Interactive mode: auto (0), none (1), minimal (2), full (3).  Defaults to auto").

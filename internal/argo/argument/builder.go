@@ -71,7 +71,7 @@ func (a *argumentBuilder) Binding() argo.ArgumentBinding {
 }
 
 func (a *argumentBuilder) HasBinding() bool {
-	return a.binding.bType != argo.BindingTypeNone
+	return a.binding.BType != argo.BindingTypeNone
 }
 
 func (a *argumentBuilder) WithDefault(def any) argo.ArgumentBuilder {

@@ -10,6 +10,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -49,7 +50,7 @@ My Special Little Commands
 `
 
 func TestCommandBranchHelpRenderer001(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(tree.NewBranchBuilder("branch1").
 			WithAliases("branch2", "branch3").
@@ -91,7 +92,7 @@ func TestCommandBranchHelpRenderer001(t *testing.T) {
 }
 
 func TestCommandBranchHelpRendererFail01(t *testing.T) {
-	opt := argo.DefaultOptions()
+	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(tree.NewBranchBuilder("branch1").
 			WithAliases("branch2", "branch3").
@@ -146,7 +147,8 @@ func renderBranchOutputCheck(
 	com argo.BranchCommand,
 ) {
 	sb := new(strings.Builder)
-	opts := argo.DefaultOptions()
+	opts := argo.Options{}
+	opts2.FixOptions(&opts)
 
 	utils.Must(tree.RenderBranchHelp(com, opts, sb))
 

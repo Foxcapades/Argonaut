@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Foxcapades/Argonaut/internal/xreflect"
+	"github.com/foxcapades/argonaut/v3/internal/xreflect"
 )
 
 func TestRootType01(t *testing.T) {

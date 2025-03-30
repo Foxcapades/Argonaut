@@ -27,7 +27,7 @@ func RenderHelp(tree argo.TreeCommand, options argo.Options, writer io.Writer) e
 func MakeRenderTreeHelpCallback(tree argo.TreeCommand, options argo.Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
 		utils.Must(RenderHelp(tree, options, os.Stdout))
-		os.Exit(0)
+		utils.Exit(0)
 	}
 }
 

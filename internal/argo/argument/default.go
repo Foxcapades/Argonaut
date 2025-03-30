@@ -14,22 +14,22 @@ func NewDefault(value any) Default {
 }
 
 type Default struct {
-	value any
-	dType argo.ArgumentDefaultType
+	Raw   any
+	DType argo.ArgumentDefaultType
 }
 
 func (d *Default) Type() argo.ArgumentDefaultType {
-	return d.dType
+	return d.DType
 }
 
 func (d *Default) Value() any {
-	return d.value
+	return d.Raw
 }
 
 func (d *Default) IsUsable() bool {
 	// This method is only called internally by the default implementations, so we
 	// know that the "Unknown" type isn't a possible value.
-	return !(d.dType == argo.DefaultTypeNone || d.dType == argo.DefaultTypeInvalid)
+	return !(d.DType == argo.DefaultTypeNone || d.DType == argo.DefaultTypeInvalid)
 }
 
 func DetermineDefaultType(bind, def any) (kind argo.ArgumentDefaultType, err error) {
@@ -123,7 +123,7 @@ func DetermineDefaultType(bind, def any) (kind argo.ArgumentDefaultType, err err
 		// But the first out param is not compatible with the binding type
 		if !dt.Out(0).AssignableTo(bt) {
 			kind = argo.DefaultTypeInvalid
-			err = fmt.Errorf("default value provider does not returns type %d which is incompatible with binding type %s", dt, bt)
+			err = fmt.Errorf("default value provider returns type %s which is incompatible with binding type %s", dt.Out(0), bt)
 			return
 		}
 
