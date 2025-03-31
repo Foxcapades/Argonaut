@@ -3,7 +3,11 @@ package tree
 // WARNING:
 //   This is a generated file!  Edits here will be lost!
 
-import "github.com/foxcapades/argonaut/v3/pkg/argo"
+import (
+	"fmt"
+
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
+)
 
 type Branch struct {
 	disableHelp   bool
@@ -42,26 +46,6 @@ func (i *Branch) Callback() argo.CommandCallback[argo.BranchCommand] {
 	return i.callback
 }
 
-func (i *Branch) FindShortFlag(b byte) argo.Flag {
-	for _, group := range i.flagGroups {
-		if flag := group.FindShortFlag(b); flag != nil {
-			return flag
-		}
-	}
-
-	return nil
-}
-
-func (i *Branch) FindLongFlag(name string) argo.Flag {
-	for _, group := range i.flagGroups {
-		if flag := group.FindLongFlag(name); flag != nil {
-			return flag
-		}
-	}
-
-	return nil
-}
-
 func (i *Branch) IsHelpDisabled() bool {
 	return i.disableHelp
 }
@@ -94,6 +78,56 @@ func (i *Branch) Matches(name string) bool {
 	}
 
 	return false
+}
+
+func (i *Branch) FindShortFlag(b byte) argo.Flag {
+	for _, group := range i.flagGroups {
+		if flag := group.FindShortFlag(b); flag != nil {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (i *Branch) FindLongFlag(name string) argo.Flag {
+	for _, group := range i.flagGroups {
+		if flag := group.FindLongFlag(name); flag != nil {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (i *Branch) FindShortFlagRecursive(c byte) argo.Flag {
+	if f := i.FindShortFlag(c); f != nil {
+		return f
+	}
+
+	switch t := i.parent.(type) {
+	case argo.TreeCommand:
+		return t.FindShortFlag(c)
+	case argo.BranchCommand:
+		return t.FindShortFlagRecursive(c)
+	default:
+		panic(fmt.Sprintf("illegal state: unknown node parent type: %v", i.parent))
+	}
+}
+
+func (i *Branch) FindLongFlagRecursive(name string) argo.Flag {
+	if f := i.FindLongFlag(name); f != nil {
+		return f
+	}
+
+	switch t := i.parent.(type) {
+	case argo.TreeCommand:
+		return t.FindLongFlag(name)
+	case argo.BranchCommand:
+		return t.FindLongFlagRecursive(name)
+	default:
+		panic(fmt.Sprintf("illegal state: unknown node parent type: %v", i.parent))
+	}
 }
 
 func (i *Branch) HasCommandGroups() bool {

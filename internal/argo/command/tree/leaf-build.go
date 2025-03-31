@@ -11,7 +11,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func BuildLeaf(l argo.LeafCommandBuilder, options argo.Options, parent argo.ParentNode) (argo.LeafCommand, error) {
+func BuildLeaf(l argo.LeafCommandBuilder, options Options, parent argo.ParentNode) (argo.LeafCommand, error) {
 	errs := xerr.NewMultiError()
 
 	// Ensure the group name is not blank
@@ -39,7 +39,7 @@ func BuildLeaf(l argo.LeafCommandBuilder, options argo.Options, parent argo.Pare
 	}
 	// this needs to happen _after_ TryAddHelpFlags, which itself has to happen
 	// after the leaf instance is created.
-	leaf.flagGroups = flag.BuildGroups(l.FlagGroups(true), options, errs)
+	leaf.flagGroups = flag.BuildGroups(l.FlagGroups(true), errs)
 
 	if len(errs.Errors()) > 0 {
 		return nil, errs

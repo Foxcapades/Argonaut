@@ -4,7 +4,11 @@ package tree
 // WARNING:
 //   This is a generated file!  Edits here will be lost!
 
-import "github.com/foxcapades/argonaut/v3/pkg/argo"
+import (
+  "fmt"
+
+  "github.com/foxcapades/argonaut/v3/pkg/argo"
+)
 
 type Branch struct {
   {{ template "CommandBaseProps" $vars }}

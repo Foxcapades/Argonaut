@@ -2,7 +2,10 @@
 package tree
 
 import (
+  "fmt"
+
   "github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+  "github.com/foxcapades/argonaut/v3/internal/argo/flag"
   "github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -45,4 +48,55 @@ func (i *{{ .ImplType }}) Matches(name string) bool {
 
   return false
 }
+
+func (i *{{ .ImplType }}) FindShortFlag(b byte) argo.Flag {
+  for _, group := range i.flagGroups {
+    if flag := group.FindShortFlag(b); flag != nil {
+      return flag
+    }
+  }
+
+  return nil
+}
+
+func (i *{{ .ImplType }}) FindLongFlag(name string) argo.Flag {
+  for _, group := range i.flagGroups {
+    if flag := group.FindLongFlag(name); flag != nil {
+      return flag
+    }
+  }
+
+  return nil
+}
+
+func (i *{{ .ImplType }}) FindShortFlagRecursive(c byte) argo.Flag {
+  if f := i.FindShortFlag(c); f != nil {
+    return f
+  }
+
+  switch t := i.parent.(type) {
+  case argo.TreeCommand:
+    return t.FindShortFlag(c)
+  case argo.BranchCommand:
+    return t.FindShortFlagRecursive(c)
+  default:
+    panic(fmt.Sprintf("illegal state: unknown node parent type: %v", i.parent))
+  }
+}
+
+func (i *{{ .ImplType }}) FindLongFlagRecursive(name string) argo.Flag {
+  if f := i.FindLongFlag(name); f != nil {
+    return f
+  }
+
+  switch t := i.parent.(type) {
+  case argo.TreeCommand:
+    return t.FindLongFlag(name)
+  case argo.BranchCommand:
+    return t.FindLongFlagRecursive(name)
+  default:
+    panic(fmt.Sprintf("illegal state: unknown node parent type: %v", i.parent))
+  }
+}
+
 {{- end }}

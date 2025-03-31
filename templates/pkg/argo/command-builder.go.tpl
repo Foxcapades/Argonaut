@@ -23,4 +23,8 @@ package argo
 type CommandBuilder interface {
   {{ template "CommandBuilderCommon" $vars }}
   {{ template "CommandEndBuilder" $vars }}
+
+  WithOptions(opts CommandOptions) CommandBuilder
+
+  Options() CommandOptions
 }

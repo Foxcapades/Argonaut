@@ -194,12 +194,13 @@ func TestArgument_default04(t *testing.T) {
 	foo := func() (int, error) { return 3, nil }
 
 	os.Args = []string{"command", "poo"}
-	_, err := cli.BuildCommand(cli.Command().
+	_, res, _ := cli.ParseCommand(cli.Command().
 		WithArgument(cli.Argument().WithBinding(con).WithDefault(foo)))
 
-	t.Log(err)
-	if err == nil {
-		t.Fail()
+	if res.Error == nil {
+		t.Error("expected a configuration error but err was nil")
+	} else if res.ErrorType != argo.ConfigurationError {
+		t.Errorf("expected a configuration error but err type was %s", res.ErrorType)
 	}
 }
 
@@ -214,12 +215,13 @@ func TestArgument_default05(t *testing.T) {
 	foo := func() (int, error) { return 3, nil }
 
 	os.Args = []string{"command", "poo"}
-	_, err := cli.BuildCommand(cli.Command().
+	_, res, _ := cli.ParseCommand(cli.Command().
 		WithArgument(cli.Argument().WithBinding(con).WithDefault(foo)))
 
-	t.Log(err)
-	if err == nil {
-		t.Fail()
+	if res.Error == nil {
+		t.Error("expected a configuration error but err was nil")
+	} else if res.ErrorType != argo.ConfigurationError {
+		t.Errorf("expected a configuration error but err type was %s", res.ErrorType)
 	}
 }
 

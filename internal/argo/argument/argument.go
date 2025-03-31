@@ -8,7 +8,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-type argument struct {
+type Argument struct {
 	name string
 	desc string
 	raw  string
@@ -25,51 +25,51 @@ type argument struct {
 	postParseValidators []any
 }
 
-func (a *argument) Name() string {
+func (a *Argument) Name() string {
 	return a.name
 }
 
-func (a *argument) HasName() bool {
+func (a *Argument) HasName() bool {
 	return len(a.name) > 0
 }
 
-func (a *argument) Description() string {
+func (a *Argument) Description() string {
 	return a.desc
 }
 
-func (a *argument) HasDescription() bool {
+func (a *Argument) HasDescription() bool {
 	return len(a.desc) > 0
 }
 
-func (a *argument) HasBinding() bool {
+func (a *Argument) HasBinding() bool {
 	return a.binding.BType != argo.BindingTypeNone
 }
 
-func (a *argument) Binding() argo.ArgumentBinding {
+func (a *Argument) Binding() argo.ArgumentBinding {
 	return &a.binding
 }
 
-func (a *argument) HasDefault() bool {
+func (a *Argument) HasDefault() bool {
 	return a.defVal.DType != argo.DefaultTypeNone
 }
 
-func (a *argument) Default() any {
-	return a.defVal.Raw
+func (a *Argument) Default() argo.ArgumentDefault {
+	return &a.defVal
 }
 
-func (a *argument) WasHit() bool {
+func (a *Argument) WasHit() bool {
 	return a.isUsed
 }
 
-func (a *argument) RawValue() string {
+func (a *Argument) RawValue() string {
 	return a.raw
 }
 
-func (a *argument) IsRequired() bool {
+func (a *Argument) IsRequired() bool {
 	return a.required
 }
 
-func (a *argument) SetToDefault() error {
+func (a *Argument) SetToDefault() error {
 	// If there is no binding set, what are we going to set to the default value?
 	if !a.HasBinding() {
 		return nil
@@ -146,7 +146,7 @@ func (a *argument) SetToDefault() error {
 	return nil
 }
 
-func (a *argument) SetValue(rawString string) error {
+func (a *Argument) SetValue(rawString string) error {
 	a.isUsed = true
 	a.raw = rawString
 
@@ -175,7 +175,7 @@ func (a *argument) SetValue(rawString string) error {
 	return nil
 }
 
-func (a *argument) callPreArgFunc(fn any, raw string) error {
+func (a *Argument) callPreArgFunc(fn any, raw string) error {
 	errs := reflect.ValueOf(fn).Call([]reflect.Value{reflect.ValueOf(raw)})
 
 	if !errs[0].IsNil() {
@@ -185,7 +185,7 @@ func (a *argument) callPreArgFunc(fn any, raw string) error {
 	return nil
 }
 
-func (a *argument) callPostArgFunc(fn any, root reflect.Value, raw string) error {
+func (a *Argument) callPostArgFunc(fn any, root reflect.Value, raw string) error {
 	errs := reflect.ValueOf(fn).Call([]reflect.Value{root, reflect.ValueOf(raw)})
 
 	if !errs[0].IsNil() {

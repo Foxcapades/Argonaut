@@ -2,10 +2,11 @@ package common
 
 import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func TryAddHelpFlags[T any](c flag.GroupContainerBuilder[T], fn argo.FlagCallback, options argo.Options) {
+func TryAddHelpFlags[T any](c flag.GroupContainerBuilder[T], fn argo.FlagCallback, options opts.Options) {
 	var targetGroup argo.FlagGroupBuilder
 	var groups []argo.FlagGroupBuilder
 
@@ -15,7 +16,7 @@ func TryAddHelpFlags[T any](c flag.GroupContainerBuilder[T], fn argo.FlagCallbac
 	if c.HasFlagGroups(true) {
 		groups = c.FlagGroups(true)
 
-		if flag.IsDefaultGroup(groups[0]) && (groups[0].Size() < options.MaxDefaultFlagGroupSizeForMetaGroup || options.MaxDefaultFlagGroupSizeForMetaGroup < 1) {
+		if flag.IsDefaultGroup(groups[0]) && (groups[0].Size() < options.MaxDefaultFlagGroupSizeForMetaGroup() || options.MaxDefaultFlagGroupSizeForMetaGroup() < 1) {
 			targetGroup = groups[0]
 		} else {
 			targetGroup = flag.NewDefaultGroupBuilder()

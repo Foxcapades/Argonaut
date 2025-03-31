@@ -30,6 +30,7 @@ type ChildNode interface {
   // Matches tests whether the branch name or any of its aliases match the given
   // string.
   Matches(name string) bool
+  {{ template "ChildNodeCommon" }}
 }
 
 type ChildNodeBuilder interface {

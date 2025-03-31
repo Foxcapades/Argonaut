@@ -7,10 +7,10 @@ import (
 
 // NewBuilder returns a new FlagBuilder instance.
 func NewBuilder() argo.FlagBuilder {
-	return &flagBuilder{}
+	return new(Builder)
 }
 
-type flagBuilder struct {
+type Builder struct {
 	short  byte
 	req    bool
 	isHelp bool
@@ -20,91 +20,81 @@ type flagBuilder struct {
 	arg    argo.ArgumentBuilder
 }
 
-func (b *flagBuilder) WithShortForm(char byte) argo.FlagBuilder {
+func (b *Builder) WithShortForm(char byte) argo.FlagBuilder {
 	b.short = char
 	return b
 }
 
-func (b *flagBuilder) HasShortForm() bool {
+func (b *Builder) HasShortForm() bool {
 	return b.short != 0
 }
 
-func (b *flagBuilder) ShortForm() byte {
+func (b *Builder) ShortForm() byte {
 	return b.short
 }
 
-func (b *flagBuilder) WithLongForm(form string) argo.FlagBuilder {
+func (b *Builder) WithLongForm(form string) argo.FlagBuilder {
 	b.long = form
 	return b
 }
 
-func (b *flagBuilder) HasLongForm() bool {
+func (b *Builder) HasLongForm() bool {
 	return len(b.long) > 0
 }
 
-func (b *flagBuilder) LongForm() string {
+func (b *Builder) LongForm() string {
 	return b.long
 }
 
-//
-
-func (b *flagBuilder) WithDescription(desc string) argo.FlagBuilder {
+func (b *Builder) WithDescription(desc string) argo.FlagBuilder {
 	b.desc = desc
 	return b
 }
 
-func (b *flagBuilder) HasDescription() bool {
+func (b *Builder) HasDescription() bool {
 	return len(b.desc) > 0
 }
 
-func (b *flagBuilder) Description() string {
+func (b *Builder) Description() string {
 	return b.desc
 }
 
-//
-
-func (b *flagBuilder) WithCallback(fn argo.FlagCallback) argo.FlagBuilder {
+func (b *Builder) WithCallback(fn argo.FlagCallback) argo.FlagBuilder {
 	b.onHit = fn
 	return b
 }
 
-func (b *flagBuilder) HasCallback() bool {
+func (b *Builder) HasCallback() bool {
 	return b.onHit != nil
 }
 
-func (b *flagBuilder) Callback() argo.FlagCallback {
+func (b *Builder) Callback() argo.FlagCallback {
 	return b.onHit
 }
 
-//
-
-func (b *flagBuilder) WithArgument(arg argo.ArgumentBuilder) argo.FlagBuilder {
+func (b *Builder) WithArgument(arg argo.ArgumentBuilder) argo.FlagBuilder {
 	b.arg = arg
 	return b
 }
 
-func (b *flagBuilder) HasArgument() bool {
+func (b *Builder) HasArgument() bool {
 	return b.arg != nil
 }
 
-func (b *flagBuilder) Argument() argo.ArgumentBuilder {
+func (b *Builder) Argument() argo.ArgumentBuilder {
 	return b.arg
 }
 
-//
-
-func (b *flagBuilder) Require() argo.FlagBuilder {
+func (b *Builder) Require() argo.FlagBuilder {
 	b.req = true
 	return b
 }
 
-func (b *flagBuilder) IsRequired() bool {
+func (b *Builder) IsRequired() bool {
 	return b.req
 }
 
-//
-
-func (b *flagBuilder) WithBinding(pointer any, required bool) argo.FlagBuilder {
+func (b *Builder) WithBinding(pointer any, required bool) argo.FlagBuilder {
 	b.arg = argument.NewBuilder().WithBinding(pointer)
 
 	if required {
@@ -114,7 +104,7 @@ func (b *flagBuilder) WithBinding(pointer any, required bool) argo.FlagBuilder {
 	return b
 }
 
-func (b *flagBuilder) WithBindingAndDefault(pointer, def any, required bool) argo.FlagBuilder {
+func (b *Builder) WithBindingAndDefault(pointer, def any, required bool) argo.FlagBuilder {
 	b.arg = argument.NewBuilder().WithBinding(pointer).WithDefault(def)
 
 	if required {
@@ -124,15 +114,11 @@ func (b *flagBuilder) WithBindingAndDefault(pointer, def any, required bool) arg
 	return b
 }
 
-//
-
-func (b *flagBuilder) MarkAsHelpFlag() argo.FlagBuilder {
+func (b *Builder) MarkAsHelpFlag() argo.FlagBuilder {
 	b.isHelp = true
 	return b
 }
 
-func (b *flagBuilder) IsHelpFlag() bool {
+func (b *Builder) IsHelpFlag() bool {
 	return b.isHelp
 }
-
-//

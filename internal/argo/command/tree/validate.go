@@ -16,7 +16,7 @@ func ValidateNodeName(name string) error {
 	}
 
 	for i := 1; i < len(name); i++ {
-		if !text.IsWord(name[i]) || name[i] == text.DashByte {
+		if !(text.IsWord(name[i]) || name[i] == text.DashByte) {
 			return errors.New("command names may only contain alphanumeric characters, dashes, and/or underscores")
 		}
 	}

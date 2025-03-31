@@ -5,6 +5,43 @@ import (
   . "github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
+type ChildNodeCommon interface {
+{{ define "ChildNodeCommon" }}
+  // FindShortFlag looks up a target Flag instance by its short-form character.
+  //
+  // If no such flag exists on this node, nil will be returned.
+  //
+  // To search this node and all parent nodes, use FindShortFlagRecursive
+  FindShortFlag(c byte) Flag
+
+  // FindShortFlagRecursive looks up a target Flag instance by its short-form
+  // character recursively on this node and all ancestor nodes.
+  //
+  // If no such flag exists in the tree hierarchy, nil will be returned.
+  //
+  // The behavior of this method is not affected by the InheritParentFlags
+  // TreeCommandOption setting.
+  FindShortFlagRecursive(c byte) Flag
+
+  // FindLongFlag looks up a target Flag instance by its long-form name.
+  //
+  // If no such flag exists on this node, the ancestor nodes will be checked
+  // parent by parent.
+  //
+  // To search this node and all parent nodes, use FindLongFlagRecursive
+  FindLongFlag(name string) Flag
+
+  // FindLongFlagRecursive looks up a target Flag instance by its long-form
+  // name recursively on this node and all ancestor nodes.
+  //
+  // If no such flag exists in the tree hierarchy, nil will be returned.
+  //
+  // The behavior of this method is not affected by the InheritParentFlags
+  // TreeCommandOption setting.
+  FindLongFlagRecursive(name string) Flag
+{{ end }}
+}
+
 type ChildNodeBuilderCommon interface {
 {{ define "ChildNodeBuilderCommon" }}
   // WithAlias assigns the given alias to the target command node.

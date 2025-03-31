@@ -34,8 +34,11 @@ func (c *CommandTreeInterpreter) handlePlainText(
 		if child := node.FindChild(element.String()); child != nil {
 			// If flag inheritance is disabled, process the already given flags and
 			// clear the queue.
-			if c.options.InheritParentFlags == argo.FlagInheritanceDisabled {
-				c.shiftFlagQueue(child.(flag.GroupContainer), errs)
+			if c.tree.Options().InheritParentFlags == argo.FlagInheritanceDisabled {
+				c.shiftFlagQueue(c.current.(flag.GroupContainer), errs)
+				c.flagIndex = flag.BuildFlagIndex(child.(flag.GroupContainer))
+			} else {
+				c.flagIndex.Overlay(child.(flag.GroupContainer))
 			}
 
 			c.current = child

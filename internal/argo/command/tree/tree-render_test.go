@@ -10,7 +10,6 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
-	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -20,12 +19,12 @@ var commandName = filepath.Base(os.Args[0])
 const output001 = `Usage:
   %s [options] <command>
 
+Commands
+  leaf
+
 Flags
   -h | --help
       Prints this help text.
-
-Commands
-  leaf
 `
 
 func TestCommandTreeHelpRenderer001(t *testing.T) {
@@ -36,14 +35,14 @@ func TestCommandTreeHelpRenderer001(t *testing.T) {
 const output002 = `Usage:
   %s [options] <command>
 
+Commands
+  leaf
+
 Flags
   -c
 
   -h | --help
       Prints this help text.
-
-Commands
-  leaf
 `
 
 func TestCommandTreeHelpRenderer002(t *testing.T) {
@@ -55,14 +54,14 @@ func TestCommandTreeHelpRenderer002(t *testing.T) {
 const output003 = `Usage:
   %s [options] <command>
 
+Commands
+  leaf
+
 Flags
   --hello
       Some description of the flag.
   -h | --help
       Prints this help text.
-
-Commands
-  leaf
 `
 
 func TestCommandTreeHelpRenderer003(t *testing.T) {
@@ -76,13 +75,13 @@ func TestCommandTreeHelpRenderer003(t *testing.T) {
 const output004 = `Usage:
   %s [options] <command>
 
-Flags
-  -h | --help
-      Prints this help text.
-
 Commands
   leaf
       Help text about the leaf.
+
+Flags
+  -h | --help
+      Prints this help text.
 `
 
 func TestCommandTreeHelpRenderer004(t *testing.T) {
@@ -94,13 +93,13 @@ func TestCommandTreeHelpRenderer004(t *testing.T) {
 const output005 = `Usage:
   %s [options] <command>
 
-Flags
-  -h | --help
-      Prints this help text.
-
 Commands
   leaf1
   leaf2
+
+Flags
+  -h | --help
+      Prints this help text.
 `
 
 func TestCommandTreeHelpRenderer005(t *testing.T) {
@@ -112,14 +111,14 @@ func TestCommandTreeHelpRenderer005(t *testing.T) {
 const treeHelp006 = `Usage:
   %s -c=<arg> [options] <command>
 
+Commands
+  leaf
+
 Flags
   -c <arg>
 
   -h | --help
       Prints this help text.
-
-Commands
-  leaf
 `
 
 func TestCommandTreeHelpRenderer006(t *testing.T) {
@@ -134,15 +133,15 @@ func TestCommandTreeHelpRenderer006(t *testing.T) {
 const treeHelp007 = `Usage:
   %s [options] <command>
 
+Commands
+  leaf
+
 Something
   -c
 
-Help Flags
+General Flags
   -h | --help
       Prints this help text.
-
-Commands
-  leaf
 `
 
 func TestCommandTreeHelpRenderer007(t *testing.T) {
@@ -155,17 +154,17 @@ func TestCommandTreeHelpRenderer007(t *testing.T) {
 const treeHelp008 = `Usage:
   %s [options] <command>
 
+Commands
+  leaf
+
 Something
     A description of something.
 
   -c
 
-Help Flags
+General Flags
   -h | --help
       Prints this help text.
-
-Commands
-  leaf
 `
 
 func TestCommandTreeHelpRenderer008(t *testing.T) {
@@ -182,10 +181,11 @@ func renderTreeOutputCheck(
 	com argo.TreeCommandBuilder,
 ) {
 	sb := new(strings.Builder)
-	opts := argo.Options{}
-	opts2.FixOptions(&opts)
 
-	utils.Must(tree.RenderHelp(utils.MustReturn(tree.Build(com, opts)), opts, sb))
+	built := utils.MustReturn(tree.Build(com))
+	ot := built.Options()
+
+	utils.Must(tree.RenderHelp(built, tree.WrapOptions(&ot), sb))
 
 	expected := fmt.Sprintf(pattern, commandName)
 

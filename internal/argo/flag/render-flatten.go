@@ -4,6 +4,7 @@ import (
 	"bufio"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
@@ -58,7 +59,7 @@ LOOP:
 	return options
 }
 
-func RenderInheritedForms(forms *Forms, options argo.Options, padding uint8, sb *bufio.Writer) error {
+func RenderInheritedForms(forms *Forms, options opts.Options, padding uint8, sb *bufio.Writer) error {
 	if _, err := sb.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
@@ -131,7 +132,7 @@ func RenderInheritedForms(forms *Forms, options argo.Options, padding uint8, sb 
 			return err
 		}
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), sb)
 		if err := formatter.Format(forms.Flag.Description()); err != nil {
 			return err
 		}

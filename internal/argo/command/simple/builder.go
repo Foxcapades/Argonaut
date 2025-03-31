@@ -6,7 +6,7 @@ import (
 )
 
 func NewBuilder() argo.CommandBuilder {
-	return &commandBuilder{}
+	return new(commandBuilder)
 }
 
 type commandBuilder struct {
@@ -16,6 +16,7 @@ type commandBuilder struct {
 	arguments   []argo.ArgumentBuilder
 	disableHelp bool
 	callback    argo.CommandCallback[argo.Command]
+	options     argo.CommandOptions
 }
 
 //
@@ -33,8 +34,6 @@ func (b *commandBuilder) Description() string {
 	return b.description
 }
 
-//
-
 func (b *commandBuilder) WithHelpDisabled() argo.CommandBuilder {
 	b.disableHelp = true
 	return b
@@ -43,8 +42,6 @@ func (b *commandBuilder) WithHelpDisabled() argo.CommandBuilder {
 func (b *commandBuilder) IsHelpDisabled() bool {
 	return b.disableHelp
 }
-
-//
 
 func (b *commandBuilder) WithFlagGroup(group argo.FlagGroupBuilder) argo.CommandBuilder {
 	b.flagGroups = append(b.flagGroups, group)
@@ -74,8 +71,6 @@ func (b *commandBuilder) hasDefaultFlagGroup() bool {
 	return len(b.flagGroups) > 0 && flag.IsDefaultGroup(b.flagGroups[0])
 }
 
-//
-
 func (b *commandBuilder) WithFlag(f argo.FlagBuilder) argo.CommandBuilder {
 	b.flagGroups = flag.EnsureDefaultGroup(b.flagGroups)
 	b.flagGroups[0].WithFlag(f)
@@ -98,8 +93,6 @@ func (b *commandBuilder) HasFlags() bool {
 	return false
 }
 
-//
-
 func (b *commandBuilder) WithArgument(arg argo.ArgumentBuilder) argo.CommandBuilder {
 	b.arguments = append(b.arguments, arg)
 	return b
@@ -118,8 +111,6 @@ func (b *commandBuilder) Arguments() []argo.ArgumentBuilder {
 	return b.arguments
 }
 
-//
-
 func (b *commandBuilder) WithUnmappedInputLabel(label string) argo.CommandBuilder {
 	b.unmapLabel = label
 	return b
@@ -133,8 +124,6 @@ func (b *commandBuilder) UnmappedInputLabel() string {
 	return b.unmapLabel
 }
 
-//
-
 func (b *commandBuilder) WithCallback(cb argo.CommandCallback[argo.Command]) argo.CommandBuilder {
 	b.callback = cb
 	return b
@@ -146,4 +135,13 @@ func (b *commandBuilder) HasCallback() bool {
 
 func (b *commandBuilder) Callback() argo.CommandCallback[argo.Command] {
 	return b.callback
+}
+
+func (b *commandBuilder) WithOptions(opts argo.CommandOptions) argo.CommandBuilder {
+	b.options = opts
+	return b
+}
+
+func (b *commandBuilder) Options() argo.CommandOptions {
+	return b.options
 }

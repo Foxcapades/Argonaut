@@ -1,16 +1,17 @@
 package command_test
 
 import (
+	"strings"
 	"testing"
 
-	cli "github.com/foxcapades/argonaut/v3"
-	command "github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
+	"github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func TestCommandBuilder_Parse(t *testing.T) {
-	com := utils.MustReturn(command.Build(command.NewBuilder(), argo.Options{}))
+	com := utils.MustReturn(command.Build(command.NewBuilder()))
 	utils.MustReturn(command.Parse(com, []string{"hello", "--foo", "bar"}))
 
 	if !com.HasUnmappedInputs() {
@@ -35,7 +36,7 @@ func TestCommandBuilder_WithArgument(t *testing.T) {
 
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithArgument(cli.Argument().
-			WithBinding(&foo)), argo.Options{}))
+			WithBinding(&foo))))
 	utils.MustReturn(command.Parse(com, []string{"hello", "goober=banana"}))
 
 	if len(foo) != 1 {
@@ -55,7 +56,7 @@ func TestCommandBuilder_WithUnmappedLabel(t *testing.T) {
 	utils.MustReturn(command.Parse(
 		utils.MustReturn(command.Build(cli.Command().
 			WithUnmappedInputLabel("DUCKS...").
-			WithFlag(cli.Flag().WithLongForm("value").WithBinding(&foo, true)), argo.Options{})),
+			WithFlag(cli.Flag().WithLongForm("value").WithBinding(&foo, true)))),
 		[]string{
 			"hello",
 			"goodbye",
@@ -82,7 +83,7 @@ func TestCommandBuilder_ConflictingLongFlags(t *testing.T) {
 	_, err := command.Build(command.NewBuilder().
 		WithFlag(cli.Flag().WithLongForm("hello")).
 		WithFlagGroup(cli.FlagGroup("nope").
-			WithFlag(cli.Flag().WithLongForm("hello"))), argo.Options{})
+			WithFlag(cli.Flag().WithLongForm("hello"))))
 
 	if err == nil {
 		t.Error("expected error not to be nil, but it was")
@@ -92,7 +93,7 @@ func TestCommandBuilder_ConflictingLongFlags(t *testing.T) {
 func TestCommandBuilder_ConflictingShortFlags(t *testing.T) {
 	_, err := command.Build(command.NewBuilder().
 		WithFlag(cli.Flag().WithShortForm('a')).
-		WithFlag(cli.Flag().WithShortForm('a')), argo.Options{})
+		WithFlag(cli.Flag().WithShortForm('a')))
 
 	if err == nil {
 		t.Error("expected error not to be nil, but it was")
@@ -102,7 +103,7 @@ func TestCommandBuilder_ConflictingShortFlags(t *testing.T) {
 func TestCommandBuilder_ParseUnhitRequiredFlag(t *testing.T) {
 	_, err := command.Parse(utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(cli.Flag().WithLongForm("apple").Require()).
-		WithFlag(cli.Flag().WithShortForm('x')), argo.Options{})), []string{"hello", "-x=banana", "--banana=orange"})
+		WithFlag(cli.Flag().WithShortForm('x')))), []string{"hello", "-x=banana", "--banana=orange"})
 
 	if err == nil {
 		t.Fail()
@@ -110,20 +111,11 @@ func TestCommandBuilder_ParseUnhitRequiredFlag(t *testing.T) {
 }
 
 func TestCommandBuilder_OptionalArgumentBeforeRequiredArgument(t *testing.T) {
-	com := utils.MustReturn(command.Build(command.NewBuilder().
+	_, err := command.Build(command.NewBuilder().
 		WithArgument(cli.Argument()).
-		WithArgument(cli.Argument().Require()), argo.Options{}))
-	res := utils.MustReturn(command.Parse(com, []string{"command", "value1", "value2"}))
+		WithArgument(cli.Argument().Require()))
 
-	if len(res.Warnings) != 1 {
-		t.Error("expected command to have exactly 1 warning, but it didn't")
-	} else if res.Warnings[0].Message != "argument 1 was not marked as required, but preceded required argument 2" {
-		t.Error("expected command warning to match specific warning text but it didn't")
-	}
-
-	for i, arg := range com.Arguments() {
-		if !arg.IsRequired() {
-			t.Errorf("expected argument %d to be required but it wasn't", i+1)
-		}
+	if !strings.Contains(err.(argo.MultiError).Errors()[0].Error(), "argument 1") {
+		t.Error("expected a build error for argument 1")
 	}
 }

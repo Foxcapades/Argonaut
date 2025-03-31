@@ -6,6 +6,7 @@ import (
 
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
+	"github.com/foxcapades/argonaut/v3/pkg/argoutil"
 )
 
 // EnsureDefaultCommandGroup tests the given slice of argo.CommandGroupBuilder
@@ -71,7 +72,7 @@ func UniqueCommandNames(groups []argo.CommandGroupBuilder, errs argo.MultiError)
 // argo.IncompleteCommandHandler function type which renders the help text of
 // the last reached argo.ParentNode instance and exits the application with exit
 // code 1.
-func MakeDefaultOnIncompleteHandler[T argo.ParentNode](opts argo.Options) argo.IncompleteCommandHandler[T] {
+func MakeDefaultOnIncompleteHandler[T argo.ParentNode](opts Options) argo.IncompleteCommandHandler[T] {
 	return func(parent T) {
 		if tree, ok := argo.ParentNode(parent).(argo.TreeCommand); ok {
 			utils.Must(RenderHelp(tree, opts, os.Stderr))
@@ -87,7 +88,7 @@ func MakeDefaultOnIncompleteHandler[T argo.ParentNode](opts argo.Options) argo.I
 
 func BuildCommandGroups(
 	builders []argo.CommandGroupBuilder,
-	opts argo.Options,
+	options Options,
 	parent argo.ParentNode,
 	errs argo.MultiError,
 ) []argo.CommandGroup {
@@ -97,7 +98,7 @@ func BuildCommandGroups(
 
 	for _, build := range builders {
 		if build.HasSubcommands() {
-			if group, err := BuildGroup(build, opts, parent); err != nil {
+			if group, err := BuildGroup(build, options, parent); err != nil {
 				errs.AppendError(err)
 			} else {
 				commandGroups = append(commandGroups, group)
@@ -106,4 +107,19 @@ func BuildCommandGroups(
 	}
 
 	return commandGroups
+}
+
+func FixOptions(opts argo.TreeCommandOptions) argo.TreeCommandOptions {
+	consoleWidth, _ := argoutil.GetConsoleWidth()
+	if opts.HelpTextMaxWidth < 60 {
+		opts.HelpTextMaxWidth = max(min(consoleWidth, 120), 60)
+	}
+	if len(opts.MetaFlagGroupName) == 0 {
+		opts.MetaFlagGroupName = "General Flags"
+	}
+	if len(opts.DefaultCommandGroupName) == 0 {
+		opts.DefaultCommandGroupName = "Commands"
+	}
+
+	return opts
 }

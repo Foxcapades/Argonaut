@@ -3,6 +3,7 @@ package flag
 import (
 	"bufio"
 
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -68,7 +69,7 @@ func GroupInheritance(node GroupContainer) []FormGroup {
 
 type named interface{ Name() string }
 
-func RenderGroupedInheritance(formGroup *FormGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {
+func RenderGroupedInheritance(formGroup *FormGroup, options opts.Options, padding uint8, sb *bufio.Writer) error {
 	if err := sb.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}

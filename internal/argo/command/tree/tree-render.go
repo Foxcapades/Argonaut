@@ -13,41 +13,41 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func RenderHelp(tree argo.TreeCommand, options argo.Options, writer io.Writer) error {
+func RenderHelp(tree argo.TreeCommand, opts Options, writer io.Writer) error {
 	if buf, ok := writer.(*bufio.Writer); ok {
-		return renderCommandTree(tree, options, buf)
+		return renderCommandTree(tree, opts, buf)
 	}
 
 	buf := bufio.NewWriter(writer)
-	err := renderCommandTree(tree, options, buf)
+	err := renderCommandTree(tree, opts, buf)
 	_ = buf.Flush()
 	return err
 }
 
-func MakeRenderTreeHelpCallback(tree argo.TreeCommand, options argo.Options) argo.FlagCallback {
+func MakeRenderTreeHelpCallback(tree argo.TreeCommand, opts Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
-		utils.Must(RenderHelp(tree, options, os.Stdout))
+		utils.Must(RenderHelp(tree, opts, os.Stdout))
 		utils.Exit(0)
 	}
 }
 
-func renderCommandTree(tree argo.TreeCommand, options argo.Options, out *bufio.Writer) error {
-	if err := renderTreeUsageBlock(tree, options, out); err != nil {
+func renderCommandTree(tree argo.TreeCommand, opts Options, out *bufio.Writer) error {
+	if err := renderTreeUsageBlock(tree, out); err != nil {
 		return err
 	}
 	if err := out.WriteByte(text.LineFeedByte); err != nil {
 		return err
 	}
 
-	if err := TryRenderDescription(tree, options, out, false); err != nil {
+	if err := TryRenderDescription(tree, opts, out, false); err != nil {
 		return err
 	}
 
-	if err := RenderCommandGroups(tree.CommandGroups(), options, 0, out); err != nil {
+	if err := RenderCommandGroups(tree.CommandGroups(), opts, 0, out); err != nil {
 		return err
 	}
 
-	if err := TryRenderFlags(tree, options, out); err != nil {
+	if err := TryRenderFlags(tree, opts, out); err != nil {
 		return err
 	}
 
@@ -58,7 +58,7 @@ func renderCommandTree(tree argo.TreeCommand, options argo.Options, out *bufio.W
 	return nil
 }
 
-func renderTreeUsageBlock(tree argo.TreeCommand, options argo.Options, out *bufio.Writer) error {
+func renderTreeUsageBlock(tree argo.TreeCommand, out *bufio.Writer) error {
 	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func renderTreeUsageBlock(tree argo.TreeCommand, options argo.Options, out *bufi
 					if err := out.WriteByte(text.SpaceByte); err != nil {
 						return err
 					}
-					if err := flag.RenderShortestLine(f, out); err != nil {
+					if err := flag.RenderShortestForUsage(f, out); err != nil {
 						return err
 					}
 				} else {

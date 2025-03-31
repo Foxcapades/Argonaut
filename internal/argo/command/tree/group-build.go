@@ -8,7 +8,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func BuildGroup(group argo.CommandGroupBuilder, opts argo.Options, parent argo.ParentNode) (argo.CommandGroup, error) {
+func BuildGroup(group argo.CommandGroupBuilder, options Options, parent argo.ParentNode) (argo.CommandGroup, error) {
 	errs := xerr.NewMultiError()
 	out := CommandGroup{}
 
@@ -25,7 +25,7 @@ func BuildGroup(group argo.CommandGroupBuilder, opts argo.Options, parent argo.P
 		out.branches = make([]argo.BranchCommand, len(branches))
 
 		for i, builder := range branches {
-			if branch, err := BuildBranch(builder, opts, parent); err != nil {
+			if branch, err := BuildBranch(builder, options, parent); err != nil {
 				errs.AppendError(err)
 			} else {
 				out.branches[i] = branch
@@ -38,7 +38,7 @@ func BuildGroup(group argo.CommandGroupBuilder, opts argo.Options, parent argo.P
 		out.leaves = make([]argo.LeafCommand, len(leaves))
 
 		for i, builder := range leaves {
-			if leaf, err := BuildLeaf(builder, opts, parent); err != nil {
+			if leaf, err := BuildLeaf(builder, options, parent); err != nil {
 				errs.AppendError(err)
 			} else {
 				out.leaves[i] = leaf

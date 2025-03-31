@@ -1,17 +1,14 @@
 package argument
 
 import (
-	"github.com/foxcapades/argonaut/v3/internal/parse"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 func NewBuilder() argo.ArgumentBuilder {
-	return &argumentBuilder{
-		marsh: parse.NewDefaultMagicUnmarshaler(),
-	}
+	return new(Builder)
 }
 
-type argumentBuilder struct {
+type Builder struct {
 	name string
 	desc string
 
@@ -26,89 +23,89 @@ type argumentBuilder struct {
 	validators []any
 }
 
-func (a *argumentBuilder) WithName(name string) argo.ArgumentBuilder {
+func (a *Builder) WithName(name string) argo.ArgumentBuilder {
 	a.name = name
 	return a
 }
 
-func (a *argumentBuilder) HasName() bool {
+func (a *Builder) HasName() bool {
 	return len(a.name) > 0
 }
 
-func (a *argumentBuilder) Name() string {
+func (a *Builder) Name() string {
 	return a.name
 }
 
-func (a *argumentBuilder) WithDescription(desc string) argo.ArgumentBuilder {
+func (a *Builder) WithDescription(desc string) argo.ArgumentBuilder {
 	a.desc = desc
 	return a
 }
 
-func (a *argumentBuilder) HasDescription() bool {
+func (a *Builder) HasDescription() bool {
 	return len(a.desc) > 0
 }
 
-func (a *argumentBuilder) Description() string {
+func (a *Builder) Description() string {
 	return a.desc
 }
 
-func (a *argumentBuilder) Require() argo.ArgumentBuilder {
+func (a *Builder) Require() argo.ArgumentBuilder {
 	a.required = true
 	return a
 }
 
-func (a *argumentBuilder) IsRequired() bool {
+func (a *Builder) IsRequired() bool {
 	return a.required
 }
 
-func (a *argumentBuilder) WithBinding(binding any) argo.ArgumentBuilder {
+func (a *Builder) WithBinding(binding any) argo.ArgumentBuilder {
 	a.binding = NewBinding(binding)
 	return a
 }
 
-func (a *argumentBuilder) Binding() argo.ArgumentBinding {
+func (a *Builder) Binding() argo.ArgumentBinding {
 	return &a.binding
 }
 
-func (a *argumentBuilder) HasBinding() bool {
+func (a *Builder) HasBinding() bool {
 	return a.binding.BType != argo.BindingTypeNone
 }
 
-func (a *argumentBuilder) WithDefault(def any) argo.ArgumentBuilder {
+func (a *Builder) WithDefault(def any) argo.ArgumentBuilder {
 	a.defVal = NewDefault(def)
 	return a
 }
 
-func (a *argumentBuilder) HasDefault() bool {
+func (a *Builder) HasDefault() bool {
 	return a.defVal.Type() != argo.DefaultTypeNone
 }
 
-func (a *argumentBuilder) Default() argo.ArgumentDefault {
+func (a *Builder) Default() argo.ArgumentDefault {
 	return &a.defVal
 }
 
-func (a *argumentBuilder) WithUnmarshaler(fn argo.ValueUnmarshaler) argo.ArgumentBuilder {
+func (a *Builder) WithUnmarshaler(fn argo.ValueUnmarshaler) argo.ArgumentBuilder {
 	a.marsh = fn
 	return a
 }
 
-func (a *argumentBuilder) HasUnmarshaler() bool {
+func (a *Builder) HasUnmarshaler() bool {
 	return a.marsh != nil
 }
 
-func (a *argumentBuilder) Unmarshaler() argo.ValueUnmarshaler {
+func (a *Builder) Unmarshaler() argo.ValueUnmarshaler {
 	return a.marsh
 }
 
-func (a *argumentBuilder) WithValidator(fn any) argo.ArgumentBuilder {
+func (a *Builder) WithValidator(fn any) argo.ArgumentBuilder {
 	a.validators = append(a.validators, fn)
 	return a
 }
 
-func (a *argumentBuilder) HasValidators() bool {
+func (a *Builder) HasValidators() bool {
 	return len(a.validators) > 0
 }
 
-func (a *argumentBuilder) Validators() []any {
+func (a *Builder) Validators() []any {
 	return a.validators
 }

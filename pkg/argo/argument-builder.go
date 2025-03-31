@@ -89,8 +89,10 @@ type ArgumentBuilder interface {
 	//
 	WithBinding(pointer any) ArgumentBuilder
 
+	// HasBinding indicates whether this ArgumentBuilder has a bind variable set.
 	HasBinding() bool
 
+	// Binding returns details about the ArgumentBuilder's bound variable.
 	Binding() ArgumentBinding
 
 	// WithDefault sets the default value for the argument to be used if the
@@ -128,8 +130,11 @@ type ArgumentBuilder interface {
 	// value it will be dereferenced to set the bind value.
 	WithDefault(def any) ArgumentBuilder
 
+	// HasDefault indicates whether this ArgumentBuilder has a default value set.
 	HasDefault() bool
 
+	// Default returns details about the default value set on this ArgumentBuilder
+	// instance.
 	Default() ArgumentDefault
 
 	// WithUnmarshaler allows providing a custom ValueUnmarshaler instance that
@@ -142,8 +147,15 @@ type ArgumentBuilder interface {
 	// internal magic unmarshaler will be used to parse raw argument values.
 	WithUnmarshaler(fn ValueUnmarshaler) ArgumentBuilder
 
+	// HasUnmarshaler indicates whether a custom ValueUnmarshaler has been set on
+	// this ArgumentBuilder.
 	HasUnmarshaler() bool
 
+	// Unmarshaler returns the ValueUnmarshaler that was set on this
+	// ArgumentBuilder.
+	//
+	// If no custom ValueUnmarshaler has been set on this ArgumentBuilder, this
+	// method will return nil.
 	Unmarshaler() ValueUnmarshaler
 
 	// WithValidator appends the given validator function to the argument's
@@ -176,7 +188,14 @@ type ArgumentBuilder interface {
 	// Validators will be executed in the order they are appended.
 	WithValidator(validatorFn any) ArgumentBuilder
 
+	// HasValidators indicates whether any validator functions have been set on
+	// this ArgumentBuilder by use of the WithValidator method.
 	HasValidators() bool
 
+	// Validators returns a slice containing all the validator functions that have
+	// been set on this ArgumentBuilder.
+	//
+	// If no validators have been provided, this method will return an empty slice
+	// (which may be nil).
 	Validators() []any
 }

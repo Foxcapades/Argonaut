@@ -7,9 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	cli "github.com/foxcapades/argonaut/v3"
-	command "github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
-	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
+	"github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -48,11 +47,9 @@ func TestCommandHelpRenderer001(t *testing.T) {
 			WithName("argument").
 			WithDescription("poo")).
 		WithArgument(cli.Argument()).
-		WithUnmappedInputLabel("asteroids..."), argo.Options{}))
+		WithUnmappedInputLabel("asteroids...")))
 
-	// cli.MustParseCommand(com)
-
-	renderOutputCheck(t, commandHelp001, com)
+	renderOutputCheck(t, commandHelp001, com, com.Options())
 }
 
 const regression51Expected = `Usage:
@@ -145,14 +142,13 @@ func TestCommandHelpRenderer_regression51(t *testing.T) {
 				fmt.Println("<version information>")
 				utils.Exit(0)
 			})).
-		WithUnmappedInputLabel("FILE..."), argo.Options{
-		MaxDefaultFlagGroupSizeForMetaGroup: 5,
-	})
+		WithUnmappedInputLabel("FILE...").
+		WithOptions(argo.CommandOptions{MaxDefaultFlagGroupSizeForMetaGroup: 5}))
 
 	if err != nil {
 		t.Error("expected err to be nil but was", err)
 	} else {
-		renderOutputCheck(t, regression51Expected, com)
+		renderOutputCheck(t, regression51Expected, com, com.Options())
 	}
 }
 
@@ -169,12 +165,12 @@ Flags
 func TestCommandHelpRenderer_optionalArgs(t *testing.T) {
 	var bind string
 	com, err := command.Build(command.NewBuilder().
-		WithFlag(cli.ComboFlag('a', "all").WithBinding(&bind, false)), argo.Options{})
+		WithFlag(cli.ComboFlag('a', "all").WithBinding(&bind, false)))
 
 	if err != nil {
 		t.Error("expected err to be nil but was", err)
 	} else {
-		renderOutputCheck(t, commandHelpRendererExpectOptionalArgs, com)
+		renderOutputCheck(t, commandHelpRendererExpectOptionalArgs, com, com.Options())
 	}
 }
 
@@ -182,12 +178,11 @@ func renderOutputCheck(
 	t *testing.T,
 	pattern string,
 	com argo.Command,
+	opts argo.CommandOptions,
 ) {
 	sb := new(strings.Builder)
-	opts := argo.Options{}
-	opts2.FixOptions(&opts)
 
-	utils.Must(command.RenderHelp(com, opts, sb))
+	utils.Must(command.RenderHelp(com, command.WrapOptions(&opts), sb))
 
 	expected := fmt.Sprintf(pattern, filepath.Base(os.Args[0]))
 

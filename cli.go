@@ -21,7 +21,6 @@
 package cli
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
@@ -46,127 +45,34 @@ func Command() argo.CommandBuilder {
 	return command.NewBuilder()
 }
 
-// BuildCommand attempts to build a new argo.Command instance based on the
-// configuration applied to the given builder and the default argo.Options
-// values.
-//
-// If the builder is misconfigured, this method will return nil, with an error
-// containing information about the reason the command could not be built.
-//
-// The error will likely be an instance of argo.MultiError which will contain a
-// list of all the configuration errors that were encountered while attempting
-// to build the argo.Command.
-func BuildCommand(builder argo.CommandBuilder) (argo.Command, error) {
-	return BuildCommandCustom(builder, argo.Options{})
-}
-
-// BuildCommandCustom attempts to build a new argo.Command instance based on the
-// configuration applied to the given builder and the given argo.Options value.
-//
-// If the builder is misconfigured, this method will return nil, with an error
-// containing information about the reason the command could not be built.
-//
-// The error will likely be an instance of argo.MultiError which will contain a
-// list of all the configuration errors that were encountered while attempting
-// to build the argo.Command.
-func BuildCommandCustom(builder argo.CommandBuilder, options argo.Options) (argo.Command, error) {
-	return command.Build(builder, options)
-}
-
-// MustBuildCommand calls BuildCommand and panics if an error is returned.
-//
-// See BuildCommand for more information about the input and output.
-func MustBuildCommand(builder argo.CommandBuilder) argo.Command {
-	if out, err := BuildCommand(builder); err != nil {
-		panic(err)
-	} else {
-		return out
-	}
-}
-
-// MustBuildCommandCustom calls BuildCommandCustom and panics if an error is
-// returned.
-//
-// See BuildCommandCustom for more information about the inputs and output.
-func MustBuildCommandCustom(options argo.Options, builder argo.CommandBuilder) argo.Command {
-	if out, err := BuildCommandCustom(builder, options); err != nil {
-		panic(err)
-	} else {
-		return out
-	}
-}
-
 // ParseCommand attempts to parse the CLI call inputs as options and arguments
-// to an argo.Command.
+// to a new argo.Command instance built from the given argo.CommandBuilder.
 //
-// The ParseCommand method accepts as its argument one of the following types:
-// * argo.Command
-// * argo.CommandBuilder
-//
-// If a value of any other type is passed to ParseCommand, it will panic.
-//
-// For the argo.CommandBuilder type, MustBuildCommand will be called, to build
-// an argo.Command instance, meaning an invalid builder config will cause a
-// panic.
-//
-// ParseCommand returns three values, an argo.Command instance, an
-// argo.ParseResult struct, and an error value if an error occurred during the
-// parse attempt.
+// ParseCommand returns three values, an argo.Command instance (which may be nil
+// on error), an argo.ParseResult struct, and an error value.
 //
 // If the returned error value is not nil, that same error will also be set as
 // the value of the argo.ParseResult's Error field.
-//
-// If the given argument value is an argo.Command instance, that same value will
-// be the first return output.
-func ParseCommand(com any) (out argo.Command, res argo.ParseResult, err error) {
-	switch t := com.(type) {
-	case argo.CommandBuilder:
-		out = MustBuildCommand(t)
-	case argo.Command:
-		out = t
-	default:
-		panic(fmt.Sprintf("%T does not implement argo.Command or argo.CommandBuilder", com))
+func ParseCommand(builder argo.CommandBuilder) (out argo.Command, res argo.ParseResult, err error) {
+	if out, err = command.Build(builder); err != nil {
+		res.Error = err
+		res.ErrorType = argo.ConfigurationError
+		return
 	}
 
-	res, err = command.Parse(out, os.Args)
-	return
-}
+	if res.InputWarnings, err = command.Parse(out, os.Args); err != nil {
+		res.Error = err
+		res.ErrorType = argo.InputError
+	}
 
-// ParseCommandCustom attempts to parse the CLI call inputs as options and
-// arguments to an argo.Command built from the given input, using the given
-// argo.Options as configuration.
-//
-// MustBuildCommandCustom will be called to build the argo.Command instance,
-// meaning an invalid builder config will cause a panic.
-//
-// ParseCommandCustom returns three values, an argo.Command instance, an
-// argo.ParseResult struct, and an error value if an error occurred during the
-// parse attempt.
-//
-// If the returned error value is not nil, that same error will also be set as
-// the value of the argo.ParseResult's Error field.
-func ParseCommandCustom(options argo.Options, com argo.CommandBuilder) (out argo.Command, res argo.ParseResult, err error) {
-	out = MustBuildCommandCustom(options, com)
-	res, err = command.Parse(out, os.Args)
 	return
 }
 
 // MustParseCommand calls Parse and panics if an error is returned.
 //
 // See ParseCommand for more information about the input and output.
-func MustParseCommand(com any) (argo.Command, argo.ParseResult) {
+func MustParseCommand(com argo.CommandBuilder) (argo.Command, argo.ParseResult) {
 	if out, res, err := ParseCommand(com); err != nil {
-		panic(err)
-	} else {
-		return out, res
-	}
-}
-
-// MustParseCommandCustom calls ParseCommandCustom and panics if an error is returned.
-//
-// See ParseCommandCustom for more information about the input and outputs.
-func MustParseCommandCustom(options argo.Options, com argo.CommandBuilder) (argo.Command, argo.ParseResult) {
-	if out, res, err := ParseCommandCustom(options, com); err != nil {
 		panic(err)
 	} else {
 		return out, res
@@ -237,128 +143,35 @@ func CommandGroup(name string) argo.CommandGroupBuilder {
 	return tree.NewGroupBuilder(name)
 }
 
-// BuildTree attempts to build a new argo.TreeCommand instance based on the
-// configuration applied to the given builder and the default argo.Options
-// values.
-//
-// If the builder is misconfigured, this method will return nil, with an error
-// containing information about the reason the command could not be built.
-//
-// The error will likely be an instance of argo.MultiError which will contain a
-// list of all the configuration errors that were encountered while attempting
-// to build the argo.TreeCommand.
-func BuildTree(builder argo.TreeCommandBuilder) (argo.TreeCommand, error) {
-	return tree.Build(builder, argo.Options{})
-}
-
-// MustBuildTree calls BuildTree and panics if an error is returned.
-//
-// See BuildTree for more information about the input and output.
-func MustBuildTree(builder argo.TreeCommandBuilder) argo.TreeCommand {
-	if out, err := BuildTree(builder); err != nil {
-		panic(err)
-	} else {
-		return out
-	}
-}
-
-// BuildTreeCustom attempts to build a new argo.TreeCommand instance based on
-// the configuration applied to the given builder and the given argo.Options
-// value.
-//
-// If the builder is misconfigured, this method will return nil, with an error
-// containing information about the reason the command could not be built.
-//
-// The error will likely be an instance of argo.MultiError which will contain a
-// list of all the configuration errors that were encountered while attempting
-// to build the argo.TreeCommand.
-func BuildTreeCustom(options argo.Options, builder argo.TreeCommandBuilder) (argo.TreeCommand, error) {
-	return tree.Build(builder, options)
-}
-
-// MustBuildTreeCustom calls BuildTreeCustom and panics if an error is
-// returned.
-//
-// See BuildTreeCustom for more information about the inputs and outputs.
-func MustBuildTreeCustom(options argo.Options, builder argo.TreeCommandBuilder) argo.TreeCommand {
-	if out, err := BuildTreeCustom(options, builder); err != nil {
-		panic(err)
-	} else {
-		return out
-	}
-}
-
 // ParseTree attempts to parse the CLI call inputs as options and arguments
-// to an argo.TreeCommand.
+// to an argo.TreeCommand instance built from the given argo.TreeCommandBuilder.
 //
-// The ParseTree method accepts as its argument one of the following types:
-// * argo.TreeCommand
-// * argo.TreeCommandBuilder
-//
-// If a value of any other type is passed to ParseTree, it will panic.
-//
-// For the argo.TreeCommandBuilder type, MustBuildTree will be called, to build
-// an argo.TreeCommand instance, meaning an invalid builder config will cause a
-// panic.
-//
-// ParseTree returns three values, an argo.TreeCommand instance, an
-// argo.ParseResult struct, and an error value if an error occurred during the
-// parse attempt.
+// ParseTree returns three values, an argo.TreeCommand instance (which may be
+// nil on error), an argo.ParseResult struct, and an error value if an error
+// occurred during the parse attempt.
 //
 // If the returned error value is not nil, that same error will also be set as
 // the value of the argo.ParseResult's Error field.
-//
-// If the given argument value is an argo.TreeCommand instance, that same value
-// will be the first return output.
-func ParseTree(com any) (out argo.TreeCommand, res argo.ParseResult, err error) {
-	switch t := com.(type) {
-	case argo.TreeCommandBuilder:
-		out = MustBuildTree(t)
-	case argo.TreeCommand:
-		out = t
-	default:
-		panic(fmt.Sprintf("%T does not implement argo.TreeCommand or argo.TreeCommandBuilder", com))
+func ParseTree(builder argo.TreeCommandBuilder) (out argo.TreeCommand, res argo.ParseResult, err error) {
+	if out, err = tree.Build(builder); err != nil {
+		res.Error = err
+		res.ErrorType = argo.ConfigurationError
+		return
 	}
 
-	res, err = tree.Parse(out, os.Args)
-	return
-}
+	if res.InputWarnings, err = tree.Parse(out, os.Args); err != nil {
+		res.Error = err
+		res.ErrorType = argo.InputError
+	}
 
-// ParseTreeCustom attempts to parse the CLI call inputs as options and
-// arguments to an argo.TreeCommand built from the given input, using the given
-// argo.Options as configuration.
-//
-// MustBuildTreeCustom will be called to build the argo.TreeCommand instance,
-// meaning an invalid builder config will cause a panic.
-//
-// ParseTreeCustom returns three values, the built argo.TreeCommand instance, an
-// argo.ParseResult struct, and an error value if an error occurred during the
-// parse attempt.
-//
-// If the returned error value is not nil, that same error will also be set as
-// the value of the argo.ParseResult's Error field.
-func ParseTreeCustom(options argo.Options, com argo.TreeCommandBuilder) (out argo.TreeCommand, res argo.ParseResult, err error) {
-	out = MustBuildTreeCustom(options, com)
-	res, err = tree.Parse(out, os.Args)
 	return
 }
 
 // MustParseTree calls ParseTree and panics if an error is returned.
 //
 // See ParseTree for more information about the input and outputs.
-func MustParseTree(com any) (argo.TreeCommand, argo.ParseResult) {
+func MustParseTree(com argo.TreeCommandBuilder) (argo.TreeCommand, argo.ParseResult) {
 	if out, res, err := ParseTree(com); err != nil {
-		panic(err)
-	} else {
-		return out, res
-	}
-}
-
-// MustParseTreeCustom calls ParseTreeCustom and panics if an error is returned.
-//
-// See ParseTreeCustom for more information about the input and outputs.
-func MustParseTreeCustom(options argo.Options, com argo.TreeCommandBuilder) (argo.TreeCommand, argo.ParseResult) {
-	if out, res, err := ParseTreeCustom(options, com); err != nil {
 		panic(err)
 	} else {
 		return out, res

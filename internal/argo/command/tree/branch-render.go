@@ -13,7 +13,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func RenderBranchHelp(branch argo.BranchCommand, options argo.Options, writer io.Writer) error {
+func RenderBranchHelp(branch argo.BranchCommand, options Options, writer io.Writer) error {
 	if branch.HasSelectedChild() {
 		switch child := branch.SelectedChild().(type) {
 		case argo.LeafCommand:
@@ -39,14 +39,14 @@ func RenderBranchHelp(branch argo.BranchCommand, options argo.Options, writer io
 	return err
 }
 
-func MakeRenderBranchHelpCallback(branch argo.BranchCommand, options argo.Options) argo.FlagCallback {
+func MakeRenderBranchHelpCallback(branch argo.BranchCommand, options Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
 		utils.Must(RenderBranchHelp(branch, options, os.Stdout))
 		utils.Exit(0)
 	}
 }
 
-func renderCommandBranch(branch argo.BranchCommand, options argo.Options, out *bufio.Writer) error {
+func renderCommandBranch(branch argo.BranchCommand, options Options, out *bufio.Writer) error {
 	if err := renderCommandBranchUsage(branch, out); err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func renderCommandBranchUsage(node argo.BranchCommand, out *bufio.Writer) error 
 					if err := out.WriteByte(text.SpaceByte); err != nil {
 						return err
 					}
-					if err := flag.RenderShortestLine(f, out); err != nil {
+					if err := flag.RenderShortestForUsage(f, out); err != nil {
 						return err
 					}
 				} else {

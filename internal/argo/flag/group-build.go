@@ -9,7 +9,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func BuildGroup(g argo.FlagGroupBuilder, o argo.Options) (argo.FlagGroup, error) {
+func BuildGroup(g argo.FlagGroupBuilder) (argo.FlagGroup, error) {
 	if g.Size() == 0 {
 		return nil, fmt.Errorf("flag group '%s' contains no flags", g.Name())
 	}
@@ -25,9 +25,7 @@ func BuildGroup(g argo.FlagGroupBuilder, o argo.Options) (argo.FlagGroup, error)
 	builders := g.Flags()
 
 	for i := range builders {
-		if flag, err := Build(builders[i]); err != nil {
-			errs.AppendError(err)
-		} else {
+		if flag, ok := xerr.TryBuild(builders[i], Build, errs); ok {
 			flags = append(flags, flag)
 		}
 	}
@@ -44,16 +42,14 @@ func BuildGroup(g argo.FlagGroupBuilder, o argo.Options) (argo.FlagGroup, error)
 
 }
 
-func BuildGroups(groups []argo.FlagGroupBuilder, opts argo.Options, errs argo.MultiError) []argo.FlagGroup {
+func BuildGroups(groups []argo.FlagGroupBuilder, errs argo.MultiError) []argo.FlagGroup {
 	output := make([]argo.FlagGroup, 0, len(groups))
 
 	UniqueFlagNames(groups, errs)
 
 	for _, builder := range groups {
 		if builder.HasFlags() {
-			if group, err := BuildGroup(builder, opts); err != nil {
-				errs.AppendError(err)
-			} else {
+			if group, ok := xerr.TryBuild(builder, BuildGroup, errs); ok {
 				output = append(output, group)
 			}
 		}

@@ -8,12 +8,14 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func Parse(command argo.Command, args []string) (argo.ParseResult, error) {
+func Parse(command argo.Command, args []string) ([]argo.InputWarning, error) {
 	i := Interpreter{
-		parser:   parse.NewParser(emit.NewEmitter(args)),
-		command:  command,
-		elements: utils.NewDeque[parse.Element](2),
-		flagHits: flag.NewQueue(),
+		parser:    parse.NewParser(emit.NewEmitter(args)),
+		command:   command,
+		warnings:  make([]argo.InputWarning, 0, 2),
+		elements:  utils.NewDeque[parse.Element](2),
+		flagHits:  flag.NewQueue(),
+		flagIndex: flag.BuildFlagIndex(command),
 	}
 
 	return i.Run()

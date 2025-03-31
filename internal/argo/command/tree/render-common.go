@@ -47,7 +47,7 @@ func TryRenderAliases(node Aliased, w *bufio.Writer) (err error) {
 	return w.WriteByte(text.LineFeedByte)
 }
 
-func TryRenderDescription(node Described, opts argo.Options, w *bufio.Writer, preNl bool) (err error) {
+func TryRenderDescription(node Described, opts Options, w *bufio.Writer, preNl bool) (err error) {
 	if !node.HasDescription() {
 		return
 	}
@@ -58,14 +58,14 @@ func TryRenderDescription(node Described, opts argo.Options, w *bufio.Writer, pr
 		}
 	}
 
-	if err = render.NewDescriptionFormatter(render.DescriptionPadding[0], opts.HelpTextMaxWidth, w).Format(node.Description()); err != nil {
+	if err = render.NewDescriptionFormatter(render.DescriptionPadding[0], opts.HelpTextMaxWidth(), w).Format(node.Description()); err != nil {
 		return
 	}
 
 	return w.WriteByte(text.LineFeedByte)
 }
 
-func TryRenderFlags(node flag.GroupContainer, opts argo.Options, w *bufio.Writer) (err error) {
+func TryRenderFlags(node flag.GroupContainer, opts Options, w *bufio.Writer) (err error) {
 	if !node.HasFlagGroups() {
 		return
 	}
@@ -124,19 +124,19 @@ type FlagInheritor interface {
 	flag.GroupContainer
 }
 
-func TryRenderInheritedFlags(node FlagInheritor, options argo.Options, out *bufio.Writer) error {
-	if options.InheritParentFlags == argo.FlagInheritanceEnabled {
+func TryRenderInheritedFlags(node FlagInheritor, options Options, out *bufio.Writer) error {
+	if options.InheritParentFlags() == argo.FlagInheritanceEnabled {
 		return renderInheritedFlagsFlat(node, options, out)
 	}
 
-	if options.InheritParentFlags == argo.FlagInheritanceGrouped {
+	if options.InheritParentFlags() == argo.FlagInheritanceGrouped {
 		return renderInheritedFlagsGrouped(node, options, out)
 	}
 
 	return nil
 }
 
-func renderInheritedFlagsFlat(node FlagInheritor, options argo.Options, out *bufio.Writer) error {
+func renderInheritedFlagsFlat(node FlagInheritor, options Options, out *bufio.Writer) error {
 	inherited := flag.FlattenInheritance(node)
 
 	if len(inherited) == 0 {
@@ -168,7 +168,7 @@ func renderInheritedFlagsFlat(node FlagInheritor, options argo.Options, out *buf
 	return nil
 }
 
-func renderInheritedFlagsGrouped(node FlagInheritor, options argo.Options, sb *bufio.Writer) error {
+func renderInheritedFlagsGrouped(node FlagInheritor, options Options, sb *bufio.Writer) error {
 	grouped := flag.GroupInheritance(node)
 
 	if len(grouped) == 0 {

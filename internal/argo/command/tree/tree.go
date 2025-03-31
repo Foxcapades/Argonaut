@@ -18,6 +18,7 @@ type Tree struct {
 	commandGroups []argo.CommandGroup
 	selectedChild argo.ChildNode
 	incompleteFn  argo.IncompleteCommandHandler[argo.TreeCommand]
+	options       argo.TreeCommandOptions
 }
 
 func (_ *Tree) Name() string {
@@ -25,14 +26,17 @@ func (_ *Tree) Name() string {
 }
 
 func (i *Tree) SelectedCommand() argo.LeafCommand {
-	c := i.selectedChild
-	for {
-		if l, ok := c.(argo.LeafCommand); ok {
-			return l
+	child := i.selectedChild
+
+	for child != nil {
+		if leaf, ok := child.(argo.LeafCommand); ok {
+			return leaf
 		}
 
-		c = c.(argo.ParentNode).SelectedChild()
+		child = child.(argo.ParentNode).SelectedChild()
 	}
+
+	return nil
 }
 
 func (i *Tree) HasCommandGroups() bool {
@@ -118,6 +122,14 @@ func (i *Tree) Callback() argo.CommandCallback[argo.TreeCommand] {
 	return i.callback
 }
 
+func (i *Tree) IsHelpDisabled() bool {
+	return i.disableHelp
+}
+
+func (i *Tree) Options() argo.TreeCommandOptions {
+	return i.options
+}
+
 func (i *Tree) FindShortFlag(b byte) argo.Flag {
 	for _, group := range i.flagGroups {
 		if flag := group.FindShortFlag(b); flag != nil {
@@ -138,6 +150,18 @@ func (i *Tree) FindLongFlag(name string) argo.Flag {
 	return nil
 }
 
-func (i *Tree) IsHelpDisabled() bool {
-	return i.disableHelp
+func (i *Tree) FindShortFlagRecursive(c byte) argo.Flag {
+	if selected := i.SelectedCommand(); selected != nil {
+		return selected.FindShortFlagRecursive(c)
+	}
+
+	return nil
+}
+
+func (i *Tree) FindLongFlagRecursive(name string) argo.Flag {
+	if selected := i.SelectedCommand(); selected != nil {
+		return selected.FindLongFlagRecursive(name)
+	}
+
+	return nil
 }

@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func RenderHelp(command argo.Command, opts argo.Options, writer io.Writer) error {
+func RenderHelp(command argo.Command, opts opts.Options, writer io.Writer) error {
 	if buf, ok := writer.(*bufio.Writer); ok {
 		return renderCommand(command, opts, buf)
 	} else {
@@ -23,14 +24,14 @@ func RenderHelp(command argo.Command, opts argo.Options, writer io.Writer) error
 	}
 }
 
-func MakeRenderHelpCallback(command argo.Command, options argo.Options) argo.FlagCallback {
+func MakeRenderHelpCallback(command argo.Command, opts opts.Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
-		utils.Must(RenderHelp(command, options, os.Stdout))
+		utils.Must(RenderHelp(command, opts, os.Stdout))
 		utils.Exit(0)
 	}
 }
 
-func renderCommand(com argo.Command, opts argo.Options, out *bufio.Writer) error {
+func renderCommand(com argo.Command, opts opts.Options, out *bufio.Writer) error {
 	if err := renderCommandUsageBlock(com, out); err != nil {
 		return err
 	}

@@ -24,6 +24,10 @@ func CheckRequired(flagGroups []argo.FlagGroup, errs argo.MultiError) {
 				}
 			} else if f.IsRequired() {
 				errs.AppendError(NewMissingFlagError(f))
+			} else if f.HasArgument() && f.Argument().HasDefault() {
+				if err := f.Argument().SetToDefault(); err != nil {
+					errs.AppendError(err)
+				}
 			}
 		}
 	}

@@ -19,6 +19,7 @@ type TreeCommandBuilder struct {
 	description  string
 	flagGroups   []argo.FlagGroupBuilder
 	callback     argo.CommandCallback[argo.TreeCommand]
+	options      argo.TreeCommandOptions
 }
 
 func (i *TreeCommandBuilder) WithCommandGroup(group argo.CommandGroupBuilder) argo.TreeCommandBuilder {
@@ -178,4 +179,13 @@ func (i *TreeCommandBuilder) HasCallback() bool {
 
 func (i *TreeCommandBuilder) Callback() argo.CommandCallback[argo.TreeCommand] {
 	return i.callback
+}
+
+func (i *TreeCommandBuilder) WithOptions(opts argo.TreeCommandOptions) argo.TreeCommandBuilder {
+	i.options = opts
+	return i
+}
+
+func (i *TreeCommandBuilder) Options() argo.TreeCommandOptions {
+	return i.options
 }

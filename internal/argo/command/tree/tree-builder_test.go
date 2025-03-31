@@ -11,18 +11,16 @@ import (
 )
 
 func TestEmptyCommandTree(t *testing.T) {
-	opt := argo.Options{}
-	_, err := tree.Build(tree.NewBuilder(), opt)
+	_, err := tree.Build(tree.NewBuilder())
 	if err == nil {
 		t.Fail()
 	}
 }
 
 func TestCommandTreeBuilder_WithDescription(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithDescription("hello").
-		WithLeaf(tree.NewLeafBuilder("goodbye")), opt))
+		WithLeaf(tree.NewLeafBuilder("goodbye"))))
 	_ = utils.MustReturn(tree.Parse(com, []string{"hello", "goodbye"}))
 
 	if !com.HasDescription() {
@@ -36,10 +34,9 @@ func TestCommandTreeBuilder_WithDescription(t *testing.T) {
 
 func TestCommandTreeBuilder_WithCallback(t *testing.T) {
 	counter := 0
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithCallback(func(com argo.TreeCommand) { counter++ }).
-		WithLeaf(tree.NewLeafBuilder("goodbye")), opt))
+		WithLeaf(tree.NewLeafBuilder("goodbye"))))
 	_ = utils.MustReturn(tree.Parse(com, []string{"hello", "goodbye"}))
 
 	if counter != 1 {
@@ -49,10 +46,9 @@ func TestCommandTreeBuilder_WithCallback(t *testing.T) {
 
 func TestCommandTreeBuilder_WithFlag(t *testing.T) {
 	counter := 0
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('c').WithBinding(&counter, true)).
-		WithLeaf(tree.NewLeafBuilder("bell")), opt))
+		WithLeaf(tree.NewLeafBuilder("bell"))))
 	_ = utils.MustReturn(tree.Parse(com, []string{"taco", "bell", "-c=3", "banana", "--", "pickle"}))
 
 	if counter != 3 {
@@ -85,13 +81,12 @@ func TestCommandTreeBuilder_WithBranch(t *testing.T) {
 	a := 0
 	b := 0
 	c := 0
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithCallback(func(com argo.TreeCommand) { a++ }).
 		WithBranch(tree.NewBranchBuilder("foo").
 			WithCallback(func(com argo.BranchCommand) { b++ }).
 			WithLeaf(tree.NewLeafBuilder("bar").
-				WithCallback(func(leaf argo.LeafCommand) { c++ }))), opt))
+				WithCallback(func(leaf argo.LeafCommand) { c++ })))))
 	_ = utils.MustReturn(tree.Parse(com, []string{"say", "foo", "bar"}))
 
 	if a != 1 || b != 1 || c != 1 {
@@ -101,7 +96,6 @@ func TestCommandTreeBuilder_WithBranch(t *testing.T) {
 
 func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
 	value := 0
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("no-thanks")).
 		WithFlagGroup(flag.NewGroupBuilder("derpy").
@@ -109,7 +103,7 @@ func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
 				WithShortForm('b').
 				WithArgument(argument.NewBuilder().
 					WithDefault(3).
-					WithBinding(&value)))), opt))
+					WithBinding(&value))))))
 	_ = utils.MustReturn(tree.Parse(com, []string{"hoopla", "no-thanks"}))
 
 	if value != 3 {
@@ -118,12 +112,11 @@ func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
 }
 
 func TestCommandTreeBuilder_WithLeaf(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("ass").
 			WithFlag(flag.NewBuilder().
 				WithLongForm("butt").
-				WithArgument(argument.NewBuilder().Require()))), opt))
+				WithArgument(argument.NewBuilder().Require())))))
 
 	_, err := tree.Parse(com, []string{"my", "ass", "--butt"})
 
@@ -133,13 +126,12 @@ func TestCommandTreeBuilder_WithLeaf(t *testing.T) {
 }
 
 func TestCommandTreeBuilder_Parse(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf").
 			WithFlag(flag.NewBuilder().
 				WithShortForm('f').
 				Require().
-				WithArgument(argument.NewBuilder().Require()))), opt))
+				WithArgument(argument.NewBuilder().Require())))))
 
 	_, err := tree.Parse(com, []string{"tree", "leaf"})
 
@@ -156,50 +148,41 @@ func TestCommandTreeBuilder_Parse(t *testing.T) {
 
 func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 	value := "hello"
-	opt := argo.Options{}
-	com := utils.MustReturn(tree.Build(tree.NewBuilder().
+	_, err := tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("bar").
 			WithArgument(argument.NewBuilder().
 				WithBinding(&value).
-				WithDefault(3))), opt))
-
-	_, err := tree.Parse(com, []string{"foo", "bar"})
+				WithDefault(3))))
 
 	if err == nil {
 		t.Fail()
 	}
 
-	com = utils.MustReturn(tree.Build(tree.NewBuilder().
+	_, err = tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("bar").
 			WithArgument(argument.NewBuilder().
 				WithBinding(&value).
-				WithDefault(func() int { return 3 }))), opt))
-
-	_, err = tree.Parse(com, []string{"foo", "bar"})
+				WithDefault(func() int { return 3 }))))
 
 	if err == nil {
 		t.Fail()
 	}
 
-	com = utils.MustReturn(tree.Build(tree.NewBuilder().
+	_, err = tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("bar").
 			WithArgument(argument.NewBuilder().
 				WithBinding(&value).
-				WithDefault(func() (string, int) { return "hello", 3 }))), opt))
-
-	_, err = tree.Parse(com, []string{"foo", "bar"})
+				WithDefault(func() (string, int) { return "hello", 3 }))))
 
 	if err == nil {
 		t.Fail()
 	}
 
-	com = utils.MustReturn(tree.Build(tree.NewBuilder().
+	_, err = tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("bar").
 			WithArgument(argument.NewBuilder().
 				WithBinding(&value).
-				WithDefault(func() (string, int, int) { return "hello", 3, 5 }))), opt))
-
-	_, err = tree.Parse(com, []string{"foo", "bar"})
+				WithDefault(func() (string, int, int) { return "hello", 3, 5 }))))
 
 	if err == nil {
 		t.Fail()
@@ -208,30 +191,28 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 
 // Unrecognized short solo flag becomes a warning.
 func TestCommandTreeBuilder_UnknownShortSoloWarning(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
-		WithLeaf(tree.NewLeafBuilder("leaf")), opt))
+		WithLeaf(tree.NewLeafBuilder("leaf"))))
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-a"}))
 
-	if len(res.Warnings) != 1 {
+	if len(res) != 1 {
 		t.Error("expected command tree to have exactly 1 error but it didn't")
-	} else if res.Warnings[0].Message != "unrecognized short flag -a" {
+	} else if res[0].Message != "unrecognized short flag -a" {
 		t.Error("expected command tree warning to match expected warning but it didn't")
 	}
 }
 
 // Unrecognized short pair flag becomes a warning.
 func TestCommandTreeBuilder_UnknownShortPairWarning(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
-		WithFlag(flag.NewBuilder().WithShortForm('b').WithArgument(argument.NewBuilder())), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('b').WithArgument(argument.NewBuilder()))))
 
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "-ab=1"}))
 
-	if len(res.Warnings) != 1 {
+	if len(res) != 1 {
 		t.Error("expected command tree to have exactly 1 error but it didn't")
-	} else if res.Warnings[0].Message != "unrecognized short flag -a" {
+	} else if res[0].Message != "unrecognized short flag -a" {
 		t.Error("expected command tree warning to match expected warning but it didn't")
 	}
 }
@@ -239,13 +220,13 @@ func TestCommandTreeBuilder_UnknownShortPairWarning(t *testing.T) {
 // Unrecognized long solo flag becomes a warning.
 func TestCommandTreeBuilder_UnknownLongSoloWarning(t *testing.T) {
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
-		WithLeaf(tree.NewLeafBuilder("leaf")), argo.Options{}))
+		WithLeaf(tree.NewLeafBuilder("leaf"))))
 
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--apple"}))
 
-	if len(res.Warnings) != 1 {
+	if len(res) != 1 {
 		t.Error("expected command tree to have exactly 1 error but it didn't")
-	} else if res.Warnings[0].Message != "unrecognized long flag --apple" {
+	} else if res[0].Message != "unrecognized long flag --apple" {
 		t.Error("expected command tree warning to match expected warning but it didn't")
 	}
 }
@@ -253,13 +234,13 @@ func TestCommandTreeBuilder_UnknownLongSoloWarning(t *testing.T) {
 // Unrecognized long pair flag becomes a warning.
 func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
-		WithLeaf(tree.NewLeafBuilder("leaf")), argo.Options{}))
+		WithLeaf(tree.NewLeafBuilder("leaf"))))
 
 	res := utils.MustReturn(tree.Parse(com, []string{"command", "leaf", "--apple=1"}))
 
-	if len(res.Warnings) != 1 {
+	if len(res) != 1 {
 		t.Error("expected command tree to have exactly 1 error but it didn't")
-	} else if res.Warnings[0].Message != "unrecognized long flag --apple" {
+	} else if res[0].Message != "unrecognized long flag --apple" {
 		t.Error("expected command tree warning to match expected warning but it didn't")
 	}
 }
@@ -268,7 +249,7 @@ func TestCommandTreeBuilder_UnknownLongPairWarning(t *testing.T) {
 func TestCommandTreeBuilder_Build01(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder().
 		WithBranch(tree.NewBranchBuilder("something").WithLeaf(tree.NewLeafBuilder("something-else"))).
-		WithLeaf(tree.NewLeafBuilder("something")), argo.Options{})
+		WithLeaf(tree.NewLeafBuilder("something")))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -281,7 +262,7 @@ func TestCommandTreeBuilder_Build02(t *testing.T) {
 		WithCommandGroup(tree.NewGroupBuilder("foo").
 			WithBranch(tree.NewBranchBuilder("something").WithLeaf(tree.NewLeafBuilder("something-else")))).
 		WithCommandGroup(tree.NewGroupBuilder("bar").
-			WithLeaf(tree.NewLeafBuilder("something"))), argo.Options{})
+			WithLeaf(tree.NewLeafBuilder("something"))))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -293,7 +274,7 @@ func TestCommandTreeBuilder_Build03(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder().
 		WithFlag(flag.NewBuilder().WithLongForm("hello")).
 		WithFlag(flag.NewBuilder().WithLongForm("hello")).
-		WithLeaf(tree.NewLeafBuilder("something")), argo.Options{})
+		WithLeaf(tree.NewLeafBuilder("something")))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -305,7 +286,7 @@ func TestCommandTreeBuilder_Build04(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('f')).
 		WithFlag(flag.NewBuilder().WithShortForm('f')).
-		WithLeaf(tree.NewLeafBuilder("something")), argo.Options{})
+		WithLeaf(tree.NewLeafBuilder("something")))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -318,7 +299,7 @@ func TestCommandTreeBuilder_Build05(t *testing.T) {
 		WithFlagGroup(flag.NewGroupBuilder("hoopla").
 			WithFlag(flag.NewBuilder().WithLongForm("hello"))).
 		WithFlagGroup(flag.NewGroupBuilder("wednesday").
-			WithFlag(flag.NewBuilder().WithLongForm("hello"))), argo.Options{})
+			WithFlag(flag.NewBuilder().WithLongForm("hello"))))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
@@ -333,7 +314,7 @@ func TestCommandTreeBuilder_Build06(t *testing.T) {
 		WithFlagGroup(flag.NewGroupBuilder("hoopla").
 			WithFlag(flag.NewBuilder().WithShortForm('g'))).
 		WithFlagGroup(flag.NewGroupBuilder("wednesday").
-			WithFlag(flag.NewBuilder().WithShortForm('g'))), argo.Options{})
+			WithFlag(flag.NewBuilder().WithShortForm('g'))))
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")

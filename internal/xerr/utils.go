@@ -16,15 +16,3 @@ func TryBuild[B, O any](builder B, buildFunc func(B) (O, error), errs argo.Multi
 		return out, true
 	}
 }
-
-func AppendError(result argo.ParseResult, err error) (argo.ParseResult, error) {
-	result.Error = err
-	return result, err
-}
-
-func AppendWarning(result *argo.ParseResult, warning string, kind argo.ParseWarningType) {
-	result.Warnings = append(result.Warnings, argo.ParseWarning{
-		Type:    kind,
-		Message: warning,
-	})
-}

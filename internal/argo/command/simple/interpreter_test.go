@@ -10,14 +10,12 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/simple"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
-	"github.com/foxcapades/argonaut/v3/pkg/argo"
 	"github.com/foxcapades/argonaut/v3/pkg/argotype"
 )
 
 // Unknown short solo flag.
 func TestCommandInterpreterShortSolo01(t *testing.T) {
-	opt := argo.Options{}
-	com := utils.MustReturn(command.Build(command.NewBuilder(), opt))
+	com := utils.MustReturn(command.Build(command.NewBuilder()))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-f"}))
 
 	if !com.HasUnmappedInputs() {
@@ -31,8 +29,7 @@ func TestCommandInterpreterShortSolo01(t *testing.T) {
 
 // Known short solo flag.
 func TestCommandInterpreterShortSolo02(t *testing.T) {
-	opt := argo.Options{}
-	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('f')), opt))
+	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('f'))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-f"}))
 
 	if !com.FindShortFlag('f').WasHit() {
@@ -42,8 +39,7 @@ func TestCommandInterpreterShortSolo02(t *testing.T) {
 
 // Unknown short solo at the start of a block
 func TestCommandInterpreterShortSolo03(t *testing.T) {
-	opt := argo.Options{}
-	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('b')), opt))
+	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('b'))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	if !com.HasUnmappedInputs() {
@@ -61,8 +57,7 @@ func TestCommandInterpreterShortSolo03(t *testing.T) {
 
 // Unknown short solo in the middle of a block
 func TestCommandInterpreterShortSolo04(t *testing.T) {
-	opt := argo.Options{}
-	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('a')), opt))
+	com := utils.MustReturn(command.Build(command.NewBuilder().WithFlag(flag.NewBuilder().WithShortForm('a'))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	if !com.HasUnmappedInputs() {
@@ -80,9 +75,8 @@ func TestCommandInterpreterShortSolo04(t *testing.T) {
 
 // Short solo requires arg but hits eof
 func TestCommandInterpreterShortSolo05(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
-		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require()))))
 	_, err := command.Parse(com, []string{"Command", "-a"})
 
 	if err == nil {
@@ -92,9 +86,8 @@ func TestCommandInterpreterShortSolo05(t *testing.T) {
 
 // Short solo requires arg but hits boundary
 func TestCommandInterpreterShortSolo06(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
-		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require()))))
 	_, err := command.Parse(com, []string{"Command", "-a", "--"})
 
 	if err == nil {
@@ -104,9 +97,8 @@ func TestCommandInterpreterShortSolo06(t *testing.T) {
 
 // Short solo requires arg and hits any value
 func TestCommandInterpreterShortSolo07(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
-		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-b"}))
 
 	f := com.FindShortFlag('a')
@@ -122,9 +114,8 @@ func TestCommandInterpreterShortSolo07(t *testing.T) {
 
 // Short solo requires arg and clobbers block
 func TestCommandInterpreterShortSolo08(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
-		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require())), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder().Require()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	f := com.FindShortFlag('a')
@@ -139,10 +130,9 @@ func TestCommandInterpreterShortSolo08(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo09(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder())).
-		WithFlag(flag.NewBuilder().WithShortForm('b')), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('b'))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	flag1 := com.FindShortFlag('a')
@@ -158,9 +148,8 @@ func TestCommandInterpreterShortSolo09(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo10(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
-		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder())), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('a').WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-ab"}))
 
 	flag1 := com.FindShortFlag('a')
@@ -175,10 +164,9 @@ func TestCommandInterpreterShortSolo10(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo11(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a"}))
 
 	f := com.FindShortFlag('a')
@@ -191,10 +179,9 @@ func TestCommandInterpreterShortSolo11(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo12(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--"}))
 
 	f := com.FindShortFlag('a')
@@ -207,10 +194,9 @@ func TestCommandInterpreterShortSolo12(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo13(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "lamp"}))
 
 	f := com.FindShortFlag('a')
@@ -225,10 +211,9 @@ func TestCommandInterpreterShortSolo13(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo14(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l"}))
 
 	f := com.FindShortFlag('a')
@@ -243,10 +228,9 @@ func TestCommandInterpreterShortSolo14(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo15(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--paul"}))
 
 	f := com.FindShortFlag('a')
@@ -261,11 +245,10 @@ func TestCommandInterpreterShortSolo15(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo16(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
-		WithFlag(flag.NewBuilder().WithShortForm('l')), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('l'))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l"}))
 
 	f1 := com.FindShortFlag('a')
@@ -283,11 +266,10 @@ func TestCommandInterpreterShortSolo16(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo17(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
-		WithFlag(flag.NewBuilder().WithLongForm("atom")), opt))
+		WithFlag(flag.NewBuilder().WithLongForm("atom"))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--atom"}))
 
 	f1 := com.FindShortFlag('a')
@@ -305,11 +287,10 @@ func TestCommandInterpreterShortSolo17(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo18(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
-		WithFlag(flag.NewBuilder().WithShortForm('l')), opt))
+		WithFlag(flag.NewBuilder().WithShortForm('l'))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l=1"}))
 
 	f1 := com.FindShortFlag('a')
@@ -327,11 +308,10 @@ func TestCommandInterpreterShortSolo18(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo19(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
 			WithArgument(argument.NewBuilder())).
-		WithFlag(flag.NewBuilder().WithLongForm("atom")), opt))
+		WithFlag(flag.NewBuilder().WithLongForm("atom"))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--atom=1"}))
 
 	f1 := com.FindShortFlag('a')
@@ -349,10 +329,9 @@ func TestCommandInterpreterShortSolo19(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo20(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "-l=1"}))
 
 	f1 := com.FindShortFlag('a')
@@ -367,10 +346,9 @@ func TestCommandInterpreterShortSolo20(t *testing.T) {
 }
 
 func TestCommandInterpreterShortSolo21(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('a').
-			WithArgument(argument.NewBuilder())), opt))
+			WithArgument(argument.NewBuilder()))))
 	_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--atom=1"}))
 
 	f1 := com.FindShortFlag('a')
@@ -386,11 +364,10 @@ func TestCommandInterpreterShortSolo21(t *testing.T) {
 
 // https://github.com/Foxcapades/Argonaut/issues/18
 func TestRegression18Command(t *testing.T) {
-	opt := argo.Options{}
 	{
 		bind := false
 		com := utils.MustReturn(command.Build(command.NewBuilder().
-			WithFlag(flag.NewBuilder().WithShortForm('a').WithBinding(&bind, false)), opt))
+			WithFlag(flag.NewBuilder().WithShortForm('a').WithBinding(&bind, false))))
 		_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a"}))
 
 		f := com.FindShortFlag('a')
@@ -410,7 +387,7 @@ func TestRegression18Command(t *testing.T) {
 	{
 		bind := false
 		com := utils.MustReturn(command.Build(command.NewBuilder().
-			WithFlag(flag.NewBuilder().WithShortForm('a').WithBinding(&bind, false)), opt))
+			WithFlag(flag.NewBuilder().WithShortForm('a').WithBinding(&bind, false))))
 		_ = utils.MustReturn(command.Parse(com, []string{"Command", "-a", "--", "flumps"}))
 
 		f := com.FindShortFlag('a')
@@ -445,7 +422,6 @@ func TestRegression58Command(t *testing.T) {
 	var printHeaders bool
 	var inputFile string
 
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('r').WithLongForm("rm-na").
 			WithBinding(&removeNAValues, false)).
@@ -475,7 +451,7 @@ func TestRegression58Command(t *testing.T) {
 			WithBinding(func(path []string) (err error) {
 				inputFile = path[0]
 				return
-			})), opt))
+			}))))
 	_, err := command.Parse(com, []string{"build/linux/find-bin-width", "-s", "-f", "tsv", "some-file"})
 
 	if err != nil {
@@ -507,11 +483,10 @@ func TestRegression58Command(t *testing.T) {
 func TestRegression62Command(t *testing.T) {
 	var value argotype.Hex8
 
-	opt := argo.Options{}
 	com := utils.MustReturn(command.Build(command.NewBuilder().
 		WithFlag(flag.NewBuilder().WithShortForm('i').WithLongForm("interactive").
 			WithDescription("Interactive mode: auto (0), none (1), minimal (2), full (3).  Defaults to auto").
-			WithBindingAndDefault(&value, argotype.Hex8(23), true)), opt))
+			WithBindingAndDefault(&value, argotype.Hex8(23), true))))
 	_, err := command.Parse(com, []string{"something", "gen-meta"})
 
 	if err != nil {

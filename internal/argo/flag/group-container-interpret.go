@@ -7,12 +7,11 @@ import (
 	"github.com/foxcapades/argonaut/v3/internal/parse"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
-	"github.com/foxcapades/argonaut/v3/internal/xerr"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
 type ContainingInterpreter interface {
-	CurrentAsFlagGroupContainer() GroupContainer
+	FlagIndex() Index
 
 	Next() parse.Element
 
@@ -23,7 +22,7 @@ type ContainingInterpreter interface {
 	ElementQueue() utils.Deque[parse.Element]
 }
 
-func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
+func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmapped *[]string, warnings *[]argo.InputWarning) error {
 	remainder := element.Data[0]
 
 	for i := 0; i < len(element.Data[0]); i++ {
@@ -34,12 +33,12 @@ func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmappe
 		remainder = remainder[1:]
 
 		// Look up the flag in the short flag map
-		f := c.CurrentAsFlagGroupContainer().FindShortFlag(b)
+		f := c.FlagIndex().ByShortName(b)
 
 		// If the flag was not found, append the arg to the unmapped slice and move
 		// on to the next character.
 		if f == nil {
-			AppendUnrecognizedShortFlag(result, b)
+			AppendUnrecognizedShortFlag(warnings, b)
 			*unmapped = append(*unmapped, text.DashString+string(b))
 			continue
 		}
@@ -89,7 +88,7 @@ func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmappe
 			}
 
 			if argument.IsBoolean(arg) {
-				possibleNextFlag := c.CurrentAsFlagGroupContainer().FindShortFlag(remainder[0])
+				possibleNextFlag := c.FlagIndex().ByShortName(remainder[0])
 
 				if possibleNextFlag != nil {
 					if err := arg.SetValue("true"); err != nil {
@@ -113,7 +112,7 @@ func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmappe
 
 			// test if the next character is a flag itself.  If it is, then we
 			// prioritize the flag over an optional argument.
-			if t := c.CurrentAsFlagGroupContainer().FindShortFlag(n); t != nil {
+			if t := c.FlagIndex().ByShortName(n); t != nil {
 				if argument.IsBoolean(arg) {
 					if err := arg.SetValue("true"); err != nil {
 						return err
@@ -138,11 +137,14 @@ func InterpretShortSolo(c ContainingInterpreter, element *parse.Element, unmappe
 // InterpretShortPair tries to make sense of a pair where the first value is a
 // block of one or more short flags, and the second value is an argument value
 // that was directly attached using an `=` character.
-func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
+func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmapped *[]string, warnings *[]argo.InputWarning) error {
 	block := element.Data[0]
 
 	if len(block) == 0 {
-		xerr.AppendWarning(result, "blank short flag name", argo.UnrecognizedFlag)
+		*warnings = append(*warnings, argo.InputWarning{
+			Type:    argo.UnrecognizedFlag,
+			Message: "blank short flag name",
+		})
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -150,7 +152,7 @@ func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmappe
 	// If the flag key block is a single character in length, then we can do this
 	// in a simple check.
 	if len(block) == 1 {
-		if f := c.CurrentAsFlagGroupContainer().FindShortFlag(block[0]); f != nil {
+		if f := c.FlagIndex().ByShortName(block[0]); f != nil {
 			c.FlagHits().Append(f)
 			f.IncrementHitCount()
 			if f.HasArgument() {
@@ -172,10 +174,19 @@ func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmappe
 		// current character
 		b := block[0]
 
-		f := c.CurrentAsFlagGroupContainer().FindShortFlag(b)
+		f := c.FlagIndex().ByShortName(b)
 
 		if f == nil {
-			AppendUnrecognizedShortFlag(result, b)
+			AppendUnrecognizedShortFlag(warnings, b)
+
+			// If we are on the last byte of the flag name segment, and we didn't find
+			// anything, then include the value in the unmapped, and return here as
+			// there is nothing left to do.
+			if !hasNextChar {
+				*unmapped = append(*unmapped, text.DashString+block[0:1]+element.Data[1])
+				return nil
+			}
+
 			*unmapped = append(*unmapped, text.DashString+block[0:1])
 			block = block[1:]
 			continue
@@ -203,7 +214,7 @@ func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmappe
 			// If there _is_ a next character, and it happens to be a valid short
 			// flag itself, then hit the current flag and move on to the next
 			// character in the block.
-			if c.CurrentAsFlagGroupContainer().FindShortFlag(block[1]) != nil {
+			if c.FlagIndex().ByShortName(block[1]) != nil {
 				block = block[1:]
 				continue
 			}
@@ -214,11 +225,12 @@ func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmappe
 		}
 
 		// So the flag doesn't expect an argument at all.
-		// Well let's see what we have to say about that.  It may be, if this is the
-		// last character in the block, that it has to have one anyway.
 		if !hasNextChar {
-			xerr.AppendWarning(result, fmt.Sprintf("flag -%c received an argument it didn't expect", b), argo.UnexpectedFlagArgument)
-			return f.Argument().SetValue(element.Data[1])
+			*warnings = append(*warnings, argo.InputWarning{
+				Type:    argo.UnexpectedFlagArgument,
+				Message: fmt.Sprintf("flag -%c received an argument it didn't expect", b),
+			})
+			return nil
 		}
 
 		block = block[1:]
@@ -227,11 +239,11 @@ func InterpretShortPair(c ContainingInterpreter, element *parse.Element, unmappe
 	panic("illegal state")
 }
 
-func InterpretLongSolo(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
-	f := c.CurrentAsFlagGroupContainer().FindLongFlag(element.Data[0])
+func InterpretLongSolo(c ContainingInterpreter, element *parse.Element, unmapped *[]string, warnings *[]argo.InputWarning) error {
+	f := c.FlagIndex().ByLongName(element.Data[0])
 
 	if f == nil {
-		AppendUnrecognizedLongFlag(result, element.Data[0])
+		AppendUnrecognizedLongFlag(warnings, element.Data[0])
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -263,11 +275,11 @@ func InterpretLongSolo(c ContainingInterpreter, element *parse.Element, unmapped
 	return tryConsumeNextElementForOptionalArgument(c, arg)
 }
 
-func InterpretLongPair(c ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error {
-	targetFlag := c.CurrentAsFlagGroupContainer().FindLongFlag(element.Data[0])
+func InterpretLongPair(c ContainingInterpreter, element *parse.Element, unmapped *[]string, warnings *[]argo.InputWarning) error {
+	targetFlag := c.FlagIndex().ByLongName(element.Data[0])
 
 	if targetFlag == nil {
-		AppendUnrecognizedLongFlag(result, element.Data[0])
+		AppendUnrecognizedLongFlag(warnings, element.Data[0])
 		*unmapped = append(*unmapped, element.String())
 		return nil
 	}
@@ -278,11 +290,10 @@ func InterpretLongPair(c ContainingInterpreter, element *parse.Element, unmapped
 	if targetFlag.HasArgument() {
 		return targetFlag.Argument().SetValue(element.Data[1])
 	} else {
-		xerr.AppendWarning(
-			result,
-			fmt.Sprintf("flag --%s received an argument it didn't expect", element.Data[0]),
-			argo.UnexpectedFlagArgument,
-		)
+		*warnings = append(*warnings, argo.InputWarning{
+			Type:    argo.UnexpectedFlagArgument,
+			Message: fmt.Sprintf("flag --%s received an argument it didn't expect", element.Data[0]),
+		})
 	}
 
 	return nil
@@ -308,14 +319,14 @@ func tryConsumeNextElementForOptionalArgument(c ContainingInterpreter, arg argo.
 		}
 
 	case parse.ElementTypeShortBlockSolo, parse.ElementTypeShortBlockPair:
-		if len(nextElement.Data[0]) > 0 && c.CurrentAsFlagGroupContainer().FindShortFlag(nextElement.Data[0][0]) != nil {
+		if len(nextElement.Data[0]) > 0 && c.FlagIndex().ByShortName(nextElement.Data[0][0]) != nil {
 			c.ElementQueue().Offer(nextElement)
 		} else if err := arg.SetValue(nextElement.String()); err != nil {
 			c.ElementQueue().Offer(nextElement)
 		}
 
 	case parse.ElementTypeLongFlagSolo, parse.ElementTypeLongFlagPair:
-		if c.CurrentAsFlagGroupContainer().FindLongFlag(nextElement.Data[0]) != nil {
+		if c.FlagIndex().ByLongName(nextElement.Data[0]) != nil {
 			c.ElementQueue().Offer(nextElement)
 		} else if err := arg.SetValue(nextElement.String()); err != nil {
 			c.ElementQueue().Offer(nextElement)
@@ -325,13 +336,23 @@ func tryConsumeNextElementForOptionalArgument(c ContainingInterpreter, arg argo.
 		panic("illegal state: unrecognized parser element type")
 	}
 
+	if !arg.WasHit() && argument.IsBoolean(arg) {
+		return arg.SetValue("true")
+	}
+
 	return nil
 }
 
-func AppendUnrecognizedLongFlag(result *argo.ParseResult, name string) {
-	xerr.AppendWarning(result, fmt.Sprintf("unrecognized long flag --%s", name), argo.UnrecognizedFlag)
+func AppendUnrecognizedLongFlag(warnings *[]argo.InputWarning, name string) {
+	*warnings = append(*warnings, argo.InputWarning{
+		Type:    argo.UnrecognizedFlag,
+		Message: fmt.Sprintf("unrecognized long flag --%s", name),
+	})
 }
 
-func AppendUnrecognizedShortFlag(result *argo.ParseResult, name byte) {
-	xerr.AppendWarning(result, fmt.Sprintf("unrecognized short flag -%c", name), argo.UnrecognizedFlag)
+func AppendUnrecognizedShortFlag(warnings *[]argo.InputWarning, name byte) {
+	*warnings = append(*warnings, argo.InputWarning{
+		Type:    argo.UnrecognizedFlag,
+		Message: fmt.Sprintf("unrecognized short flag -%c", name),
+	})
 }

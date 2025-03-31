@@ -101,4 +101,8 @@ type CommandBuilder interface {
 	// If no unmapped input label has been set, this method returns an empty
 	// string.
 	UnmappedInputLabel() string
+
+	WithOptions(opts CommandOptions) CommandBuilder
+
+	Options() CommandOptions
 }

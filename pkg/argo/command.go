@@ -33,18 +33,6 @@ type Command interface {
 	// flag group.
 	HasFlagGroups() bool
 
-	// FindShortFlag looks up a target Flag instance by its short-form character.
-	//
-	// If no such flag exists on this Node or any of its parents, this
-	// method will return nil.
-	FindShortFlag(c byte) Flag
-
-	// FindLongFlag looks up a target Flag instance by its long-form name.
-	//
-	// If no such flag exists on this Node or any of its parents, this
-	// method will return nil.
-	FindLongFlag(name string) Flag
-
 	HasCallback() bool
 
 	Callback() CommandCallback[Command]
@@ -91,4 +79,16 @@ type Command interface {
 	// HasUnmappedInputLabel indicates whether an unmapped label has been set on this
 	// command.
 	HasUnmappedInputLabel() bool
+
+	// FindShortFlag looks up a target Flag instance by its short-form character.
+	//
+	// If no such flag exists, this method will return nil.
+	FindShortFlag(c byte) Flag
+
+	// FindLongFlag looks up a target Flag instance by its long-form name.
+	//
+	// If no such flag exists, this method will return nil.
+	FindLongFlag(name string) Flag
+
+	Options() CommandOptions
 }

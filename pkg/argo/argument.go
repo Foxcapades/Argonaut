@@ -17,12 +17,8 @@ type Argument interface {
 	// Argument.
 	HasDefault() bool
 
-	// Default returns the default value or value provider attached to this
-	// Argument, if such a value exists.
-	//
-	// If this Argument does not have a default value or provider set, this method
-	// will return nil.
-	Default() any
+	// Default returns the default value  details for this Argument.
+	Default() ArgumentDefault
 
 	// HasDescription tests whether this Argument has a description attached.
 	HasDescription() bool
@@ -59,9 +55,22 @@ type Argument interface {
 	// HasBinding indicates whether this Argument has a value binding.
 	HasBinding() bool
 
+	// Binding returns the binding details for this Argument.
 	Binding() ArgumentBinding
 
+	// SetValue attempts to set the value of this Argument's binding by parsing
+	// the given raw CLI string.
+	//
+	// If the given string value could not be parsed into the type of the bound
+	// variable, an error will be returned.
 	SetValue(rawValue string) error
 
+	// SetToDefault attempts to set the value of this Argument's binding to the
+	// default value provided when building the Argument.
+	//
+	// If no argument default value was provided, this method does nothing.
+	//
+	// If the default value that was provided when building the Argument could not
+	// be set to or parsed into the bound variable, an error will be returned.
 	SetToDefault() error
 }

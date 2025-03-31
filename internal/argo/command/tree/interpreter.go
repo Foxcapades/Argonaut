@@ -13,29 +13,24 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func Parse(tree argo.TreeCommand, args []string) (argo.ParseResult, error) {
+func Parse(tree argo.TreeCommand, args []string) ([]argo.InputWarning, error) {
 	i := CommandTreeInterpreter{
-		parser:   parse.NewParser(emit.NewEmitter(args)),
-		current:  tree,
-		tree:     tree,
-		queue:    utils.NewDeque[parse.Element](2),
-		flagHits: flag.NewQueue(),
+		parser:    parse.NewParser(emit.NewEmitter(args)),
+		current:   tree,
+		tree:      tree,
+		queue:     utils.NewDeque[parse.Element](2),
+		flagHits:  flag.NewQueue(),
+		flagIndex: flag.BuildFlagIndex(tree),
+		warnings:  make([]argo.InputWarning, 0, 2),
 	}
 
-	res, err := i.Run()
-
-	if err != nil && res.Error == nil {
-		res.Error = err
-	}
-
-	return res, err
+	return i.Run()
 }
 
 type CommandTreeInterpreter struct {
 	parser   parse.Parser
 	current  any
 	boundary bool
-	options  argo.Options
 
 	tree argo.TreeCommand
 
@@ -46,8 +41,10 @@ type CommandTreeInterpreter struct {
 
 	flagHits flag.Queue
 
-	result   argo.ParseResult
+	warnings []argo.InputWarning
 	appender argument.ValueAppender
+
+	flagIndex flag.Index
 }
 
 func (c *CommandTreeInterpreter) Next() parse.Element {
@@ -66,8 +63,8 @@ func (c *CommandTreeInterpreter) HitBoundary() {
 	c.boundary = true
 }
 
-func (c *CommandTreeInterpreter) CurrentAsFlagGroupContainer() flag.GroupContainer {
-	return c.current.(flag.GroupContainer)
+func (c *CommandTreeInterpreter) FlagIndex() flag.Index {
+	return c.flagIndex
 }
 
 func (c *CommandTreeInterpreter) FlagHits() *flag.Queue {
@@ -78,7 +75,7 @@ func (c *CommandTreeInterpreter) haveLeaf() bool {
 	return c.leaf != nil
 }
 
-func (c *CommandTreeInterpreter) Run() (argo.ParseResult, error) {
+func (c *CommandTreeInterpreter) Run() ([]argo.InputWarning, error) {
 	var err error
 
 	unmapped := make([]string, 0, 10)
@@ -100,7 +97,7 @@ FOR:
 			}
 
 			if ok, err := c.appender.Append(element.String()); err != nil {
-				return c.result, err
+				return c.warnings, err
 			} else if !ok {
 				unmapped = append(unmapped, element.String())
 			}
@@ -111,27 +108,27 @@ FOR:
 		switch element.Type {
 		case parse.ElementTypePlainText:
 			if unmapped, err = c.handlePlainText(element, unmapped, errs); err != nil {
-				return c.result, err
+				return c.warnings, err
 			}
 
 		case parse.ElementTypeLongFlagPair:
-			if err = flag.InterpretLongPair(c, &element, &unmapped, &c.result); err != nil {
-				return c.result, err
+			if err = flag.InterpretLongPair(c, &element, &unmapped, &c.warnings); err != nil {
+				return c.warnings, err
 			}
 
 		case parse.ElementTypeLongFlagSolo:
-			if err = flag.InterpretLongSolo(c, &element, &unmapped, &c.result); err != nil {
-				return c.result, err
+			if err = flag.InterpretLongSolo(c, &element, &unmapped, &c.warnings); err != nil {
+				return c.warnings, err
 			}
 
 		case parse.ElementTypeShortBlockSolo:
-			if err = flag.InterpretShortSolo(c, &element, &unmapped, &c.result); err != nil {
-				return c.result, err
+			if err = flag.InterpretShortSolo(c, &element, &unmapped, &c.warnings); err != nil {
+				return c.warnings, err
 			}
 
 		case parse.ElementTypeShortBlockPair:
-			if err = flag.InterpretShortPair(c, &element, &unmapped, &c.result); err != nil {
-				return c.result, err
+			if err = flag.InterpretShortPair(c, &element, &unmapped, &c.warnings); err != nil {
+				return c.warnings, err
 			}
 
 		case parse.ElementTypeBoundary:
@@ -145,7 +142,7 @@ FOR:
 		}
 
 		if len(errs.Errors()) > 0 {
-			return c.result, errs
+			return c.warnings, errs
 		}
 	}
 
@@ -180,7 +177,7 @@ FOR:
 	}
 
 	if len(errs.Errors()) > 0 {
-		return c.result, errs
+		return c.warnings, errs
 	}
 
 	if c.tree.HasCallback() {
@@ -197,5 +194,5 @@ FOR:
 		c.leaf.Callback()(c.leaf)
 	}
 
-	return c.result, nil
+	return c.warnings, nil
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
@@ -27,14 +28,14 @@ type CallEndNode interface {
 	Arguments() []argo.Argument
 }
 
-func RenderCommandBackHalf(com CallEndNode, options argo.Options, out *bufio.Writer) error {
+func RenderCommandBackHalf(com CallEndNode, options opts.Options, out *bufio.Writer) error {
 	// If the command has a description, append it.
 	if com.HasDescription() {
 		if err := out.WriteByte(text.LineFeedByte); err != nil {
 			return err
 		}
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth(), out)
 		if err := formatter.Format(com.Description()); err != nil {
 			return err
 		}
@@ -129,7 +130,7 @@ func RenderCommandUsageLineBackHalf(com CommandBackHalf, out *bufio.Writer) erro
 					if err := out.WriteByte(text.SpaceByte); err != nil {
 						return err
 					}
-					if err := flag.RenderShortestLine(f, out); err != nil {
+					if err := flag.RenderShortestForUsage(f, out); err != nil {
 						return err
 					}
 				} else {

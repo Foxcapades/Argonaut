@@ -13,7 +13,7 @@ import (
 
 func BuildBranch(
 	branch argo.BranchCommandBuilder,
-	options argo.Options,
+	options Options,
 	parent argo.ParentNode,
 ) (argo.BranchCommand, error) {
 	errs := xerr.NewMultiError()
@@ -41,7 +41,7 @@ func BuildBranch(
 		common.TryAddHelpFlags(branch, MakeRenderBranchHelpCallback(out, options), options)
 	}
 
-	out.flagGroups = flag.BuildGroups(branch.FlagGroups(true), options, errs)
+	out.flagGroups = flag.BuildGroups(branch.FlagGroups(true), errs)
 	out.commandGroups = BuildCommandGroups(branch.CommandGroups(true), options, out, errs)
 
 	if len(errs.Errors()) > 0 {

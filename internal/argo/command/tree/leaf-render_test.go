@@ -5,9 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	cli "github.com/foxcapades/argonaut/v3"
+	"github.com/foxcapades/argonaut/v3"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/tree"
-	opts2 "github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
@@ -30,7 +29,7 @@ Your Flags
 
   -d <name> | --doorknob=<name>
 
-Help Flags
+General Flags
   -h | --help
       Prints this help text.
 
@@ -40,7 +39,6 @@ Arguments
 `
 
 func TestRenderCommandLeaf01(t *testing.T) {
-	opt := argo.Options{}
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithBranch(cli.Branch("branch").
 			WithLeaf(cli.Leaf("leaf").
@@ -61,22 +59,21 @@ func TestRenderCommandLeaf01(t *testing.T) {
 					WithFlag(cli.ShortFlag('d').
 						WithLongForm("doorknob").
 						WithArgument(cli.Argument().WithName("name").Require()))).
-				WithUnmappedInputLabel("files..."))), opt))
+				WithUnmappedInputLabel("files...")))))
 	_ = utils.MustReturn(tree.Parse(com, []string{"command", "branch", "leaf", "argument", "-a"}))
 
-	renderLeafOutputCheck(t, leafInput01, com.SelectedCommand())
+	renderLeafOutputCheck(t, leafInput01, com.SelectedCommand(), com.Options())
 }
 
 func renderLeafOutputCheck(
 	t *testing.T,
 	pattern string,
-	com argo.LeafCommand,
+	leaf argo.LeafCommand,
+	opts argo.TreeCommandOptions,
 ) {
 	sb := new(strings.Builder)
-	opts := argo.Options{}
-	opts2.FixOptions(&opts)
 
-	utils.Must(tree.RenderLeafHelp(com, opts, sb))
+	utils.Must(tree.RenderLeafHelp(leaf, tree.WrapOptions(&opts), sb))
 
 	expected := fmt.Sprintf(pattern, commandName)
 

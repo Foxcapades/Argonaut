@@ -10,16 +10,13 @@ import (
 )
 
 type Interpreter struct {
-	boundary bool
-	parser   parse.Parser
-	flagHits flag.Queue
-	result   argo.ParseResult
-	command  argo.Command
-	elements utils.Deque[parse.Element]
-}
-
-func (c *Interpreter) CurrentAsFlagGroupContainer() flag.GroupContainer {
-	return c.command
+	boundary  bool
+	parser    parse.Parser
+	flagHits  flag.Queue
+	warnings  []argo.InputWarning
+	command   argo.Command
+	elements  utils.Deque[parse.Element]
+	flagIndex flag.Index
 }
 
 func (c *Interpreter) FlagHits() *flag.Queue {
@@ -34,6 +31,10 @@ func (c *Interpreter) ElementQueue() utils.Deque[parse.Element] {
 	return c.elements
 }
 
+func (c *Interpreter) FlagIndex() flag.Index {
+	return c.flagIndex
+}
+
 func (c *Interpreter) Next() parse.Element {
 	if c.elements.IsEmpty() {
 		c.elements.Offer(c.parser.Next())
@@ -42,10 +43,10 @@ func (c *Interpreter) Next() parse.Element {
 	return c.elements.Poll()
 }
 
-func (c *Interpreter) Run() (argo.ParseResult, error) {
+func (c *Interpreter) Run() ([]argo.InputWarning, error) {
 	argumentStream := argument.NewValueAppender(c.command.Arguments())
 
-	var interpretFn func(c flag.ContainingInterpreter, element *parse.Element, unmapped *[]string, result *argo.ParseResult) error
+	var interpretFn func(flag.ContainingInterpreter, *parse.Element, *[]string, *[]argo.InputWarning) error
 	var unmapped []string
 
 FOR:
@@ -60,7 +61,7 @@ FOR:
 			}
 
 			if ok, err := argumentStream.Append(element.String()); err != nil {
-				return xerr.AppendError(c.result, err)
+				return c.warnings, err
 			} else if !ok {
 				unmapped = append(unmapped, element.String())
 			}
@@ -72,7 +73,7 @@ FOR:
 
 		case parse.ElementTypePlainText:
 			if ok, err := argumentStream.Append(element.String()); err != nil {
-				return xerr.AppendError(c.result, err)
+				return c.warnings, err
 			} else if !ok {
 				unmapped = append(unmapped, element.String())
 			}
@@ -101,8 +102,8 @@ FOR:
 			panic("illegal state")
 		}
 
-		if err := interpretFn(c, &element, &unmapped, &c.result); err != nil {
-			return xerr.AppendError(c.result, err)
+		if err := interpretFn(c, &element, &unmapped, &c.warnings); err != nil {
+			return c.warnings, err
 		}
 	}
 
@@ -118,12 +119,12 @@ FOR:
 	argument.CheckRequired(c.command.Arguments(), errs)
 
 	if len(errs.Errors()) > 0 {
-		return xerr.AppendError(c.result, errs)
+		return c.warnings, errs
 	}
 
 	if c.command.HasCallback() {
 		c.command.Callback()(c.command)
 	}
 
-	return c.result, nil
+	return c.warnings, nil
 }

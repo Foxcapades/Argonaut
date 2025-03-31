@@ -36,26 +36,6 @@ func (i *{{ .ImplType }}) Callback() argo.CommandCallback[{{ .OutputType }}] {
   return i.callback
 }
 
-func (i *{{ .ImplType }}) FindShortFlag(b byte) argo.Flag {
-  for _, group := range i.flagGroups {
-    if flag := group.FindShortFlag(b); flag != nil {
-      return flag
-    }
-  }
-
-  return nil
-}
-
-func (i *{{ .ImplType }}) FindLongFlag(name string) argo.Flag {
-  for _, group := range i.flagGroups {
-    if flag := group.FindLongFlag(name); flag != nil {
-      return flag
-    }
-  }
-
-  return nil
-}
-
 func (i *{{ .ImplType }}) IsHelpDisabled() bool {
   return i.disableHelp
 }

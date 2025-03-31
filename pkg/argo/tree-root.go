@@ -54,18 +54,6 @@ type TreeCommand interface {
 	// flag group.
 	HasFlagGroups() bool
 
-	// FindShortFlag looks up a target Flag instance by its short-form character.
-	//
-	// If no such flag exists on this Node or any of its parents, this
-	// method will return nil.
-	FindShortFlag(c byte) Flag
-
-	// FindLongFlag looks up a target Flag instance by its long-form name.
-	//
-	// If no such flag exists on this Node or any of its parents, this
-	// method will return nil.
-	FindLongFlag(name string) Flag
-
 	HasCallback() bool
 
 	Callback() CommandCallback[TreeCommand]
@@ -81,6 +69,43 @@ type TreeCommand interface {
 
 	// SelectedCommand returns the leaf command that was selected in the CLI call.
 	SelectedCommand() LeafCommand
+
+	// FindShortFlag looks up a target Flag instance by its short-form character.
+	//
+	// If no such flag exists on this node, nil will be returned.
+	FindShortFlag(c byte) Flag
+
+	// FindShortFlagRecursive looks up a target Flag instance by its short-form
+	// character recursively on the selected LeafCommand node and any intermediate
+	// nodes back to this TreeCommand.
+	//
+	// If no such flag exists in the tree hierarchy, nil will be returned.
+	//
+	// If this method is called before the CLI input has been parsed into this
+	// TreeCommand
+	//
+	// The behavior of this method is not affected by the InheritParentFlags
+	// TreeCommandOption setting.
+	FindShortFlagRecursive(c byte) Flag
+
+	// FindLongFlag looks up a target Flag instance by its long-form name.
+	//
+	// If no such flag exists on this node, the ancestor nodes will be checked
+	// parent by parent.
+	//
+	// To search this node and all parent nodes, use FindLongFlagRecursive
+	FindLongFlag(name string) Flag
+
+	// FindLongFlagRecursive looks up a target Flag instance by its long-form
+	// name recursively on this node and all ancestor nodes.
+	//
+	// If no such flag exists in the tree hierarchy, nil will be returned.
+	//
+	// The behavior of this method is not affected by the InheritParentFlags
+	// TreeCommandOption setting.
+	FindLongFlagRecursive(name string) Flag
+
+	Options() TreeCommandOptions
 }
 
 // A TreeCommandBuilder is a builder type used to construct a TreeCommand
@@ -193,4 +218,8 @@ type TreeCommandBuilder interface {
 
 	WithIncompleteHandler(handler IncompleteCommandHandler[TreeCommand]) TreeCommandBuilder
 	IncompleteHandler() IncompleteCommandHandler[TreeCommand]
+
+	WithOptions(opts TreeCommandOptions) TreeCommandBuilder
+
+	Options() TreeCommandOptions
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func RenderCommandGroups(groups []argo.CommandGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {
+func RenderCommandGroups(groups []argo.CommandGroup, options Options, padding uint8, sb *bufio.Writer) error {
 	if len(groups) == 0 {
 		return nil
 	}
@@ -33,13 +33,13 @@ func RenderCommandGroups(groups []argo.CommandGroup, options argo.Options, paddi
 	return sb.WriteByte(text.LineFeedByte)
 }
 
-func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding uint8, sb *bufio.Writer) error {
+func RenderCommandGroup(group argo.CommandGroup, options Options, padding uint8, sb *bufio.Writer) error {
 	if _, err := sb.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
 
 	if group.Name() == DefaultCommandGroupName {
-		if _, err := sb.WriteString(options.DefaultCommandGroupName); err != nil {
+		if _, err := sb.WriteString(options.DefaultCommandGroupName()); err != nil {
 			return err
 		}
 	} else {
@@ -53,7 +53,7 @@ func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding u
 	}
 
 	if group.HasDescription() {
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), sb)
 		if err := formatter.Format(group.Description()); err != nil {
 			return err
 		}
@@ -118,7 +118,7 @@ func RenderCommandGroup(group argo.CommandGroup, options argo.Options, padding u
 				return err
 			}
 
-			formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding+1], options.HelpTextMaxWidth, sb)
+			formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding+1], options.HelpTextMaxWidth(), sb)
 			if err := formatter.Format(described.Description()); err != nil {
 				return err
 			}

@@ -3,7 +3,11 @@ package tree
 // WARNING:
 //   This is a generated file!  Edits here will be lost!
 
-import "github.com/foxcapades/argonaut/v3/pkg/argo"
+import (
+	"fmt"
+
+	"github.com/foxcapades/argonaut/v3/pkg/argo"
+)
 
 type Leaf struct {
 	disableHelp   bool
@@ -76,6 +80,56 @@ func (i *Leaf) Matches(name string) bool {
 	return false
 }
 
+func (i *Leaf) FindShortFlag(b byte) argo.Flag {
+	for _, group := range i.flagGroups {
+		if flag := group.FindShortFlag(b); flag != nil {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (i *Leaf) FindLongFlag(name string) argo.Flag {
+	for _, group := range i.flagGroups {
+		if flag := group.FindLongFlag(name); flag != nil {
+			return flag
+		}
+	}
+
+	return nil
+}
+
+func (i *Leaf) FindShortFlagRecursive(c byte) argo.Flag {
+	if f := i.FindShortFlag(c); f != nil {
+		return f
+	}
+
+	switch t := i.parent.(type) {
+	case argo.TreeCommand:
+		return t.FindShortFlag(c)
+	case argo.BranchCommand:
+		return t.FindShortFlagRecursive(c)
+	default:
+		panic(fmt.Sprintf("illegal state: unknown node parent type: %v", i.parent))
+	}
+}
+
+func (i *Leaf) FindLongFlagRecursive(name string) argo.Flag {
+	if f := i.FindLongFlag(name); f != nil {
+		return f
+	}
+
+	switch t := i.parent.(type) {
+	case argo.TreeCommand:
+		return t.FindLongFlag(name)
+	case argo.BranchCommand:
+		return t.FindLongFlagRecursive(name)
+	default:
+		panic(fmt.Sprintf("illegal state: unknown node parent type: %v", i.parent))
+	}
+}
+
 func (i *Leaf) HasDescription() bool {
 	return len(i.description) > 0
 }
@@ -98,26 +152,6 @@ func (i *Leaf) HasCallback() bool {
 
 func (i *Leaf) Callback() argo.CommandCallback[argo.LeafCommand] {
 	return i.callback
-}
-
-func (i *Leaf) FindShortFlag(b byte) argo.Flag {
-	for _, group := range i.flagGroups {
-		if flag := group.FindShortFlag(b); flag != nil {
-			return flag
-		}
-	}
-
-	return nil
-}
-
-func (i *Leaf) FindLongFlag(name string) argo.Flag {
-	for _, group := range i.flagGroups {
-		if flag := group.FindLongFlag(name); flag != nil {
-			return flag
-		}
-	}
-
-	return nil
 }
 
 func (i *Leaf) IsHelpDisabled() bool {

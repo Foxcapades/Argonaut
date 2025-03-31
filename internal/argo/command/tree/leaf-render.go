@@ -13,7 +13,7 @@ import (
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func RenderLeafHelp(leaf argo.LeafCommand, options argo.Options, writer io.Writer) error {
+func RenderLeafHelp(leaf argo.LeafCommand, options Options, writer io.Writer) error {
 	if leaf.IsHelpDisabled() {
 		return nil
 	}
@@ -26,18 +26,25 @@ func RenderLeafHelp(leaf argo.LeafCommand, options argo.Options, writer io.Write
 		buf = bufio.NewWriter(writer)
 	}
 
-	defer utils.DisregardError(buf.Flush)
-	return renderCommandLeaf(leaf, options, buf)
+	if err := renderCommandLeaf(leaf, options, buf); err != nil {
+		return err
+	}
+
+	if writer != buf {
+		return buf.Flush()
+	}
+
+	return nil
 }
 
-func MakeRenderLeafHelpCallback(leaf argo.LeafCommand, options argo.Options) argo.FlagCallback {
+func MakeRenderLeafHelpCallback(leaf argo.LeafCommand, options Options) argo.FlagCallback {
 	return func(flag argo.Flag) {
 		utils.Must(RenderLeafHelp(leaf, options, os.Stdout))
 		utils.Exit(0)
 	}
 }
 
-func renderCommandLeaf(leaf argo.LeafCommand, options argo.Options, out *bufio.Writer) error {
+func renderCommandLeaf(leaf argo.LeafCommand, options Options, out *bufio.Writer) error {
 	if err := renderCommandLeafUsage(leaf, out); err != nil {
 		return err
 	}
@@ -63,7 +70,7 @@ func renderCommandLeafUsage(leaf argo.LeafCommand, out *bufio.Writer) error {
 	return common.RenderCommandUsageLineBackHalf(leaf, out)
 }
 
-func renderCommandLeafBackHalf(com argo.LeafCommand, options argo.Options, out *bufio.Writer) error {
+func renderCommandLeafBackHalf(com argo.LeafCommand, options Options, out *bufio.Writer) error {
 
 	// If the command has a description, append it.
 	if err := TryRenderDescription(com, options, out, com.HasAliases()); err != nil {

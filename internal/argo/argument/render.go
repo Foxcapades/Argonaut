@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"strconv"
 
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
@@ -20,7 +21,7 @@ func ShouldBeRendered(arg argo.Argument) bool {
 	return arg.IsRequired() || !IsBoolean(arg)
 }
 
-func Render(arg argo.Argument, options argo.Options, padding uint8, out *bufio.Writer, argIndex int) error {
+func Render(arg argo.Argument, options opts.Options, padding uint8, out *bufio.Writer, argIndex int) error {
 	if _, err := out.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
@@ -33,7 +34,7 @@ func Render(arg argo.Argument, options argo.Options, padding uint8, out *bufio.W
 			return err
 		}
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), out)
 		if err := formatter.Format(arg.Description()); err != nil {
 			return err
 		}

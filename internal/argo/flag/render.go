@@ -4,12 +4,13 @@ import (
 	"bufio"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
+	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
-func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Writer) error {
+func Render(flag argo.Flag, options opts.Options, padding uint8, sb *bufio.Writer) error {
 	if _, err := sb.WriteString(render.HeaderPadding[padding]); err != nil {
 		return err
 	}
@@ -19,7 +20,7 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 
 		// AND a short form character
 		if flag.HasShortForm() {
-			if err := renderShortForm(sb, flag); err != nil {
+			if err := renderShortForm(sb, flag, text.SpaceByte); err != nil {
 				return err
 			}
 
@@ -28,11 +29,11 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 			}
 		}
 
-		if err := renderLongForm(sb, flag); err != nil {
+		if err := renderLongForm(sb, flag, text.EqualsByte); err != nil {
 			return err
 		}
 	} else {
-		if err := renderShortForm(sb, flag); err != nil {
+		if err := renderShortForm(sb, flag, text.SpaceByte); err != nil {
 			return err
 		}
 	}
@@ -42,7 +43,7 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 			return err
 		}
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, sb)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), sb)
 		if err := formatter.Format(flag.Description()); err != nil {
 			return err
 		}
@@ -60,7 +61,7 @@ func Render(flag argo.Flag, options argo.Options, padding uint8, sb *bufio.Write
 	return nil
 }
 
-func RenderArgument(arg argo.Argument, options argo.Options, padding uint8, out *bufio.Writer) error {
+func RenderArgument(arg argo.Argument, options opts.Options, padding uint8, out *bufio.Writer) error {
 	if _, err := out.WriteString(render.SubLinePadding[padding]); err != nil {
 		return err
 	}
@@ -74,7 +75,7 @@ func RenderArgument(arg argo.Argument, options argo.Options, padding uint8, out 
 			return err
 		}
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), out)
 		if err := formatter.Format(arg.Description()); err != nil {
 			return err
 		}
@@ -83,25 +84,26 @@ func RenderArgument(arg argo.Argument, options argo.Options, padding uint8, out 
 	return nil
 }
 
-// RenderShortestLine renders the shortest form of the given flag.
+// RenderShortestForUsage renders the shortest form of the given flag for the
+// command usage line.
 //
 // If the flag has a short form, that form will be rendered, otherwise the long
 // form will be rendered.
 //
 // If the flag has an argument, that argument may also be rendered.
-func RenderShortestLine(flag argo.Flag, sb *bufio.Writer) error {
+func RenderShortestForUsage(flag argo.Flag, sb *bufio.Writer) error {
 	if flag.HasShortForm() {
-		return renderShortForm(sb, flag)
+		return renderShortForm(sb, flag, text.EqualsByte)
 	}
 
-	return renderLongForm(sb, flag)
+	return renderLongForm(sb, flag, text.EqualsByte)
 }
 
 const (
 	fgSingleName = "Flags"
 )
 
-func RenderGroups(groups []argo.FlagGroup, options argo.Options, padding uint8, out *bufio.Writer) error {
+func RenderGroups(groups []argo.FlagGroup, options opts.Options, padding uint8, out *bufio.Writer) error {
 	for i, group := range groups {
 		if i > 0 {
 			if _, err := out.WriteString(render.ParagraphBreak); err != nil {
@@ -119,7 +121,7 @@ func RenderGroups(groups []argo.FlagGroup, options argo.Options, padding uint8, 
 
 func RenderGroup(
 	group argo.FlagGroup,
-	options argo.Options,
+	options opts.Options,
 	padding uint8,
 	out *bufio.Writer,
 	multiple bool,
@@ -130,7 +132,7 @@ func RenderGroup(
 
 	if group.Name() == DefaultFlagGroupName {
 		if multiple {
-			if _, err := out.WriteString(options.MetaFlagGroupName); err != nil {
+			if _, err := out.WriteString(options.MetaFlagGroupName()); err != nil {
 				return err
 			}
 		} else {
@@ -150,7 +152,7 @@ func RenderGroup(
 			return err
 		}
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth, out)
+		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), out)
 		if err := formatter.Format(group.Description()); err != nil {
 			return err
 		}
@@ -180,7 +182,7 @@ func RenderGroup(
 	return nil
 }
 
-func renderShortForm(w *bufio.Writer, f argo.Flag) error {
+func renderShortForm(w *bufio.Writer, f argo.Flag, divider byte) error {
 	if err := w.WriteByte(text.DashByte); err != nil {
 		return err
 	}
@@ -189,10 +191,10 @@ func renderShortForm(w *bufio.Writer, f argo.Flag) error {
 		return err
 	}
 
-	return tryRenderArgument(w, f, text.SpaceByte)
+	return tryRenderArgument(w, f, divider)
 }
 
-func renderLongForm(w *bufio.Writer, f argo.Flag) error {
+func renderLongForm(w *bufio.Writer, f argo.Flag, divider byte) error {
 	if _, err := w.WriteString(text.DoubleDash); err != nil {
 		return err
 	}
@@ -201,7 +203,7 @@ func renderLongForm(w *bufio.Writer, f argo.Flag) error {
 		return err
 	}
 
-	return tryRenderArgument(w, f, text.EqualsByte)
+	return tryRenderArgument(w, f, divider)
 }
 
 func tryRenderArgument(w *bufio.Writer, f argo.Flag, d byte) error {
