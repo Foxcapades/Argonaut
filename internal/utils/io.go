@@ -1,13 +1,42 @@
 package utils
 
-import "bufio"
+import (
+	"bufio"
+	"io"
+)
 
-func Write2Strings(buf *bufio.Writer, a, b string) error {
-	if _, err := buf.WriteString(a); err != nil {
-		return err
+func NewBatchWriter(w io.Writer) *BatchWriter {
+	if b, ok := w.(*bufio.Writer); ok {
+		return &BatchWriter{Buffer: b}
+	} else {
+		return &BatchWriter{Buffer: bufio.NewWriter(w)}
 	}
-	if _, err := buf.WriteString(b); err != nil {
-		return err
+}
+
+type BatchWriter struct {
+	Buffer *bufio.Writer
+	Error  error
+}
+
+func (w *BatchWriter) WriteByte(b byte) {
+	if w.Error == nil {
+		w.Error = w.Buffer.WriteByte(b)
 	}
-	return nil
+}
+
+func (w *BatchWriter) WriteString(s string) {
+	if w.Error == nil {
+		_, w.Error = w.Buffer.WriteString(s)
+	}
+}
+
+func (w *BatchWriter) Flush() {
+	err := w.Buffer.Flush()
+	if w.Error == nil {
+		w.Error = err
+	}
+}
+
+func (w *BatchWriter) HasError() bool {
+	return w.Error != nil
 }

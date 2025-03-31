@@ -1,14 +1,12 @@
 package common
 
 import (
-	"bufio"
-	"fmt"
-
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -18,7 +16,7 @@ const (
 	CommandRenderArgs          = "Arguments"
 )
 
-type HelpRenderer[T any] = func(T, *bufio.Writer) error
+type HelpRenderer[T any] = func(T, *utils.BatchWriter) error
 
 type CallEndNode interface {
 	flag.GroupContainer
@@ -28,17 +26,13 @@ type CallEndNode interface {
 	Arguments() []argo.Argument
 }
 
-func RenderCommandBackHalf(com CallEndNode, options opts.Options, out *bufio.Writer) error {
+func RenderCommandBackHalf(com CallEndNode, options opts.Options, out *utils.BatchWriter) {
 	// If the command has a description, append it.
 	if com.HasDescription() {
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
+		out.WriteByte(text.LineFeedByte)
 
-		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth(), out)
-		if err := formatter.Format(com.Description()); err != nil {
-			return err
-		}
+		render.NewDescriptionFormatter(render.DescriptionPadding[0], options.HelpTextMaxWidth(), out).
+			Format(com.Description())
 	}
 
 	// Figure out if we have any printable arguments.
@@ -60,118 +54,39 @@ func RenderCommandBackHalf(com CallEndNode, options opts.Options, out *bufio.Wri
 
 	if com.HasFlagGroups() {
 		if com.HasDescription() {
-			if err := out.WriteByte(text.LineFeedByte); err != nil {
-				return err
-			}
+			out.WriteByte(text.LineFeedByte)
 		}
 
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
-		if err := flag.RenderGroups(com.FlagGroups(), options, 0, out); err != nil {
-			return err
-		}
+		out.WriteByte(text.LineFeedByte)
+		flag.RenderGroups(com.FlagGroups(), options, 0, out)
 	}
 
 	if writeArgs {
-		if _, err := out.WriteString(render.ParagraphBreak); err != nil {
-			return err
-		}
-		if _, err := out.WriteString(render.HeaderPadding[0]); err != nil {
-			return err
-		}
-		if _, err := out.WriteString(CommandRenderArgs); err != nil {
-			return err
-		}
+		out.WriteString(render.ParagraphBreak)
+		out.WriteString(render.HeaderPadding[0])
+		out.WriteString(CommandRenderArgs)
 
 		multiArgs := len(com.Arguments()) > 1
 
 		for i, arg := range com.Arguments() {
 			if i > 0 {
-				if err := out.WriteByte(text.LineFeedByte); err != nil {
-					return err
-				}
+				out.WriteByte(text.LineFeedByte)
 			}
 
-			if err := out.WriteByte(text.LineFeedByte); err != nil {
-				return err
-			}
+			out.WriteByte(text.LineFeedByte)
 
 			if multiArgs {
-				if err := argument.Render(arg, options, 1, out, i+1); err != nil {
-					return err
-				}
+				argument.Render(arg, options, 1, out, i+1)
 			} else {
-				if err := argument.Render(arg, options, 1, out, 0); err != nil {
-					return err
-				}
+				argument.Render(arg, options, 1, out, 0)
 			}
 		}
 	}
 
-	return out.WriteByte(text.LineFeedByte)
+	out.WriteByte(text.LineFeedByte)
 }
 
 type CommandBackHalf interface {
 	flag.GroupContainer
 	argument.Container
-}
-
-func RenderCommandUsageLineBackHalf(com CommandBackHalf, out *bufio.Writer) error {
-	// If the command has flag groups
-	if com.HasFlagGroups() {
-		hasOptionalFlags := false
-
-		// For all the required flags, append their name (and argument name if
-		// required) to the cli example text.
-		for _, group := range com.FlagGroups() {
-			for _, f := range group.Flags() {
-				if f.IsRequired() {
-					if err := out.WriteByte(text.SpaceByte); err != nil {
-						return err
-					}
-					if err := flag.RenderShortestForUsage(f, out); err != nil {
-						return err
-					}
-				} else {
-					hasOptionalFlags = true
-				}
-			}
-		}
-
-		// If there are any optional flags append the general "[OPTIONS]" text.
-		if hasOptionalFlags {
-			if _, err := out.WriteString(CommandRenderOptionalFlags); err != nil {
-				return err
-			}
-		}
-	}
-
-	// After all the flag groups have been rendered, append the argument names.
-	if com.HasArguments() {
-		multiArgs := len(com.Arguments()) > 1
-
-		for i, arg := range com.Arguments() {
-			if err := out.WriteByte(text.SpaceByte); err != nil {
-				return err
-			}
-			if multiArgs {
-				if err := argument.RenderName(arg, out, i+1); err != nil {
-					return err
-				}
-			} else {
-				if err := argument.RenderName(arg, out, 0); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	if com.HasUnmappedInputLabel() {
-		if _, err := fmt.Fprintf(out, " %c%s%c", argument.OptPrefix, com.UnmappedInputLabel(), argument.OptSuffix); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

@@ -19,7 +19,7 @@ func TestInvalidSubCommand(t *testing.T) {
 	_, err := tree.Parse(com, []string{"command", "leaf2"})
 
 	if err == nil {
-		t.Error(err)
+		t.Error("expected error for invalid subcommand but got none")
 	}
 }
 
@@ -33,15 +33,15 @@ func TestTreeInterpretLongPair01(t *testing.T) {
 	f := com.FindLongFlag("foo")
 
 	if !f.WasHit() {
-		t.Fail()
+		t.Fatal("expected flag to be hit but it wasn't")
 	}
 
 	if !f.Argument().WasHit() {
-		t.Fail()
+		t.Fatal("expected argument to be hit but it wasn't")
 	}
 
 	if f.Argument().RawValue() != "bar" {
-		t.Fail()
+		t.Fatalf("expected argument value to be 'bar' but it was '%s'", f.Argument().RawValue())
 	}
 }
 
@@ -54,11 +54,11 @@ func TestTreeInterpretLongPair02(t *testing.T) {
 	sub := com.SelectedCommand()
 
 	if !sub.HasUnmappedInputs() {
-		t.Fail()
+		t.Fatal("expected command to have unmapped inputs")
 	} else if len(sub.UnmappedInputs()) != 1 {
-		t.Fail()
+		t.Fatal("expected command to have exactly 1 unmapped input")
 	} else if sub.UnmappedInputs()[0] != "--foo=bar" {
-		t.Fail()
+		t.Fatalf("expected command unmapped input to be '--foo=bar' but was '%s'", sub.UnmappedInputs()[0])
 	}
 }
 
@@ -71,7 +71,7 @@ func TestTreeInterpretLongPair03(t *testing.T) {
 	f := com.FindLongFlag("foo")
 
 	if !f.WasHit() {
-		t.Fail()
+		t.Fatal("expected flag to be hit but it wasn't")
 	}
 }
 
@@ -84,11 +84,11 @@ func TestTreeInterpretLongSolo01(t *testing.T) {
 	sub := com.SelectedCommand()
 
 	if !sub.HasUnmappedInputs() {
-		t.Fail()
+		t.Fatal("expected command to have unmapped inputs")
 	} else if len(sub.UnmappedInputs()) != 1 {
-		t.Fail()
+		t.Fatal("expected command to have exactly 1 unmapped input")
 	} else if sub.UnmappedInputs()[0] != "--hello" {
-		t.Fail()
+		t.Fatalf("expected command unmapped input to be '--hello' but was '%s'", sub.UnmappedInputs()[0])
 	}
 }
 
@@ -101,7 +101,7 @@ func TestTreeInterpretLongSolo02(t *testing.T) {
 	_, err := tree.Parse(com, []string{"command", "leaf", "--flag", "--"})
 
 	if err == nil {
-		t.Fail()
+		t.Errorf("expected a parse error, but none was returned")
 	}
 }
 
@@ -115,11 +115,11 @@ func TestTreeInterpretLongSolo03(t *testing.T) {
 	f := com.FindLongFlagRecursive("flag")
 
 	if !f.WasHit() {
-		t.Fail()
+		t.Fatal("expected flag to be hit but it wasn't")
 	} else if !f.Argument().WasHit() {
-		t.Fail()
+		t.Fatal("expected argument to be hit but it wasn't")
 	} else if f.Argument().RawValue() != "argument" {
-		t.Fail()
+		t.Fatalf("expected argument value to be 'argument' but it was '%s'", f.Argument().RawValue())
 	}
 }
 
@@ -160,11 +160,14 @@ func TestTreeInterpretLongSolo05(t *testing.T) {
 	}
 }
 
-// Solo flag expects an optional argument but gets end of input
 func TestTreeInterpretLongSolo06(t *testing.T) {
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithLeaf(tree.NewLeafBuilder("leaf")).
 		WithFlag(flag.NewBuilder().WithLongForm("flag").WithArgument(argument.NewBuilder()))))
+	// TODO: flag is eating the next subcommand as its optional argument.  If the
+	//       argument value was invalid, it would be used as the subcommand, but
+	//       since the argument here accepts any value, the subcommand name is
+	//       being eaten.
 	_ = utils.MustReturn(tree.Parse(com, []string{"command", "--flag", "leaf"}))
 
 	f := com.FindLongFlag("flag")
@@ -365,8 +368,7 @@ func TestTreeInterpretShortPair01(t *testing.T) {
 	} else if !f.Argument().WasHit() {
 		t.Error("expected flag argument to be hit but it wasn't")
 	} else if f.Argument().RawValue() != "for cookie" {
-		t.Log(f.Argument().RawValue())
-		t.Error("expected argument value to match input but it didn't")
+		t.Errorf("expected argument value to be 'for cookie' input but it was '%s'", f.Argument().RawValue())
 	}
 }
 

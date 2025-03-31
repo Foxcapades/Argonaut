@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"bufio"
 	"io"
 	"os"
 
@@ -14,14 +13,10 @@ import (
 )
 
 func RenderHelp(tree argo.TreeCommand, opts Options, writer io.Writer) error {
-	if buf, ok := writer.(*bufio.Writer); ok {
-		return renderCommandTree(tree, opts, buf)
-	}
-
-	buf := bufio.NewWriter(writer)
-	err := renderCommandTree(tree, opts, buf)
-	_ = buf.Flush()
-	return err
+	buf := utils.NewBatchWriter(writer)
+	renderCommandTree(tree, opts, buf)
+	buf.Flush()
+	return buf.Error
 }
 
 func MakeRenderTreeHelpCallback(tree argo.TreeCommand, opts Options) argo.FlagCallback {
@@ -31,72 +26,41 @@ func MakeRenderTreeHelpCallback(tree argo.TreeCommand, opts Options) argo.FlagCa
 	}
 }
 
-func renderCommandTree(tree argo.TreeCommand, opts Options, out *bufio.Writer) error {
-	if err := renderTreeUsageBlock(tree, out); err != nil {
-		return err
-	}
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
+func renderCommandTree(tree argo.TreeCommand, opts Options, out *utils.BatchWriter) {
+	renderTreeUsageBlock(tree, out)
 
-	if err := TryRenderDescription(tree, opts, out, false); err != nil {
-		return err
-	}
+	out.WriteByte(text.LineFeedByte)
 
-	if err := RenderCommandGroups(tree.CommandGroups(), opts, 0, out); err != nil {
-		return err
-	}
+	TryRenderDescription(tree, opts, out, false)
 
-	if err := TryRenderFlags(tree, opts, out); err != nil {
-		return err
-	}
+	RenderCommandGroups(tree.CommandGroups(), opts, 0, out)
 
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
+	TryRenderFlags(tree, opts, out)
 
-	return nil
+	out.WriteByte(text.LineFeedByte)
 }
 
-func renderTreeUsageBlock(tree argo.TreeCommand, out *bufio.Writer) error {
-	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
-		return err
-	}
-	if _, err := out.WriteString(render.SubLinePadding[0]); err != nil {
-		return err
-	}
-	if _, err := out.WriteString(tree.Name()); err != nil {
-		return err
-	}
+func renderTreeUsageBlock(tree argo.TreeCommand, out *utils.BatchWriter) {
+	out.WriteString(common.CommandRenderPrefix)
+	out.WriteString(render.SubLinePadding[0])
+	out.WriteString(tree.Name())
 
 	if tree.HasFlagGroups() {
 		hasOptionalFlags := false
 
-		for _, group := range tree.FlagGroups() {
-			for _, f := range group.Flags() {
-				if f.IsRequired() {
-					if err := out.WriteByte(text.SpaceByte); err != nil {
-						return err
-					}
-					if err := flag.RenderShortestForUsage(f, out); err != nil {
-						return err
-					}
-				} else {
-					hasOptionalFlags = true
-				}
+		for _, f := range flag.Stream(tree) {
+			if f.IsRequired() {
+				out.WriteByte(text.SpaceByte)
+				flag.RenderShortestForUsage(f, out)
+			} else {
+				hasOptionalFlags = true
 			}
 		}
 
 		if hasOptionalFlags {
-			if _, err := out.WriteString(common.CommandRenderOptionalFlags); err != nil {
-				return err
-			}
+			out.WriteString(common.CommandRenderOptionalFlags)
 		}
 	}
 
-	if _, err := out.WriteString(subcommandPlaceholder); err != nil {
-		return err
-	}
-
-	return nil
+	out.WriteString(subcommandPlaceholder)
 }

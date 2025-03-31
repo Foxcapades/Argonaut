@@ -1,12 +1,12 @@
 package tree
 
 import (
-	"bufio"
 	"io"
 	"os"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
 	"github.com/foxcapades/argonaut/v3/internal/argo/command/common"
+	"github.com/foxcapades/argonaut/v3/internal/argo/flag"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
 	"github.com/foxcapades/argonaut/v3/internal/utils"
@@ -18,23 +18,10 @@ func RenderLeafHelp(leaf argo.LeafCommand, options Options, writer io.Writer) er
 		return nil
 	}
 
-	var buf *bufio.Writer
-
-	if b, ok := writer.(*bufio.Writer); ok {
-		buf = b
-	} else {
-		buf = bufio.NewWriter(writer)
-	}
-
-	if err := renderCommandLeaf(leaf, options, buf); err != nil {
-		return err
-	}
-
-	if writer != buf {
-		return buf.Flush()
-	}
-
-	return nil
+	buf := utils.NewBatchWriter(writer)
+	renderCommandLeaf(leaf, options, buf)
+	buf.Flush()
+	return buf.Error
 }
 
 func MakeRenderLeafHelpCallback(leaf argo.LeafCommand, options Options) argo.FlagCallback {
@@ -44,38 +31,38 @@ func MakeRenderLeafHelpCallback(leaf argo.LeafCommand, options Options) argo.Fla
 	}
 }
 
-func renderCommandLeaf(leaf argo.LeafCommand, options Options, out *bufio.Writer) error {
-	if err := renderCommandLeafUsage(leaf, out); err != nil {
-		return err
-	}
-
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
-
-	if err := TryRenderAliases(leaf, out); err != nil {
-		return err
-	}
-
-	return renderCommandLeafBackHalf(leaf, options, out)
+func renderCommandLeaf(leaf argo.LeafCommand, options Options, out *utils.BatchWriter) {
+	renderCommandLeafUsage(leaf, out)
+	out.WriteByte(text.LineFeedByte)
+	TryRenderAliases(leaf, out)
+	renderCommandLeafBackHalf(leaf, options, out)
 }
 
-func renderCommandLeafUsage(leaf argo.LeafCommand, out *bufio.Writer) error {
-	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
-		return err
+func renderCommandLeafUsage(leaf argo.LeafCommand, out *utils.BatchWriter) {
+	out.WriteString(common.CommandRenderPrefix)
+	RenderSubCommandPath(leaf, out)
+
+	// Possibly render "[options]" if there are any optional flags
+	for _, f := range flag.Stream(leaf) {
+		if !f.IsRequired() {
+			out.WriteString(common.CommandRenderOptionalFlags)
+			break
+		}
 	}
-	if err := RenderSubCommandPath(leaf, out); err != nil {
-		return err
+
+	argument.RenderForUsageLine(leaf.Arguments(), out)
+
+	if leaf.HasUnmappedInputLabel() {
+		out.WriteByte(argument.OptPrefix)
+		out.WriteString(leaf.UnmappedInputLabel())
+		out.WriteByte(argument.OptSuffix)
 	}
-	return common.RenderCommandUsageLineBackHalf(leaf, out)
 }
 
-func renderCommandLeafBackHalf(com argo.LeafCommand, options Options, out *bufio.Writer) error {
+func renderCommandLeafBackHalf(com argo.LeafCommand, options Options, out *utils.BatchWriter) {
 
 	// If the command has a description, append it.
-	if err := TryRenderDescription(com, options, out, com.HasAliases()); err != nil {
-		return err
-	}
+	TryRenderDescription(com, options, out, com.HasAliases())
 
 	// Figure out if we have any printable arguments.
 	//
@@ -94,47 +81,29 @@ func renderCommandLeafBackHalf(com argo.LeafCommand, options Options, out *bufio
 		}
 	}
 
-	if err := TryRenderFlags(com, options, out); err != nil {
-		return err
-	}
+	TryRenderFlags(com, options, out)
 
-	if err := TryRenderInheritedFlags(com, options, out); err != nil {
-		return err
-	}
+	TryRenderInheritedFlags(com, options, out)
 
 	if writeArgs {
-		if _, err := out.WriteString(render.ParagraphBreak); err != nil {
-			return err
-		}
-		if _, err := out.WriteString(render.HeaderPadding[0]); err != nil {
-			return err
-		}
-		if _, err := out.WriteString(common.CommandRenderArgs); err != nil {
-			return err
-		}
+		out.WriteString(render.ParagraphBreak)
+		out.WriteString(render.HeaderPadding[0])
+		out.WriteString(common.CommandRenderArgs)
 
 		multiArgs := len(com.Arguments()) > 1
 
 		for i, arg := range com.Arguments() {
 			if i > 0 {
-				if err := out.WriteByte(text.LineFeedByte); err != nil {
-					return err
-				}
+				out.WriteByte(text.LineFeedByte)
 			}
-			if err := out.WriteByte(text.LineFeedByte); err != nil {
-				return err
-			}
+			out.WriteByte(text.LineFeedByte)
 			if multiArgs {
-				if err := argument.Render(arg, options, 1, out, i+1); err != nil {
-					return err
-				}
+				argument.Render(arg, options, 1, out, i+1)
 			} else {
-				if err := argument.Render(arg, options, 1, out, 0); err != nil {
-					return err
-				}
+				argument.Render(arg, options, 1, out, 0)
 			}
 		}
 	}
 
-	return out.WriteByte(text.LineFeedByte)
+	out.WriteByte(text.LineFeedByte)
 }

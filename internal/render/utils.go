@@ -1,19 +1,16 @@
 package render
 
 import (
-	"bufio"
 	"fmt"
 
 	"github.com/foxcapades/argonaut/v3/internal/text"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 )
 
-func Pad(size int, out *bufio.Writer) error {
+func Pad(size int, out *utils.BatchWriter) {
 	for i := 0; i < size; i++ {
-		if err := out.WriteByte(text.SpaceByte); err != nil {
-			return err
-		}
+		out.WriteByte(text.SpaceByte)
 	}
-	return nil
 }
 
 const (
@@ -59,7 +56,7 @@ type Break = [2]int
 func NewDescriptionFormatter(
 	prefixPadding string,
 	maxTotalWidth int,
-	writer *bufio.Writer,
+	writer *utils.BatchWriter,
 ) *DescriptionFormatter {
 	maxLineWidth := maxTotalWidth - len(prefixPadding)
 
@@ -87,33 +84,30 @@ type DescriptionFormatter struct {
 	currentLineWidth     int
 	maxLineWidth         int
 	prefixPadding        string
-	writer               *bufio.Writer
+	writer               *utils.BatchWriter
 }
 
-func (d *DescriptionFormatter) writeLineFeed() error {
+func (d *DescriptionFormatter) writeLineFeed() {
 	d.currentLineWidth = 0
-	return d.writer.WriteByte(text.LineFeedByte)
+	d.writer.WriteByte(text.LineFeedByte)
 }
 
-func (d *DescriptionFormatter) writePadding() error {
-	_, err := d.writer.WriteString(d.prefixPadding)
-	return err
+func (d *DescriptionFormatter) writePadding() {
+	d.writer.WriteString(d.prefixPadding)
 }
 
-func (d *DescriptionFormatter) breakLine() error {
-	if err := d.writeLineFeed(); err != nil {
-		return err
-	}
-	return d.writePadding()
+func (d *DescriptionFormatter) breakLine() {
+	d.writeLineFeed()
+	d.writePadding()
 }
 
 // Format is the standard entrypoint for the description formatter.
 //
 // It takes a description string and formats it to fit within the configured
 // maximum line length.
-func (d *DescriptionFormatter) Format(text string) error {
+func (d *DescriptionFormatter) Format(text string) {
 	if len(text) == 0 {
-		return nil
+		return
 	}
 
 	scanner := breakScanner{text: text}
@@ -125,100 +119,73 @@ func (d *DescriptionFormatter) Format(text string) error {
 
 		switch currentSegment.Type {
 		case segmentTypeBreak:
-			if err := d.BreakFormatTypeBreak(&lastSegment, &currentSegment); err != nil {
-				return err
-			}
+			d.BreakFormatTypeBreak(&lastSegment, &currentSegment)
 
 		case segmentTypeLineBreak:
-			if err := d.BreakFormatTypeLineBreak(&lastSegment, &currentSegment); err != nil {
-				return err
-			}
+			d.BreakFormatTypeLineBreak(&lastSegment, &currentSegment)
 
 		case segmentTypeWord:
-			if err := d.BreakFormatTypeWord(&lastSegment, &currentSegment); err != nil {
-				return err
-			}
+			d.BreakFormatTypeWord(&lastSegment, &currentSegment)
 
 		default:
 			panic("illegal state: unrecognized segment type")
 		}
 	}
-
-	return nil
 }
 
-func (d *DescriptionFormatter) BreakFormatTypeWord(last, current *segment) error {
+func (d *DescriptionFormatter) BreakFormatTypeWord(last, current *segment) {
 	switch last.Type {
 	case segmentTypeBreak:
 		lastAndCurWidth := len(last.Data) + len(current.Data)
 
 		// If the break and the word can fit neatly onto the line
 		if d.currentLineWidth+lastAndCurWidth <= d.maxLineWidth {
-			if _, err := d.writer.WriteString(last.Data); err != nil {
-				return err
-			}
-
-			if _, err := d.writer.WriteString(current.Data); err != nil {
-				return err
-			}
-
+			d.writer.WriteString(last.Data)
+			d.writer.WriteString(current.Data)
 			*last = *current
 			d.currentLineWidth += lastAndCurWidth
-
-			return nil
+			return
 		}
 
 		if d.currentLineWidth+len(last.Data) <= d.maxLineWidth/3*2 {
-			if _, err := d.writer.WriteString(last.Data); err != nil {
-				return err
-			}
-
+			d.writer.WriteString(last.Data)
 			*last = *current
-			return d.BreakFormatSplitWord(current.Data)
+			d.BreakFormatSplitWord(current.Data)
+			return
 		}
 
-		if err := d.breakLine(); err != nil {
-			return err
-		}
+		d.breakLine()
 
 		*last = *current
-		return d.BreakFormatSplitWord(current.Data)
+		d.BreakFormatSplitWord(current.Data)
+		return
 
 	case segmentTypeLineBreak:
 		// If there were 2 or more line breaks, write out another one, but eat the
 		// rest.
 		if d.consecutiveLineFeeds > 1 {
-			if err := d.writeLineFeed(); err != nil {
-				return err
-			}
+			d.writeLineFeed()
 		}
 
 		// Write out the line break.
-		if err := d.breakLine(); err != nil {
-			return err
-		}
-
+		d.breakLine()
 		d.consecutiveLineFeeds = 0
-
 		*last = *current
-
-		return d.BreakFormatSplitWord(current.Data)
+		d.BreakFormatSplitWord(current.Data)
+		return
 
 	case segmentTypeStart:
-		if err := d.writePadding(); err != nil {
-			return err
-		}
-
+		d.writePadding()
 		*last = *current
-
-		return d.BreakFormatSplitWord(current.Data)
+		d.BreakFormatSplitWord(current.Data)
+		return
 
 	default:
 		panic(fmt.Errorf("illegal state: unexpected segment type %s", last.Type))
 	}
 }
 
-func (d *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) error {
+func (d *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) {
 	switch last.Type {
 	// If the previous segment was the initial state, then we are going to
 	// silently ignore this segment because we eat leading spaces.
@@ -238,11 +205,9 @@ func (d *DescriptionFormatter) BreakFormatTypeBreak(last, current *segment) erro
 	default:
 		panic(fmt.Errorf("illegal state: unexpected segment type %s", last.Type))
 	}
-
-	return nil
 }
 
-func (d *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segment) error {
+func (d *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segment) {
 	switch last.Type {
 	case segmentTypeStart:
 		// eat the line break
@@ -262,8 +227,6 @@ func (d *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segment) 
 	default:
 		panic("illegal state: invalid segment type")
 	}
-
-	return nil
 }
 
 // BreakFormatSplitWord splits the given word to fit onto the line if necessary.
@@ -276,7 +239,7 @@ func (d *DescriptionFormatter) BreakFormatTypeLineBreak(last, current *segment) 
 //
 // The `curWidth` variable will be updated with the current width of the line
 // after writing is completed.
-func (d *DescriptionFormatter) BreakFormatSplitWord(word string) error {
+func (d *DescriptionFormatter) BreakFormatSplitWord(word string) {
 	breakAfter := d.maxLineWidth - d.currentLineWidth - 1
 
 	// If breakAfter is longer than 1/3 of the line length, then we will break the
@@ -287,89 +250,69 @@ func (d *DescriptionFormatter) BreakFormatSplitWord(word string) error {
 		// If the whole word can fit onto the line without breaking it up, then we
 		// can write it out in its entirety.
 		if breakAfter+1 >= len(word) {
-			if _, err := d.writer.WriteString(word); err != nil {
-				return err
-			}
+			d.writer.WriteString(word)
 
 			// Update the current line width to reflect our addition.
 			d.currentLineWidth += len(word)
 
 			// Return because no further work is necessary.
-			return nil
+			return
 		}
 
 		// So the word is long enough that it can't fit onto the line without being
 		// broken up.
 
 		// Write out as much of the word as we can fit.
-		if _, err := d.writer.WriteString(word[:breakAfter]); err != nil {
-			return err
-		}
+		d.writer.WriteString(word[:breakAfter])
 
 		// Write out our hyphen
-		if err := d.writer.WriteByte(text.DashByte); err != nil {
-			return err
-		}
+		d.writer.WriteByte(text.DashByte)
 
 		// Chop the word down by the amount that we've written so far.
 		word = word[breakAfter:]
 	} else if breakAfter == 0 {
-		if err := d.writer.WriteByte(word[0]); err != nil {
-			return err
-		}
+		d.writer.WriteByte(word[0])
 		word = word[1:]
 	}
 
 	if len(word) == 0 {
-		return nil
+		return
 	}
 
 	breakAfter = d.maxLineWidth - 1
 
 	for {
 		// Write out the line feed
-		if err := d.writeLineFeed(); err != nil {
-			return err
-		}
+		d.writeLineFeed()
 
 		// write out the prefix padding
-		if _, err := d.writer.WriteString(d.prefixPadding); err != nil {
-			return err
-		}
+		d.writer.WriteString(d.prefixPadding)
 
 		// If the whole remaining word can fit into the new line, then we can write
 		// it without breaking it any further.
 		if breakAfter+1 >= len(word) {
 			// Write out the whole word
-			if _, err := d.writer.WriteString(word); err != nil {
-				return err
-			}
+			d.writer.WriteString(word)
 
 			// update the line width
 			d.currentLineWidth = len(word)
 
 			// bail out here
-			return nil
+			return
 		}
 
 		// So the word is still long enough to need to be broken further.
 
 		if breakAfter > 0 {
 			// Write out as much of the word as we can.
-			if _, err := d.writer.WriteString(word[:breakAfter]); err != nil {
-				return err
-			}
+			d.writer.WriteString(word[:breakAfter])
 			// Write out the hyphen
-			if err := d.writer.WriteByte(text.DashByte); err != nil {
-				return err
-			}
+			d.writer.WriteByte(text.DashByte)
 
 			// Chop down the word even further.
 			word = word[breakAfter:]
 		} else {
-			if _, err := d.writer.WriteString(word[:breakAfter+1]); err != nil {
-				return err
-			}
+			d.writer.WriteString(word[:breakAfter+1])
 
 			// Chop down the word even further.
 			word = word[breakAfter+1:]

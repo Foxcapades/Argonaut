@@ -1,12 +1,12 @@
 package argument
 
 import (
-	"bufio"
 	"strconv"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/render"
 	"github.com/foxcapades/argonaut/v3/internal/text"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -21,58 +21,47 @@ func ShouldBeRendered(arg argo.Argument) bool {
 	return arg.IsRequired() || !IsBoolean(arg)
 }
 
-func Render(arg argo.Argument, options opts.Options, padding uint8, out *bufio.Writer, argIndex int) error {
-	if _, err := out.WriteString(render.HeaderPadding[padding]); err != nil {
-		return err
-	}
-	if err := RenderName(arg, out, argIndex); err != nil {
-		return err
+func Render(arg argo.Argument, options opts.Options, padding uint8, out *utils.BatchWriter, argIndex int) {
+	out.WriteString(render.HeaderPadding[padding])
+	if !IsBoolean(arg) {
+		RenderName(arg, out, argIndex)
 	}
 
 	if arg.HasDescription() {
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
+		out.WriteByte(text.LineFeedByte)
 
 		formatter := render.NewDescriptionFormatter(render.DescriptionPadding[padding], options.HelpTextMaxWidth(), out)
-		if err := formatter.Format(arg.Description()); err != nil {
-			return err
-		}
+		formatter.Format(arg.Description())
 	}
-
-	return nil
 }
 
-func RenderName(a argo.Argument, out *bufio.Writer, argIndex int) error {
+func RenderName(a argo.Argument, out *utils.BatchWriter, argIndex int) {
 	if IsBoolean(a) {
-		return nil
+		return
 	}
 
 	if a.IsRequired() {
-		if err := out.WriteByte(ReqPrefix); err != nil {
-			return err
-		}
+		out.WriteByte(ReqPrefix)
+		out.WriteString(renderArgName(a, argIndex))
+		out.WriteByte(ReqSuffix)
 	} else {
-		if err := out.WriteByte(OptPrefix); err != nil {
-			return err
+		out.WriteByte(OptPrefix)
+		out.WriteString(renderArgName(a, argIndex))
+		out.WriteByte(OptSuffix)
+	}
+}
+
+func RenderForUsageLine(arguments []argo.Argument, writer *utils.BatchWriter) {
+	multiArgs := len(arguments) > 1
+
+	for i, arg := range arguments {
+		writer.WriteByte(text.SpaceByte)
+		if multiArgs {
+			RenderName(arg, writer, i+1)
+		} else {
+			RenderName(arg, writer, 0)
 		}
 	}
-
-	if _, err := out.WriteString(renderArgName(a, argIndex)); err != nil {
-		return err
-	}
-
-	if a.IsRequired() {
-		if err := out.WriteByte(ReqSuffix); err != nil {
-			return err
-		}
-	} else {
-		if err := out.WriteByte(OptSuffix); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func renderArgName(a argo.Argument, argIndex int) string {

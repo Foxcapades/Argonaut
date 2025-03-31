@@ -86,9 +86,25 @@ func TestCommandBranchHelpRenderer001(t *testing.T) {
 	renderBranchOutputCheck(t, branchHelp001, com.FindChild("branch1").(argo.BranchCommand), com.Options())
 }
 
-// TODO: the leaf command help rendering should still show that the -a flag is
-//
-//	required on the parent branch.
+const branchHelp002 = `Usage:
+  %s branch1 -a=[arg] cruise [options]
+  Aliases: flight
+
+Flags
+  -h | --help
+      Prints this help text.
+
+Inherited Flags
+  -a [arg] | --apple=[arg]
+      A description of the apple flag.
+  -b <arg> | --bear=<arg>
+
+  -d | --diameter
+
+  -e | --ergonomics
+`
+
+// Required parent flags shown in the help for child flags.
 func TestCommandBranchHelpRenderer002(t *testing.T) {
 	com := utils.MustReturn(tree.Build(tree.NewBuilder().
 		WithOptions(argo.TreeCommandOptions{InheritParentFlags: argo.FlagInheritanceEnabled}).
@@ -128,7 +144,7 @@ func TestCommandBranchHelpRenderer002(t *testing.T) {
 
 	_ = utils.MustReturn(tree.Parse(com, []string{"command", "branch1", "cruise", "-a"}))
 
-	renderBranchOutputCheck(t, branchHelp001, com.SelectedCommand().Parent().(argo.BranchCommand), com.Options())
+	renderBranchOutputCheck(t, branchHelp002, com.SelectedCommand().Parent().(argo.BranchCommand), com.Options())
 }
 
 func renderBranchOutputCheck(

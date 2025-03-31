@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"bufio"
 	"slices"
 
 	"github.com/foxcapades/argonaut/v3/internal/argo/argument"
@@ -22,59 +21,42 @@ type Aliased interface {
 	Aliases() []string
 }
 
-func TryRenderAliases(node Aliased, w *bufio.Writer) (err error) {
+func TryRenderAliases(node Aliased, w *utils.BatchWriter) {
 	if !node.HasAliases() {
 		return
 	}
-
-	if err = utils.Write2Strings(w, render.SubLinePadding[0], "Aliases: "); err != nil {
-		return
-	}
+	w.WriteString(render.SubLinePadding[0])
+	w.WriteString("Aliases: ")
 
 	aliases := node.Aliases()
 	slices.Sort(aliases)
 
-	if _, err = w.WriteString(aliases[0]); err != nil {
-		return
-	}
+	w.WriteString(aliases[0])
 
 	for i := 1; i < len(aliases); i++ {
-		if err = utils.Write2Strings(w, ", ", aliases[i]); err != nil {
-			return
-		}
+		w.WriteString(", ")
+		w.WriteString(aliases[i])
 	}
 
-	return w.WriteByte(text.LineFeedByte)
+	w.WriteByte(text.LineFeedByte)
 }
 
-func TryRenderDescription(node Described, opts Options, w *bufio.Writer, preNl bool) (err error) {
-	if !node.HasDescription() {
-		return
-	}
-
-	if preNl {
-		if err = w.WriteByte(text.LineFeedByte); err != nil {
-			return
+func TryRenderDescription(node Described, opts Options, w *utils.BatchWriter, preNl bool) {
+	if node.HasDescription() {
+		if preNl {
+			w.WriteByte(text.LineFeedByte)
 		}
-	}
 
-	if err = render.NewDescriptionFormatter(render.DescriptionPadding[0], opts.HelpTextMaxWidth(), w).Format(node.Description()); err != nil {
-		return
+		render.NewDescriptionFormatter(render.DescriptionPadding[0], opts.HelpTextMaxWidth(), w).Format(node.Description())
+		w.WriteByte(text.LineFeedByte)
 	}
-
-	return w.WriteByte(text.LineFeedByte)
 }
 
-func TryRenderFlags(node flag.GroupContainer, opts Options, w *bufio.Writer) (err error) {
-	if !node.HasFlagGroups() {
-		return
+func TryRenderFlags(node flag.GroupContainer, opts Options, w *utils.BatchWriter) {
+	if node.HasFlagGroups() {
+		w.WriteByte(text.LineFeedByte)
+		flag.RenderGroups(node.FlagGroups(), opts, 0, w)
 	}
-
-	if err = w.WriteByte(text.LineFeedByte); err != nil {
-		return
-	}
-
-	return flag.RenderGroups(node.FlagGroups(), opts, 0, w)
 }
 
 const (
@@ -85,12 +67,12 @@ type Named interface {
 	Name() string
 }
 
-func RenderSubCommandPath(node Named, out *bufio.Writer) error {
-	path := make([]string, 0, 4)
+func RenderSubCommandPath(node Named, out *utils.BatchWriter) {
+	path := make([]Named, 0, 4)
 
 	current := node
 	for {
-		path = append(path, current.Name())
+		path = append(path, current)
 
 		if t, ok := current.(argo.ChildNode); ok {
 			current = t.Parent().(Named)
@@ -101,22 +83,22 @@ func RenderSubCommandPath(node Named, out *bufio.Writer) error {
 
 	slices.Reverse(path)
 
-	if _, err := out.WriteString(render.SubLinePadding[0]); err != nil {
-		return err
-	}
+	out.WriteString(render.SubLinePadding[0])
 
 	for i, segment := range path {
 		if i > 0 {
-			if err := out.WriteByte(text.SpaceByte); err != nil {
-				return err
+			out.WriteByte(text.SpaceByte)
+		}
+
+		out.WriteString(segment.Name())
+
+		for _, f := range flag.Stream(segment.(flag.GroupContainer)) {
+			if f.IsRequired() {
+				out.WriteByte(text.SpaceByte)
+				flag.RenderShortestForUsage(f, out)
 			}
 		}
-		if _, err := out.WriteString(segment); err != nil {
-			return err
-		}
 	}
-
-	return nil
 }
 
 type FlagInheritor interface {
@@ -124,62 +106,42 @@ type FlagInheritor interface {
 	flag.GroupContainer
 }
 
-func TryRenderInheritedFlags(node FlagInheritor, options Options, out *bufio.Writer) error {
+func TryRenderInheritedFlags(node FlagInheritor, options Options, out *utils.BatchWriter) {
 	if options.InheritParentFlags() == argo.FlagInheritanceEnabled {
-		return renderInheritedFlagsFlat(node, options, out)
+		renderInheritedFlagsFlat(node, options, out)
+		return
 	}
 
 	if options.InheritParentFlags() == argo.FlagInheritanceGrouped {
-		return renderInheritedFlagsGrouped(node, options, out)
+		renderInheritedFlagsGrouped(node, options, out)
+		return
 	}
-
-	return nil
 }
 
-func renderInheritedFlagsFlat(node FlagInheritor, options Options, out *bufio.Writer) error {
+func renderInheritedFlagsFlat(node FlagInheritor, options Options, out *utils.BatchWriter) {
 	inherited := flag.FlattenInheritance(node)
 
 	if len(inherited) == 0 {
-		return nil
+		return
 	}
 
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
+	out.WriteByte(text.LineFeedByte)
 
-	if _, err := out.WriteString("\nInherited Flags"); err != nil {
-		return err
-	}
+	out.WriteString("\nInherited Flags")
 
 	for i := range inherited {
 		if i > 0 && !inherited[i-1].Flag.HasDescription() {
-			if err := out.WriteByte(text.LineFeedByte); err != nil {
-				return err
-			}
+			out.WriteByte(text.LineFeedByte)
 		}
-		if err := out.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
-		if err := flag.RenderInheritedForms(&inherited[i], options, 1, out); err != nil {
-			return err
-		}
+		out.WriteByte(text.LineFeedByte)
+		flag.RenderInheritedForms(&inherited[i], options, 1, out)
 	}
-
-	return nil
 }
 
-func renderInheritedFlagsGrouped(node FlagInheritor, options Options, sb *bufio.Writer) error {
+func renderInheritedFlagsGrouped(node FlagInheritor, options Options, sb *utils.BatchWriter) {
 	grouped := flag.GroupInheritance(node)
 
-	if len(grouped) == 0 {
-		return nil
-	}
-
 	for i := range grouped {
-		if err := flag.RenderGroupedInheritance(&grouped[i], options, 1, sb); err != nil {
-			return err
-		}
+		flag.RenderGroupedInheritance(&grouped[i], options, 1, sb)
 	}
-
-	return nil
 }

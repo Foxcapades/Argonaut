@@ -12,10 +12,14 @@ import (
 
 func TestPad(t *testing.T) {
 	sb := new(strings.Builder)
-	wri := bufio.NewWriter(sb)
+	wri := utils.NewBatchWriter(sb)
 
-	utils.Must(render.Pad(10, wri))
-	utils.Must(wri.Flush())
+	render.Pad(10, wri)
+	wri.Flush()
+
+	if wri.Error != nil {
+		t.Fatal(wri.Error)
+	}
 
 	if sb.String() != "          " {
 		t.Fail()
@@ -48,11 +52,11 @@ func TestDescriptionFormatter_Format01(t *testing.T) {
 	sb := new(strings.Builder)
 	sb.Grow(1024)
 
-	writer := bufio.NewWriter(sb)
+	writer := utils.NewBatchWriter(sb)
 
 	formatter := render.NewDescriptionFormatter("    ", 80, writer)
-	utils.Must(formatter.Format(input))
-	utils.Must(writer.Flush())
+	formatter.Format(input)
+	writer.Flush()
 
 	if sb.String() != expect {
 		t.Errorf("expected `%s`\ngot `%s`", expect, sb.String())
@@ -69,11 +73,11 @@ func TestDescriptionFormatter_Format02(t *testing.T) {
 	sb := new(strings.Builder)
 	sb.Grow(1024)
 
-	writer := bufio.NewWriter(sb)
+	writer := utils.NewBatchWriter(sb)
 
 	formatter := render.NewDescriptionFormatter("    ", 80, writer)
-	utils.Must(formatter.Format(input))
-	utils.Must(writer.Flush())
+	formatter.Format(input)
+	writer.Flush()
 
 	if sb.String() != expect {
 		t.Errorf("expected `%s`\ngot `%s`", expect, sb.String())
@@ -100,11 +104,11 @@ func TestDescriptionFormatter_Format04(t *testing.T) {
 	sb := new(strings.Builder)
 	sb.Grow(64)
 
-	writer := bufio.NewWriter(sb)
+	writer := utils.NewBatchWriter(sb)
 	formatter := render.NewDescriptionFormatter("  ", 3, writer)
 
-	utils.Must(formatter.Format(input))
-	utils.Must(writer.Flush())
+	formatter.Format(input)
+	writer.Flush()
 
 	if expect != sb.String() {
 		t.Error("failed formatting expectation")
@@ -123,11 +127,11 @@ func TestDescriptionFormatter_Format05(t *testing.T) {
 	sb := new(strings.Builder)
 	sb.Grow(64)
 
-	writer := bufio.NewWriter(sb)
+	writer := utils.NewBatchWriter(sb)
 	formatter := render.NewDescriptionFormatter("  ", 3, writer)
 
-	utils.Must(formatter.Format(input))
-	utils.Must(writer.Flush())
+	formatter.Format(input)
+	writer.Flush()
 
 	if expect != sb.String() {
 		t.Log(expect)
@@ -149,13 +153,12 @@ func TestDescriptionFormatter_Format06(t *testing.T) {
 
 	for i := 0; i < len(expect); i++ {
 		buffer := FailingWriter{FailAfter: i}
-		writer := bufio.NewWriterSize(&buffer, 1)
+		writer := utils.NewBatchWriter(bufio.NewWriterSize(&buffer, 1))
 
-		formatter := render.NewDescriptionFormatter("    ", 80, writer)
-		if err := formatter.Format(input); err == nil {
-			if err = writer.Flush(); err == nil {
-				t.Error("expected error not to be nil but it was")
-			}
+		render.NewDescriptionFormatter("    ", 80, writer).Format(input)
+		writer.Flush()
+		if writer.Error == nil {
+			t.Error("expected error not to be nil but it was")
 		}
 	}
 }
@@ -171,13 +174,12 @@ func TestDescriptionFormatter_Format07(t *testing.T) {
 
 	for i := 0; i < len(expect); i++ {
 		buffer := FailingWriter{FailAfter: i}
-		writer := bufio.NewWriterSize(&buffer, 1)
+		writer := utils.NewBatchWriter(bufio.NewWriterSize(&buffer, 1))
 
-		formatter := render.NewDescriptionFormatter("  ", 3, writer)
-		if err := formatter.Format(input); err == nil {
-			if err = writer.Flush(); err == nil {
-				t.Error("expected error not to be nil but it was")
-			}
+		render.NewDescriptionFormatter("  ", 3, writer).Format(input)
+		writer.Flush()
+		if writer.Error == nil {
+			t.Error("expected error not to be nil but it was")
 		}
 	}
 }
@@ -193,13 +195,12 @@ func TestDescriptionFormatter_Format08(t *testing.T) {
 
 	for i := 0; i < len(expect); i++ {
 		buffer := FailingWriter{FailAfter: i}
-		writer := bufio.NewWriterSize(&buffer, 1)
+		writer := utils.NewBatchWriter(bufio.NewWriterSize(&buffer, 1))
 
-		formatter := render.NewDescriptionFormatter("  ", 3, writer)
-		if err := formatter.Format(input); err == nil {
-			if err = writer.Flush(); err == nil {
-				t.Error("expected error not to be nil but it was")
-			}
+		render.NewDescriptionFormatter("  ", 3, writer).Format(input)
+		writer.Flush()
+		if writer.Error == nil {
+			t.Error("expected error not to be nil but it was")
 		}
 	}
 }

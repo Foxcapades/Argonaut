@@ -13,7 +13,7 @@ import (
 func TestEmptyCommandTree(t *testing.T) {
 	_, err := tree.Build(tree.NewBuilder())
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected a build error but none was returned")
 	}
 }
 
@@ -24,11 +24,11 @@ func TestCommandTreeBuilder_WithDescription(t *testing.T) {
 	_ = utils.MustReturn(tree.Parse(com, []string{"hello", "goodbye"}))
 
 	if !com.HasDescription() {
-		t.Fail()
+		t.Fatal("expected command to have description, but it didn't")
 	}
 
 	if com.Description() != "hello" {
-		t.Fail()
+		t.Fatal("commend description did not match the input")
 	}
 }
 
@@ -40,7 +40,7 @@ func TestCommandTreeBuilder_WithCallback(t *testing.T) {
 	_ = utils.MustReturn(tree.Parse(com, []string{"hello", "goodbye"}))
 
 	if counter != 1 {
-		t.Fail()
+		t.Fatalf("expected counter to be hit once but it was hit %d times", counter)
 	}
 }
 
@@ -52,28 +52,23 @@ func TestCommandTreeBuilder_WithFlag(t *testing.T) {
 	_ = utils.MustReturn(tree.Parse(com, []string{"taco", "bell", "-c=3", "banana", "--", "pickle"}))
 
 	if counter != 3 {
-		t.Errorf("expected 3, got %d", counter)
-		t.Fail()
+		t.Fatalf("expected 3, got %d", counter)
 	}
 
 	if com.SelectedCommand().FindShortFlag('c') == nil {
-		t.Fail()
-	}
-
-	if !com.SelectedCommand().HasUnmappedInputs() {
-		t.Fail()
+		t.Fatal("failed to find short flag -c")
 	}
 
 	if len(com.SelectedCommand().UnmappedInputs()) != 2 {
-		t.Fail()
+		t.Fatalf("expected exactly 2 unmapped inputs, got %d", len(com.SelectedCommand().UnmappedInputs()))
 	}
 
 	if com.SelectedCommand().UnmappedInputs()[0] != "banana" {
-		t.Fail()
+		t.Fatalf("expected unmapped input 0 to be 'banana', but was '%s'", com.SelectedCommand().UnmappedInputs()[0])
 	}
 
 	if com.SelectedCommand().UnmappedInputs()[1] != "pickle" {
-		t.Fail()
+		t.Fatalf("expected unmapped input 1 to be 'pickle', but was '%s'", com.SelectedCommand().UnmappedInputs()[1])
 	}
 }
 
@@ -90,7 +85,7 @@ func TestCommandTreeBuilder_WithBranch(t *testing.T) {
 	_ = utils.MustReturn(tree.Parse(com, []string{"say", "foo", "bar"}))
 
 	if a != 1 || b != 1 || c != 1 {
-		t.Fail()
+		t.Fatalf("expected a=1, b=1, c=1; got a=%d, b=%d, c=%d", a, b, c)
 	}
 }
 
@@ -107,7 +102,7 @@ func TestCommandTreeBuilder_WithFlagGroup(t *testing.T) {
 	_ = utils.MustReturn(tree.Parse(com, []string{"hoopla", "no-thanks"}))
 
 	if value != 3 {
-		t.Fail()
+		t.Fatalf("expected value to be set to default of '3', but was %d", value)
 	}
 }
 
@@ -121,7 +116,7 @@ func TestCommandTreeBuilder_WithLeaf(t *testing.T) {
 	_, err := tree.Parse(com, []string{"my", "ass", "--butt"})
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected parse error for missing required flag arg, but got none")
 	}
 }
 
@@ -136,13 +131,13 @@ func TestCommandTreeBuilder_Parse(t *testing.T) {
 	_, err := tree.Parse(com, []string{"tree", "leaf"})
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected parse error for missing required flag -f, but got none")
 	}
 
 	_, err = tree.Parse(com, []string{"tree", "leaf", "-f"})
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected parse error for missing required flag arg, but got none")
 	}
 }
 
@@ -155,7 +150,7 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 				WithDefault(3))))
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected build error for incompatible binding and default value type but got none")
 	}
 
 	_, err = tree.Build(tree.NewBuilder().
@@ -165,7 +160,7 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 				WithDefault(func() int { return 3 }))))
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected build error for incompatible binding and default return type but got none")
 	}
 
 	_, err = tree.Build(tree.NewBuilder().
@@ -175,7 +170,7 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 				WithDefault(func() (string, int) { return "hello", 3 }))))
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected build error for invalid 2 output default provider but got none")
 	}
 
 	_, err = tree.Build(tree.NewBuilder().
@@ -185,7 +180,7 @@ func TestCommandTreeBuilder_InvalidArgumentBindingAndDefault(t *testing.T) {
 				WithDefault(func() (string, int, int) { return "hello", 3, 5 }))))
 
 	if err == nil {
-		t.Fail()
+		t.Fatal("expected build error for invalid 3 output default provider but got none")
 	}
 }
 
@@ -303,8 +298,6 @@ func TestCommandTreeBuilder_Build05(t *testing.T) {
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
-	} else {
-		t.Log(err)
 	}
 }
 
@@ -318,7 +311,5 @@ func TestCommandTreeBuilder_Build06(t *testing.T) {
 
 	if err == nil {
 		t.Error("expected err not to be nil but it was")
-	} else {
-		t.Log(err)
 	}
 }

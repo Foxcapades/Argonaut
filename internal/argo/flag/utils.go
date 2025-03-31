@@ -90,3 +90,15 @@ func UniqueFlagNames(groups []argo.FlagGroupBuilder, errs argo.MultiError) {
 		}
 	}
 }
+
+func Stream(c GroupContainer) iter.Seq2[argo.FlagGroup, argo.Flag] {
+	return func(yield func(argo.FlagGroup, argo.Flag) bool) {
+		for _, g := range c.FlagGroups() {
+			for _, f := range g.Flags() {
+				if !yield(g, f) {
+					return
+				}
+			}
+		}
+	}
+}

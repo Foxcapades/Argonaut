@@ -16,15 +16,13 @@ func (i Index) ByLongName(f string) argo.Flag {
 }
 
 func (i Index) Overlay(c GroupContainer) {
-	for _, g := range c.FlagGroups() {
-		for _, f := range g.Flags() {
-			if f.HasShortForm() {
-				i.byShort[f.ShortForm()] = f
-			}
+	for _, f := range Stream(c) {
+		if f.HasShortForm() {
+			i.byShort[f.ShortForm()] = f
+		}
 
-			if f.HasLongForm() {
-				i.byLong[f.LongForm()] = f
-			}
+		if f.HasLongForm() {
+			i.byLong[f.LongForm()] = f
 		}
 	}
 }

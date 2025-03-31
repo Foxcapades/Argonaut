@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -29,14 +28,10 @@ func RenderBranchHelp(branch argo.BranchCommand, options Options, writer io.Writ
 		return nil
 	}
 
-	if buf, ok := writer.(*bufio.Writer); ok {
-		return renderCommandBranch(branch, options, buf)
-	}
-
-	buf := bufio.NewWriter(writer)
-	err := renderCommandBranch(branch, options, buf)
-	_ = buf.Flush()
-	return err
+	buf := utils.NewBatchWriter(writer)
+	renderCommandBranch(branch, options, buf)
+	buf.Flush()
+	return buf.Error
 }
 
 func MakeRenderBranchHelpCallback(branch argo.BranchCommand, options Options) argo.FlagCallback {
@@ -46,81 +41,35 @@ func MakeRenderBranchHelpCallback(branch argo.BranchCommand, options Options) ar
 	}
 }
 
-func renderCommandBranch(branch argo.BranchCommand, options Options, out *bufio.Writer) error {
-	if err := renderCommandBranchUsage(branch, out); err != nil {
-		return err
-	}
+func renderCommandBranch(branch argo.BranchCommand, options Options, out *utils.BatchWriter) {
+	renderCommandBranchUsage(branch, out)
 
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
+	out.WriteByte(text.LineFeedByte)
 
-	if err := TryRenderAliases(branch, out); err != nil {
-		return err
-	}
+	TryRenderAliases(branch, out)
 
-	if err := TryRenderDescription(branch, options, out, branch.HasAliases()); err != nil {
-		return err
-	}
+	TryRenderDescription(branch, options, out, branch.HasAliases())
 
-	if err := RenderCommandGroups(branch.CommandGroups(), options, 0, out); err != nil {
-		return err
-	}
+	RenderCommandGroups(branch.CommandGroups(), options, 0, out)
 
-	if err := TryRenderFlags(branch, options, out); err != nil {
-		return err
-	}
+	TryRenderFlags(branch, options, out)
 
-	if err := TryRenderInheritedFlags(branch, options, out); err != nil {
-		return err
-	}
+	TryRenderInheritedFlags(branch, options, out)
 
-	if err := out.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
-
-	return nil
+	out.WriteByte(text.LineFeedByte)
 }
 
-func renderCommandBranchUsage(node argo.BranchCommand, out *bufio.Writer) error {
-	if _, err := out.WriteString(common.CommandRenderPrefix); err != nil {
-		return err
-	}
-	if err := RenderSubCommandPath(node, out); err != nil {
-		return err
-	}
+func renderCommandBranchUsage(node argo.BranchCommand, out *utils.BatchWriter) {
+	out.WriteString(common.CommandRenderPrefix)
+	RenderSubCommandPath(node, out)
 
-	if node.HasFlagGroups() {
-		hasOptionalFlags := false
-
-		// For all the required flags, append their name (and argument name if
-		// required) to the cli example text.
-		for _, group := range node.FlagGroups() {
-			for _, f := range group.Flags() {
-				if f.IsRequired() {
-					if err := out.WriteByte(text.SpaceByte); err != nil {
-						return err
-					}
-					if err := flag.RenderShortestForUsage(f, out); err != nil {
-						return err
-					}
-				} else {
-					hasOptionalFlags = true
-				}
-			}
-		}
-
-		// If there are any optional flags append the general "[OPTIONS]" text.
-		if hasOptionalFlags {
-			if _, err := out.WriteString(common.CommandRenderOptionalFlags); err != nil {
-				return err
-			}
+	// Possibly render "[options]" if there are any optional flags
+	for _, f := range flag.Stream(node) {
+		if !f.IsRequired() {
+			out.WriteString(common.CommandRenderOptionalFlags)
+			break
 		}
 	}
 
-	if _, err := out.WriteString(subcommandPlaceholder); err != nil {
-		return err
-	}
-
-	return nil
+	out.WriteString(subcommandPlaceholder)
 }

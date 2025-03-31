@@ -1,10 +1,9 @@
 package flag
 
 import (
-	"bufio"
-
 	"github.com/foxcapades/argonaut/v3/internal/argo/opts"
 	"github.com/foxcapades/argonaut/v3/internal/text"
+	"github.com/foxcapades/argonaut/v3/internal/utils"
 	"github.com/foxcapades/argonaut/v3/pkg/argo"
 )
 
@@ -27,29 +26,27 @@ func GroupInheritance(node GroupContainer) []FormGroup {
 			Forms: makeFormsSlice(currentNode, currentNode == node),
 		}
 
-		for _, group := range currentNode.FlagGroups() {
-			for _, flag := range group.Flags() {
-				forms := Forms{Flag: flag}
+		for _, flag := range Stream(currentNode) {
+			forms := Forms{Flag: flag}
 
-				if flag.HasLongForm() {
-					if _, ok := longs[flag.LongForm()]; !ok {
-						longs[flag.LongForm()] = true
-						forms.Long = true
-					}
+			if flag.HasLongForm() {
+				if _, ok := longs[flag.LongForm()]; !ok {
+					longs[flag.LongForm()] = true
+					forms.Long = true
 				}
+			}
 
-				if flag.HasShortForm() {
-					if _, ok := shorts[flag.ShortForm()]; !ok {
-						shorts[flag.ShortForm()] = true
-						forms.Short = true
-					}
+			if flag.HasShortForm() {
+				if _, ok := shorts[flag.ShortForm()]; !ok {
+					shorts[flag.ShortForm()] = true
+					forms.Short = true
 				}
+			}
 
-				// If the flag has an available form, and the current node is not the
-				// original (we want them in the filter maps, but not in the output).
-				if (forms.Short || forms.Long) && currentNode != node {
-					currentForms.Forms = append(currentForms.Forms, forms)
-				}
+			// If the flag has an available form, and the current node is not the
+			// original (we want them in the filter maps, but not in the output).
+			if (forms.Short || forms.Long) && currentNode != node {
+				currentForms.Forms = append(currentForms.Forms, forms)
 			}
 		}
 
@@ -69,10 +66,8 @@ func GroupInheritance(node GroupContainer) []FormGroup {
 
 type named interface{ Name() string }
 
-func RenderGroupedInheritance(formGroup *FormGroup, options opts.Options, padding uint8, sb *bufio.Writer) error {
-	if err := sb.WriteByte(text.LineFeedByte); err != nil {
-		return err
-	}
+func RenderGroupedInheritance(formGroup *FormGroup, options opts.Options, padding uint8, sb *utils.BatchWriter) {
+	sb.WriteByte(text.LineFeedByte)
 
 	var name string
 	if _, ok := formGroup.Node.(argo.TreeCommand); ok {
@@ -81,30 +76,18 @@ func RenderGroupedInheritance(formGroup *FormGroup, options opts.Options, paddin
 		name = `Parent Command "` + formGroup.Node.(named).Name() + `"`
 	}
 
-	if _, err := sb.WriteString("\nFlags Inherited from "); err != nil {
-		return err
-	}
-	if _, err := sb.WriteString(name); err != nil {
-		return err
-	}
+	sb.WriteString("\nFlags Inherited from ")
+	sb.WriteString(name)
 
 	for i := range formGroup.Forms {
 		if i > 0 && !formGroup.Forms[i-1].Flag.HasDescription() {
-			if err := sb.WriteByte(text.LineFeedByte); err != nil {
-				return err
-			}
+			sb.WriteByte(text.LineFeedByte)
 		}
 
-		if err := sb.WriteByte(text.LineFeedByte); err != nil {
-			return err
-		}
+		sb.WriteByte(text.LineFeedByte)
 
-		if err := RenderInheritedForms(&formGroup.Forms[i], options, padding, sb); err != nil {
-			return err
-		}
+		RenderInheritedForms(&formGroup.Forms[i], options, padding, sb)
 	}
-
-	return nil
 }
 
 func makeFormsSlice(node GroupContainer, isRoot bool) []Forms {
